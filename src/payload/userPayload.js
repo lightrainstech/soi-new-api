@@ -7,7 +7,16 @@ exports.otpSchema = {
     .prop('name', S.string().minLength(4).maxLength(40).required())
     .prop('email', S.string().format(S.FORMATS.EMAIL).required())
     .prop('phone', S.string())
+    .prop('password', S.string().minLength(10).required())
     .prop('country', S.string().required())
+}
+
+exports.loginSchema = {
+  tags: ['User'],
+  summary: 'User login',
+  body: S.object()
+    .prop('email', S.string().required())
+    .prop('password', S.string().required())
 }
 
 exports.otpResendSchema = {

@@ -22,10 +22,6 @@ module.exports = function (fastify, opts, next) {
   fastify.register(swagger, swaggerConf.options)
   fastify.register(Etag)
 
-  fastify.register(require('@fastify/jwt'), {
-    secret: process.env.JWT_SECRET
-  })
-
   fastify.register(autoload, {
     dir: path.join(__dirname, 'plugins')
   })
@@ -34,12 +30,5 @@ module.exports = function (fastify, opts, next) {
     options: Object.assign({ prefix: '/api' }, opts)
   })
 
-  fastify.decorate('authenticate', async function (request, reply) {
-    try {
-      await request.jwtVerify()
-    } catch (err) {
-      reply.send(err)
-    }
-  })
   next()
 }

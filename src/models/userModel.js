@@ -2,6 +2,8 @@
 // External Dependencies
 const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
+const bcrypt = require('bcrypt')
+const SALT_ROUNDS = 10
 
 const UserSchema = new mongoose.Schema(
   {
@@ -11,8 +13,24 @@ const UserSchema = new mongoose.Schema(
       unique: true
     },
     name: { type: String, default: '--' },
-    phone: { type: String, unique: true, default: '--' },
+    phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
+    hashed_password: {
+      type: String,
+      default: ''
+    },
+    authToken: {
+      type: String,
+      default: ''
+    },
+    salt: {
+      type: String,
+      default: ''
+    },
+    isRestricted: {
+      type: Boolean,
+      default: false
+    },
     otp: {
       type: Number,
       required: true,
@@ -26,7 +44,29 @@ const UserSchema = new mongoose.Schema(
   }
 )
 
+UserSchema.virtual('password')
+  .set(function (password) {
+    this._password = password
+    this.salt = this.makeSalt()
+    this.hashed_password = this.encryptPassword(password)
+  })
+  .get(function () {
+    return this._password
+  })
+
 UserSchema.methods = {
+  makeSalt: function () {
+    return bcrypt.genSaltSync(SALT_ROUNDS)
+  },
+
+  encryptPassword: function (password) {
+    if (!password) return ''
+    return bcrypt.hashSync(password, this.salt)
+  },
+  authenticate: (plainText, hashed_password) => {
+    return bcrypt.compareSync(plainText, hashed_password)
+  },
+
   getUserById: async function (id) {
     const User = mongoose.model('User')
     let query = { _id: id }
@@ -40,6 +80,15 @@ UserSchema.methods = {
     let query = { email }
     const options = {
       criteria: query
+    }
+    return User.load(options)
+  },
+  getActiveUserByEmail: async function (email) {
+    const User = mongoose.model('User')
+    let query = { email, isRestricted: false }
+    const options = {
+      criteria: query,
+      select: 'email hashed_password name'
     }
     return User.load(options)
   },
@@ -91,13 +140,7 @@ UserSchema.statics = {
   }
 }
 
-UserSchema.index(
-  {
-    phone: 1,
-    country: 1
-  },
-  { unique: true }
-)
+UserSchema.index({ email: 1 }, { unique: true })
 
 UserSchema.plugin(uniqueValidator)
 
