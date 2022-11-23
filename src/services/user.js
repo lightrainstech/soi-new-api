@@ -3,6 +3,7 @@ const crypto = require('crypto')
 
 const User = require('../models/userModel.js')
 const userPayload = require('../payload/userPayload.js')
+const Affiliate = require('../models/affiliateModel.js')
 
 let userModal = new User()
 
@@ -13,7 +14,7 @@ module.exports = async function (fastify, opts) {
     '/signup',
     { schema: userPayload.otpSchema },
     async function (request, reply) {
-      const { phone, country, name, password } = request.body,
+      const { phone, country, name, password, affCode } = request.body,
         email = request.body.email.toString().toLowerCase()
       const user = await userModal.getUserByEmail(email)
       try {
@@ -29,10 +30,19 @@ module.exports = async function (fastify, opts) {
             .randomBytes(256)
             .toString('hex')
             .slice(0, 64)
-          userModal.save()
+          const newUsr = await userModal.save()
+
+          if (affCode) {
+            Affiliate.create({
+              user: newUsr._id,
+              affiliateCode: affCode
+            })
+          }
+
           reply.success({
             message: 'Sign up successful',
             email: email,
+            affCode: newUsr.affiliateCode,
             otp: otp
           })
         } else {

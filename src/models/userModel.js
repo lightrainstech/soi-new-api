@@ -4,6 +4,11 @@ const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
 const bcrypt = require('bcrypt')
 const SALT_ROUNDS = 10
+const { customAlphabet } = require('nanoid')
+const nanoidLong = customAlphabet(
+  '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
+  8
+)
 
 const UserSchema = new mongoose.Schema(
   {
@@ -15,6 +20,7 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, default: '--' },
     phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
+    affiliateCode: { type: String, default: null },
     hashed_password: {
       type: String,
       default: ''
@@ -43,6 +49,11 @@ const UserSchema = new mongoose.Schema(
     timestamps: true
   }
 )
+
+UserSchema.pre('save', async function (next) {
+  this.affiliateCode = nanoidLong()
+  next()
+})
 
 UserSchema.virtual('password')
   .set(function (password) {
