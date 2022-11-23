@@ -7,9 +7,7 @@ const AffiliateSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
     affiliateCode: { type: String, default: '--' }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 )
 
 AffiliateSchema.methods = {
