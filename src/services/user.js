@@ -6,6 +6,8 @@ const userPayload = require('../payload/userPayload.js')
 
 let userModal = new User()
 
+const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
+
 module.exports = async function (fastify, opts) {
   fastify.post(
     '/signup',
@@ -70,7 +72,7 @@ module.exports = async function (fastify, opts) {
       } else {
         const accessToken = fastify.jwt.sign(
           { userId: user._id, isVerified: user.isVerified },
-          { expiresIn: '7d' }
+          { expiresIn: EXPIRESIN }
         )
         reply.success({
           message: 'OTP has been verified successfully',
@@ -101,7 +103,7 @@ module.exports = async function (fastify, opts) {
                   userId: user._id,
                   name: user.name
                 },
-                { expiresIn: process.env.JWT_TOKEN_EXPIRY || '3d' }
+                { expiresIn: EXPIRESIN }
               )
               let respUser = {
                 userId: user._id,
