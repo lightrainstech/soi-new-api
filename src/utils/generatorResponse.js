@@ -15,9 +15,7 @@ const base = {
  */
 module.exports = (data, response) => {
   const baseT = { ...base }
-
   baseT.response = { ...base.response, ...response }
   baseT.data = data
-
   return baseT
 }

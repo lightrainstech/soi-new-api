@@ -20,7 +20,7 @@ module.exports = fp(async function (fastify, opts) {
               reply.send('Token expired')
               request.log.error('Token expired')
             }
-            request.log.info('Token Vaid')
+            request.log.info('Token Valid')
             request.decoded = decoded
             return request
           }
