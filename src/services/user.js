@@ -14,7 +14,7 @@ module.exports = async function (fastify, opts) {
     '/signup',
     { schema: userPayload.otpSchema },
     async function (request, reply) {
-      const { phone, country, name, password, affCode } = request.body,
+      const { phone, country, name, password, affCode, wallet } = request.body,
         email = request.body.email.toString().toLowerCase()
       const user = await userModal.getUserByEmail(email)
       try {
@@ -24,6 +24,7 @@ module.exports = async function (fastify, opts) {
           userModal.phone = phone
           userModal.email = email
           userModal.country = country
+          userModal.wallet = wallet
           userModal.otp = otp
           userModal.password = password
           userModal.authToken = crypto
@@ -38,6 +39,17 @@ module.exports = async function (fastify, opts) {
               affiliateCode: affCode
             })
           }
+
+          fastify.bull.sendNFT.add(
+            {
+              email: newUsr.email,
+              name: newUsr.name,
+              userId: newUsr._id,
+              affiliateCode: affCode,
+              wallet: newUsr.wallet
+            },
+            { removeOnComplete: true }
+          )
 
           reply.success({
             message: 'Sign up successful',

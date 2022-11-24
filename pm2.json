@@ -5,6 +5,12 @@
       "script": "./src/server.js",
       "exec_mode": "cluster",
       "max_memory_restart": "512M"
+    },
+    {
+      "name": "soi-jobs",
+      "script": "./src/jobs.js",
+      "exec_mode": "cluster",
+      "max_memory_restart": "128M"
     }
   ]
 }
