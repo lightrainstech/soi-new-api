@@ -20,6 +20,7 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, default: '--' },
     phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
+    wallet: { type: String, default: '' },
     affiliateCode: { type: String, default: null },
     hashed_password: {
       type: String,
@@ -140,7 +141,8 @@ UserSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'email name createdAt -__v'
+    const select =
+      options.select || 'email name isVerified wallet createdAt -__v'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
