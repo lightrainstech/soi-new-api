@@ -5,6 +5,9 @@ const nftAbi = require('../../abi/nft.json')
 const axios = require('axios')
 
 const provider = new ethers.providers.JsonRpcProvider(process.env.JSON_RPC)
+const assetUrl =
+  process.env.SOI_ASSET_URL ||
+  'https://ipfs.io/ipfs/QmU8awtg1cPMrSG5Fm6ou46Zk2Wzcan4BzYp48fH6yeezq'
 
 const privateKey = process.env.PRIVATE_KEY
 const wallet = new ethers.Wallet(privateKey)
@@ -26,7 +29,7 @@ const mintNFT = toAddress =>
     calculateGas()
       .then(feeData =>
         soiContract
-          .mint(toAddress, {
+          .mint(toAddress, assetUrl, {
             gasPrice: feeData
           })
           .then(tx => {
