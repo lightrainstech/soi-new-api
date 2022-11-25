@@ -9,7 +9,6 @@ exports.otpSchema = {
     .prop('phone', S.string())
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
     .prop('affCode', S.string().maxLength(8))
-    .prop('password', S.string())
     .prop('country', S.string().required())
 }
 
