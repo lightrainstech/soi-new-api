@@ -51,16 +51,8 @@ const mintNFT = toAddress =>
 
 const calculateGas = async () => {
   try {
-    const { data } = await axios({
-      method: 'get',
-      url: process.env.NETWORK_GAS_STATION
-    })
-
-    let maxFeePerGas = web3.utils.toWei(
-      Math.ceil(data.fast.maxFee) + '',
-      'gwei'
-    )
-    return maxFeePerGas
+    let feeData = web3.utils.formatUnits(feeData.maxFeePerGas, 'gwei')
+    return feeData
   } catch (error) {
     return 60000000000
   }
