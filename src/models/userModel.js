@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, default: '--' },
     phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
-    wallet: { type: String, default: '' },
+    wallet: { type: String, required: true, unique: true },
     affiliateCode: { type: String, default: null },
     hashed_password: {
       type: String,
@@ -44,7 +44,12 @@ const UserSchema = new mongoose.Schema(
       default: 0
     },
     isVerified: { type: Boolean, default: false },
-    isKycDone: { type: Boolean, default: false }
+    isKycDone: { type: Boolean, default: false },
+    role: {
+      type: String,
+      enum: ['user', 'influencer', 'agency'],
+      default: 'user'
+    }
   },
   {
     timestamps: true
@@ -128,6 +133,14 @@ UserSchema.methods = {
       },
       { new: true }
     )
+  },
+  getUserBywallet: async function (wallet) {
+    const User = mongoose.model('User')
+    let query = { wallet }
+    const options = {
+      criteria: query
+    }
+    return User.load(options)
   }
 }
 
