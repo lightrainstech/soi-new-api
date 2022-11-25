@@ -30,11 +30,6 @@ module.exports = async function (fastify, opts) {
         userModal.country = country
         userModal.wallet = await checkSumAddress(wallet)
         userModal.otp = otp
-        // userModal.password = password
-        // userModal.authToken = crypto
-        //   .randomBytes(256)
-        //   .toString('hex')
-        //   .slice(0, 64)
 
         if (affCode) {
           userModal.role = 'influencer'
