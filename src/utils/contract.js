@@ -29,7 +29,7 @@ const mintNFT = toAddress =>
     calculateGas()
       .then(feeData =>
         soiContract
-          .mint(toAddress, assetUrl, {
+          .safeMint(toAddress, assetUrl, {
             gasPrice: feeData
           })
           .then(tx => {
