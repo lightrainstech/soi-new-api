@@ -9,7 +9,6 @@ exports.otpSchema = {
     .prop('phone', S.string())
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
     .prop('affCode', S.string().maxLength(8))
-    .prop('password', S.string().minLength(10).required())
     .prop('country', S.string().required())
 }
 
@@ -38,6 +37,20 @@ exports.otpVerifySchema = {
     .prop('otp', S.string().required())
   // TODO change this when move to production
   // .prop('otp', S.string().minLength(4).maxLength(4).required())
+}
+
+exports.nftAvailableSchema = {
+  tags: ['User'],
+  summary: 'Available NNFTs',
+  params: S.object().prop('affCode', S.string().maxLength(8))
+}
+
+exports.walletConnectSchema = {
+  tags: ['User'],
+  summary: 'Wallet connect and signature verification',
+  body: S.object()
+    .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
+    .prop('signature', S.string().required())
 }
 
 exports.getMeSchema = {
