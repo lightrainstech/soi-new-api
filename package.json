@@ -10,9 +10,11 @@
     "@fastify/etag": "^4.1.0",
     "@fastify/jwt": "^6.3.3",
     "@fastify/swagger": "7.6.1",
+    "axios": "^1.2.0",
     "bcrypt": "^5.1.0",
     "bull": "^4.10.1",
     "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
     "fastify": "^4.10.2",
     "fluent-json-schema": "^4.0.0",
     "ioredis": "^5.2.4",
@@ -20,7 +22,8 @@
     "mongoose-unique-validator": "^3.1.0",
     "nanoid": "^3.0.0",
     "path": "^0.12.7",
-    "v8-compile-cache": "^2.3.0"
+    "v8-compile-cache": "^2.3.0",
+    "web3": "^1.8.1"
   },
   "scripts": {
     "start": "node ./src/server.js",
