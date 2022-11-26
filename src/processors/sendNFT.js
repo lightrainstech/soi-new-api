@@ -8,6 +8,7 @@ module.exports = async function (args, done) {
   const { wallet, affiliateCode, userId } = args.data
   console.log('--------Inside processor---------')
   try {
+    console.log(wallet, affiliateCode, userId)
     const db = await mongoose.connect(process.env.MONGO_CONN, {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -20,8 +21,8 @@ module.exports = async function (args, done) {
     await userTokenModel.save()
     console.log('saved')
     console.log('---------done-------')
+    done()
   } catch (error) {
     console.log(error)
   }
-  done()
 }
