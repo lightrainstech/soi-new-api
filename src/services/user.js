@@ -18,7 +18,7 @@ module.exports = async function (fastify, opts) {
   ) {
     const { phone, country, name, affCode, wallet } = request.body,
       email = request.body.email.toString().toLowerCase()
-
+    console.log('-----Args----', phone, country, name, affCode, wallet)
     try {
       let userModal = new User()
       const user = await userModal.getUserByEmail(email)
