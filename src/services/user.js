@@ -21,6 +21,7 @@ module.exports = async function (fastify, opts) {
       const { phone, country, name, affCode, wallet } = request.body,
         email = request.body.email.toString().toLowerCase()
       const user = await userModal.getUserByEmail(email)
+      console.log(user)
       try {
         if (user === null) {
           const otp = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000
@@ -73,7 +74,7 @@ module.exports = async function (fastify, opts) {
         }
       } catch (error) {
         console.log(error)
-        reply.error({ message: 'User already exists, please login.' })
+        reply.error({ message: `Something went wrong: ${error}` })
       }
     }
   ),
