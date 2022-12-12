@@ -15,7 +15,12 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    name: { type: String, default: '--' },
+    userName: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    name: { type: String, required: true },
     phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
     wallet: { type: String, required: true, unique: true },
@@ -103,6 +108,24 @@ UserSchema.methods = {
     let query = { wallet }
     const options = {
       criteria: query
+    }
+    return User.load(options)
+  },
+  getUserByUserNameOrEmail: async function (userName, email) {
+    const User = mongoose.model('User')
+    let query = {
+      $or: [
+        {
+          userName: userName
+        },
+        {
+          email: email
+        }
+      ]
+    }
+    const options = {
+      criteria: query,
+      select: 'email name userName'
     }
     return User.load(options)
   }
