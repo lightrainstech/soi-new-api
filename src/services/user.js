@@ -179,7 +179,7 @@ module.exports = async function (fastify, opts) {
               accessToken: jwt
             }
 
-            reply.code(200).success({
+            reply.success({
               isUserExist: true,
               respUser
             })
@@ -204,11 +204,49 @@ module.exports = async function (fastify, opts) {
       try {
         const { wallet } = request.body,
           signMessage = `SOI sign message ${nanoidLong()}`
-        reply.code(200).success({
+        reply.success({
           wallet: wallet,
           signMessage: signMessage
         })
         return reply
+      } catch (error) {
+        reply.error({
+          message: 'Failed to generate sign message.'
+        })
+        return reply
+      }
+    }
+  )
+  // Add social accounts
+  fastify.put(
+    '/social/accounts',
+    //{ schema: userPayload.getSignMessageSchema },
+    async function (request, reply) {
+      try {
+        const { wallet, socialAccounts } = request.body
+        // Check user exists or not
+        const user = await userModal.getUserBywallet(wallet)
+        if(!user){
+          if (!user) {
+            reply.code(404).error({
+              message: 'User not found'
+            })
+            return reply
+          }
+        }
+        const updateUser = await userModal.updateSocialAccounts(wallet, socialAccounts)
+        if(!updateUser){
+          reply.code(404).error({
+              message: 'Failed to add social accounts.'
+            })
+            return reply
+        }else {
+          // Todo check profile exist in social insider if not add user profile to social insider.
+          reply.success({
+            message: 'Social accounts added successfully.'
+          })
+          return reply
+        }
       } catch (error) {
         reply.error({
           message: 'Failed to generate sign message.'

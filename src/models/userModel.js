@@ -33,6 +33,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       enum: ['user', 'influencer', 'agency'],
       default: 'user'
+    },
+    social: {
+      facebook: { type: String },
+      instagram: { type: String },
+      youtube: { type: String },
+      twitter: { type: String },
+      tiktok: { type: String }
     }
   },
   {
@@ -96,6 +103,19 @@ UserSchema.methods = {
       select: 'email name userName'
     }
     return User.load(options)
+  },
+  updateSocialAccounts: async function (wallet, socialAccounts) {
+    const User = mongoose.model('User')
+    const result = User.findOneAndUpdate(
+      { wallet: wallet },
+      {
+        social: socialAccounts
+      },
+      {
+        new: true
+      }
+    )
+    return result
   }
 }
 
