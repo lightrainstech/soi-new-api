@@ -52,10 +52,20 @@ exports.walletConnectSchema = {
   body: S.object()
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
     .prop('signature', S.string().required())
+    .prop('message', S.string().required())
 }
 
 exports.getMeSchema = {
   tags: ['User'],
   summary: 'Get user profile',
   security: [{ Bearer: [] }]
+}
+
+exports.getSignMessageSchema = {
+  tags: ['User'],
+  summary: 'Get unique wallet sign message',
+  body: S.object().prop(
+    'wallet',
+    S.string().pattern('^0x[a-fA-F0-9]{40}$').required()
+  )
 }

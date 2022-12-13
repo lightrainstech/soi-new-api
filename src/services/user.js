@@ -7,6 +7,11 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
+const { customAlphabet } = require('nanoid')
+const nanoidLong = customAlphabet(
+  '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
+  8
+)
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -207,11 +212,10 @@ module.exports = async function (fastify, opts) {
       '/walletConnect',
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
-        const { wallet, signature } = request.body,
+        const { wallet, signature, message } = request.body,
           userModal = new User()
         console.log(wallet, signature)
-        const msg = 'SOIWalletVerification'
-        const msgBuffer = Buffer.from(msg)
+        const msgBuffer = Buffer.from(message)
         const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
         const signatureBuffer = ethUtil.toBuffer(signature)
         const signatureParams = ethUtil.fromRpcSig(signatureBuffer)
@@ -258,6 +262,27 @@ module.exports = async function (fastify, opts) {
         }
       }
     )
+  // Get unique message to sign wallet
+  fastify.post(
+    '/sign-message',
+    { schema: userPayload.getSignMessageSchema },
+    async function (request, reply) {
+      try {
+        const { wallet } = request.body,
+          signMessage = `SOI sign message ${nanoidLong()}`
+        reply.code(200).success({
+          wallet: wallet,
+          signMessage: signMessage
+        })
+        return reply
+      } catch (error) {
+        reply.error({
+          message: 'Failed to generate sign message.'
+        })
+        return reply
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/user'
