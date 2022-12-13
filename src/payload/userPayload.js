@@ -13,33 +13,6 @@ exports.signUpSchema = {
     .prop('country', S.string().required())
 }
 
-exports.loginSchema = {
-  tags: ['User'],
-  summary: 'User login',
-  body: S.object()
-    .prop('email', S.string().required())
-    .prop('password', S.string().required())
-}
-
-exports.otpResendSchema = {
-  tags: ['User'],
-  summary: 'Get OTP',
-  body: S.object()
-    .prop('phone', S.string().required())
-    .prop('country', S.string().required())
-}
-
-exports.otpVerifySchema = {
-  tags: ['User'],
-  summary: 'Verify OTP',
-  body: S.object()
-    .prop('phone', S.string().required())
-    .prop('country', S.string().required())
-    .prop('otp', S.string().required())
-  // TODO change this when move to production
-  // .prop('otp', S.string().minLength(4).maxLength(4).required())
-}
-
 exports.nftAvailableSchema = {
   tags: ['User'],
   summary: 'Available NNFTs',
