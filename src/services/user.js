@@ -15,6 +15,8 @@ const nanoidLong = customAlphabet(
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
+let userModal = new User()
+
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
 
@@ -27,8 +29,6 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
-        let userModal = new User()
-
         // Check email or userName is unique or not
         const user = await userModal.getUserByUserNameOrEmail(userName, email)
         if (user !== null && user.userName === userName) {
@@ -98,9 +98,24 @@ module.exports = async function (fastify, opts) {
     '/me',
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
-      reply.success({
-        message: 'Success'
-      })
+      try {
+        const { userId } = request.user,
+          user = await userModal.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'User details',
+          user: user
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+      }
     }
   )
 

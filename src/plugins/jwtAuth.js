@@ -21,7 +21,7 @@ module.exports = fp(async function (fastify, opts) {
               request.log.error('Token expired')
             }
             request.log.info('Token Valid')
-            request.decoded = decoded
+            request.user = decoded
             return request
           }
         }
