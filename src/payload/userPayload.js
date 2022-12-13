@@ -1,6 +1,6 @@
 const S = require('fluent-json-schema')
 
-exports.otpSchema = {
+exports.signUpSchema = {
   tags: ['User'],
   summary: 'User sign up',
   body: S.object()

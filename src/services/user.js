@@ -21,7 +21,7 @@ module.exports = async function (fastify, opts) {
   // User sign up
   fastify.post(
     '/signup',
-    { schema: userPayload.otpSchema },
+    { schema: userPayload.signUpSchema },
     async function (request, reply) {
       const { phone, country, name, affCode, wallet, userName } = request.body,
         email = request.body.email.toString().toLowerCase()
