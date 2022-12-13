@@ -10,7 +10,7 @@ const { checkSumAddress } = require('../utils/contract')
 const { customAlphabet } = require('nanoid')
 const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
-  8
+  10
 )
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
