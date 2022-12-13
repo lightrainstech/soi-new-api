@@ -29,13 +29,6 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    otp: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    isVerified: { type: Boolean, default: false },
-    isKycDone: { type: Boolean, default: false },
     role: {
       type: String,
       enum: ['user', 'influencer', 'agency'],
@@ -77,31 +70,6 @@ UserSchema.methods = {
       select: 'email hashed_password name'
     }
     return User.load(options)
-  },
-  resetOtp: async function (otp, phone, country) {
-    const User = mongoose.model('User')
-    return await User.findOneAndUpdate(
-      { phone: phone, country: country },
-      {
-        $set: {
-          otp: otp
-        }
-      },
-      { new: true }
-    )
-  },
-  verifyOtp: async function (otp, phone, country) {
-    const User = mongoose.model('User')
-    return await User.findOneAndUpdate(
-      { phone: phone, country: country, otp: otp, isVerified: false },
-      {
-        $set: {
-          otp: 0,
-          isVerified: true
-        }
-      },
-      { new: true }
-    )
   },
   getUserBywallet: async function (wallet) {
     const User = mongoose.model('User')
