@@ -116,6 +116,33 @@ UserSchema.methods = {
       }
     )
     return result
+  },
+  checkSocialAccountExists: async function (socialAccounts) {
+    const User = mongoose.model('User')
+    let query = {
+      $or: [
+        {
+          'social.facebook': socialAccounts.facebook
+        },
+        {
+          'social.instagram': socialAccounts.instagram
+        },
+        {
+          'social.twitter': socialAccounts.twitter
+        },
+        {
+          'social.youtube': socialAccounts.youtube
+        },
+        {
+          'social.tiktok': socialAccounts.tiktok
+        }
+      ]
+    }
+    const options = {
+      criteria: query,
+      select: 'email name userName social'
+    }
+    return User.load(options)
   }
 }
 

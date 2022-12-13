@@ -219,14 +219,14 @@ module.exports = async function (fastify, opts) {
   )
   // Add social accounts
   fastify.put(
-    '/social/accounts',
+    '/social/profile',
     //{ schema: userPayload.getSignMessageSchema },
     async function (request, reply) {
       try {
-        const { wallet, socialAccounts } = request.body
+        const { wallet, socialProfile } = request.body
         // Check user exists or not
         const user = await userModal.getUserBywallet(wallet)
-        if(!user){
+        if (!user) {
           if (!user) {
             reply.code(404).error({
               message: 'User not found'
@@ -234,22 +234,48 @@ module.exports = async function (fastify, opts) {
             return reply
           }
         }
-        const updateUser = await userModal.updateSocialAccounts(wallet, socialAccounts)
-        if(!updateUser){
-          reply.code(404).error({
+
+        // Check social account exists in db for any user
+        const socialAccountExists = await userModal.checkSocialAccountExists(
+          socialProfile
+        )
+        if (socialAccountExists == null) {
+          const addSocialAccounts = await userModal.updateSocialAccounts(
+            wallet,
+            socialProfile
+          )
+          if (!addSocialAccounts) {
+            reply.code(404).error({
               message: 'Failed to add social accounts.'
             })
             return reply
-        }else {
-          // Todo check profile exist in social insider if not add user profile to social insider.
-          reply.success({
-            message: 'Social accounts added successfully.'
+          } else {
+            // Todo check profile exist in social insider if not add user profile to social insider.
+            reply.success({
+              message: 'Social accounts added successfully.'
+            })
+            return reply
+          }
+        } else {
+          const entries1 = Object.entries(socialProfile),
+            entries2 = Object.entries(socialAccountExists.social),
+            matches = entries1.filter(
+              ([key, value]) =>
+                value &&
+                entries2.some(
+                  ([key2, value2]) => key === key2 && value === value2
+                )
+            )
+          const str = matches.map(([key, value]) => key).join()
+          reply.error({
+            message: `Profile already exists for ${str}.`
           })
           return reply
         }
       } catch (error) {
+        console.log(error)
         reply.error({
-          message: 'Failed to generate sign message.'
+          message: 'Failed to add social accounts.'
         })
         return reply
       }
