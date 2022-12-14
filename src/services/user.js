@@ -1,5 +1,5 @@
 'use strict'
-const crypto = require('crypto')
+
 const ethUtil = require('ethereumjs-util')
 
 const User = require('../models/userModel.js')
@@ -10,196 +10,141 @@ const { checkSumAddress } = require('../utils/contract')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
+let userModal = new User()
+
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
-  fastify.post('/signup', { schema: userPayload.otpSchema }, async function (
-    request,
-    reply
-  ) {
-    const { phone, country, name, affCode, wallet } = request.body,
-      email = request.body.email.toString().toLowerCase()
-    console.log('-----Args----', phone, country, name, affCode, wallet)
-    try {
-      let userModal = new User()
-      const user = await userModal.getUserByEmail(email)
-      if (user === null) {
-        const otp = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000
-        userModal.name = name
-        userModal.phone = phone
-        userModal.email = email
-        userModal.country = country
-        userModal.wallet = await checkSumAddress(wallet)
-        userModal.otp = otp
 
-        if (affCode) {
-          userModal.role = 'influencer'
+  // User sign up
+  fastify.post(
+    '/signup',
+    { schema: userPayload.signUpSchema },
+    async function (request, reply) {
+      const { phone, country, name, affCode, wallet, userName } = request.body,
+        email = request.body.email.toString().toLowerCase()
+      console.log('-----Args----', phone, country, name, affCode, wallet)
+      try {
+        // Check email or userName is unique or not
+        const user = await userModal.getUserByUserNameOrEmail(userName, email)
+        if (user !== null && user.userName === userName) {
+          reply.error({ message: 'User with this user name already exists.' })
+          return reply
         }
-        const newUsr = await userModal.save()
-        console.log('newUsr', newUsr)
+        if (user !== null && user.email === email) {
+          reply.error({ message: 'User with this email already exists.' })
+          return reply
+        }
+        if (user === null) {
+          userModal.name = name
+          userModal.userName = userName
+          userModal.phone = phone
+          userModal.email = email
+          userModal.country = country
+          userModal.wallet = await checkSumAddress(wallet)
 
-        if (affCode) {
-          Affiliate.create({
-            user: newUsr._id,
-            affiliateCode: affCode
-          })
-          await fastify.bull.sendNFT.add(
+          if (affCode) {
+            userModal.role = 'influencer'
+          }
+          const newUsr = await userModal.save()
+          console.log('newUsr', newUsr)
+
+          if (affCode) {
+            Affiliate.create({
+              user: newUsr._id,
+              affiliateCode: affCode
+            })
+            await fastify.bull.sendNFT.add(
+              {
+                email: newUsr.email,
+                name: newUsr.name,
+                userId: newUsr._id,
+                affiliateCode: affCode,
+                wallet: newUsr.wallet
+              },
+              { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
+            )
+            let count = await redis.get(`NFTC:${affCode}`)
+            count = Number(count) - 1
+            await redis.set(`NFTC:${affCode}`, Number(count))
+          }
+          const jwt = fastify.jwt.sign(
             {
-              email: newUsr.email,
-              name: newUsr.name,
               userId: newUsr._id,
-              affiliateCode: affCode,
-              wallet: newUsr.wallet
+              name: newUsr.name
             },
-            { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
-          )
-          let count = await redis.get(`NFTC:${affCode}`)
-          count = Number(count) - 1
-          await redis.set(`NFTC:${affCode}`, Number(count))
-        }
-        const jwt = fastify.jwt.sign(
-          {
-            userId: newUsr._id,
-            name: newUsr.name
-          },
-          { expiresIn: EXPIRESIN }
-        )
-        let respUser = {
-          userId: newUsr._id,
-          name: newUsr.name,
-          accessToken: jwt
-        }
-        reply.success({ message: 'Sign up successful', respUser })
-      } else {
-        reply.error({ message: 'User already exists, please login.' })
-      }
-    } catch (error) {
-      console.log(error)
-      reply.error({ message: `Something went wrong: ${error}` })
-    }
-  }),
-    fastify.post(
-      '/otpresend',
-      { schema: userPayload.otpResendSchema },
-      async function (request, reply) {
-        const otp = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000
-        const { phone, country } = request.body
-        let user = await userModal.resetOtp(otp, phone, country)
-        if (user === null) {
-          reply.error({ message: 'No such user exists, please sign up.' })
-        } else {
-          reply.success({
-            message: 'New OTP has been sent successfully',
-            otp: otp
-          })
-        }
-      }
-    ),
-    fastify.post(
-      '/otpverify',
-      { schema: userPayload.otpVerifySchema },
-      async function (request, reply) {
-        const { phone, country, otp } = request.body
-        let user = await userModal.verifyOtp(otp, phone, country)
-        if (user === null) {
-          reply.error({ message: 'OTP is invalid or already verified' })
-        } else {
-          const accessToken = fastify.jwt.sign(
-            { userId: user._id, isVerified: user.isVerified },
             { expiresIn: EXPIRESIN }
           )
-          reply.success({
-            message: 'OTP has been verified successfully',
-            accessToken: accessToken
-          })
-        }
-      }
-    ),
-    fastify.post('/login', { schema: userPayload.loginSchema }, async function (
-      request,
-      reply
-    ) {
-      const { password } = request.body,
-        email = request.body.email.toString().toLowerCase()
-
-      await userModal
-        .getActiveUserByEmail(email)
-        .then(async user => {
-          if (!user) {
-            reply.error({
-              message: 'No such account found or account is restricted!'
-            })
-          } else {
-            const isAuth = user.authenticate(password, user.hashed_password)
-            if (isAuth) {
-              const jwt = fastify.jwt.sign(
-                {
-                  userId: user._id,
-                  name: user.name
-                },
-                { expiresIn: EXPIRESIN }
-              )
-              let respUser = {
-                userId: user._id,
-                name: user.name,
-                accessToken: jwt
-              }
-              reply.code(200).success(respUser)
-            } else {
-              reply.error({
-                message: 'Invalid email or password'
-              })
-            }
+          let respUser = {
+            userId: newUsr._id,
+            name: newUsr.name,
+            userName: newUsr.userName,
+            accessToken: jwt
           }
-        })
-        .catch(function (err) {
-          console.log(err)
-          reply.error({
-            message: 'Something went wrong',
-            data: err
-          })
-        })
-
-      return reply
-    }),
-    fastify.get(
-      '/me',
-      { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
-      async function (request, reply) {
-        reply.success({
-          message: 'Success'
-        })
-      }
-    ),
-    fastify.get(
-      '/availableNft',
-      { schema: userPayload.nftAvailableSchema },
-      async function (request, reply) {
-        const { affCode } = request.query
-        try {
-          console.log('affCode', affCode)
-          let count = (await redis.get(`NFTC:${affCode}`)) || 0
-          console.log('###', count)
-          reply.success({
-            message: 'Remaining NFts',
-            data: Number(count)
-          })
-        } catch (error) {
-          reply.error({
-            message: error
-          })
+          reply.success({ message: 'Sign up successful', respUser })
         }
-        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
       }
-    ),
+    }
+  )
+  // Get logged in user details
+  fastify.get(
+    '/me',
+    { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
+    async function (request, reply) {
+      try {
+        const { userId } = request.user,
+          user = await userModal.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'User details',
+          user: user
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+      }
+    }
+  )
+
+  // Get available nft details
+  fastify.get(
+    '/availableNft',
+    { schema: userPayload.nftAvailableSchema },
+    async function (request, reply) {
+      const { affCode } = request.query
+      try {
+        console.log('affCode', affCode)
+        let count = (await redis.get(`NFTC:${affCode}`)) || 0
+        console.log('###', count)
+        reply.success({
+          message: 'Remaining NFts',
+          data: Number(count)
+        })
+      } catch (error) {
+        reply.error({
+          message: error
+        })
+      }
+      return reply
+    }
+  ),
+    // Wallet signature verification
     fastify.post(
       '/walletConnect',
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
-        const { wallet, signature } = request.body,
+        const { wallet, signature, message } = request.body,
           userModal = new User()
         console.log(wallet, signature)
-        const msg = 'SOIWalletVerification'
-        const msgBuffer = Buffer.from(msg)
+        const msgBuffer = Buffer.from(message)
         const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
         const signatureBuffer = ethUtil.toBuffer(signature)
         const signatureParams = ethUtil.fromRpcSig(signatureBuffer)
@@ -229,7 +174,7 @@ module.exports = async function (fastify, opts) {
               accessToken: jwt
             }
 
-            reply.code(200).success({
+            reply.success({
               isUserExist: true,
               respUser
             })
@@ -246,6 +191,71 @@ module.exports = async function (fastify, opts) {
         }
       }
     )
+
+  // Add social accounts
+  fastify.put(
+    '/social/profile',
+    //{ schema: userPayload.getSignMessageSchema },
+    async function (request, reply) {
+      try {
+        const { wallet, socialProfile } = request.body
+        // Check user exists or not
+        const user = await userModal.getUserBywallet(wallet)
+        if (!user) {
+          if (!user) {
+            reply.code(404).error({
+              message: 'User not found'
+            })
+            return reply
+          }
+        }
+
+        // Check social account exists in db for any user
+        const socialAccountExists = await userModal.checkSocialAccountExists(
+          socialProfile
+        )
+        if (socialAccountExists == null) {
+          const addSocialAccounts = await userModal.updateSocialAccounts(
+            wallet,
+            socialProfile
+          )
+          if (!addSocialAccounts) {
+            reply.code(404).error({
+              message: 'Failed to add social accounts.'
+            })
+            return reply
+          } else {
+            // Todo check profile exist in social insider if not add user profile to social insider.
+            reply.success({
+              message: 'Social accounts added successfully.'
+            })
+            return reply
+          }
+        } else {
+          const entries1 = Object.entries(socialProfile),
+            entries2 = Object.entries(socialAccountExists.social),
+            matches = entries1.filter(
+              ([key, value]) =>
+                value &&
+                entries2.some(
+                  ([key2, value2]) => key === key2 && value === value2
+                )
+            )
+          const str = matches.map(([key, value]) => key).join()
+          reply.error({
+            message: `Profile already exists for ${str}.`
+          })
+          return reply
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to add social accounts.'
+        })
+        return reply
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/user'

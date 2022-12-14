@@ -15,7 +15,12 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    name: { type: String, default: '--' },
+    userName: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    name: { type: String, required: true },
     phone: { type: String, default: '--' },
     country: { type: String, default: '--' },
     wallet: { type: String, required: true, unique: true },
@@ -24,17 +29,17 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    otp: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    isVerified: { type: Boolean, default: false },
-    isKycDone: { type: Boolean, default: false },
     role: {
       type: String,
       enum: ['user', 'influencer', 'agency'],
       default: 'user'
+    },
+    social: {
+      facebook: { type: String },
+      instagram: { type: String },
+      youtube: { type: String },
+      twitter: { type: String },
+      tiktok: { type: String }
     }
   },
   {
@@ -73,36 +78,69 @@ UserSchema.methods = {
     }
     return User.load(options)
   },
-  resetOtp: async function (otp, phone, country) {
-    const User = mongoose.model('User')
-    return await User.findOneAndUpdate(
-      { phone: phone, country: country },
-      {
-        $set: {
-          otp: otp
-        }
-      },
-      { new: true }
-    )
-  },
-  verifyOtp: async function (otp, phone, country) {
-    const User = mongoose.model('User')
-    return await User.findOneAndUpdate(
-      { phone: phone, country: country, otp: otp, isVerified: false },
-      {
-        $set: {
-          otp: 0,
-          isVerified: true
-        }
-      },
-      { new: true }
-    )
-  },
   getUserBywallet: async function (wallet) {
     const User = mongoose.model('User')
     let query = { wallet }
     const options = {
       criteria: query
+    }
+    return User.load(options)
+  },
+  getUserByUserNameOrEmail: async function (userName, email) {
+    const User = mongoose.model('User')
+    let query = {
+      $or: [
+        {
+          userName: userName
+        },
+        {
+          email: email
+        }
+      ]
+    }
+    const options = {
+      criteria: query,
+      select: 'email name userName'
+    }
+    return User.load(options)
+  },
+  updateSocialAccounts: async function (wallet, socialAccounts) {
+    const User = mongoose.model('User')
+    const result = User.findOneAndUpdate(
+      { wallet: wallet },
+      {
+        social: socialAccounts
+      },
+      {
+        new: true
+      }
+    )
+    return result
+  },
+  checkSocialAccountExists: async function (socialAccounts) {
+    const User = mongoose.model('User')
+    let query = {
+      $or: [
+        {
+          'social.facebook': socialAccounts.facebook
+        },
+        {
+          'social.instagram': socialAccounts.instagram
+        },
+        {
+          'social.twitter': socialAccounts.twitter
+        },
+        {
+          'social.youtube': socialAccounts.youtube
+        },
+        {
+          'social.tiktok': socialAccounts.tiktok
+        }
+      ]
+    }
+    const options = {
+      criteria: query,
+      select: 'email name userName social'
     }
     return User.load(options)
   }
