@@ -34,11 +34,3 @@ exports.getMeSchema = {
   security: [{ Bearer: [] }]
 }
 
-exports.getSignMessageSchema = {
-  tags: ['User'],
-  summary: 'Get unique wallet sign message',
-  body: S.object().prop(
-    'wallet',
-    S.string().pattern('^0x[a-fA-F0-9]{40}$').required()
-  )
-}
