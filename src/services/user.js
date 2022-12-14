@@ -53,19 +53,19 @@ module.exports = async function (fastify, opts) {
               user: newUsr._id,
               affiliateCode: affCode
             })
-            await fastify.bull.sendNFT.add(
-              {
-                email: newUsr.email,
-                name: newUsr.name,
-                userId: newUsr._id,
-                affiliateCode: affCode,
-                wallet: newUsr.wallet
-              },
-              { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
-            )
-            let count = await redis.get(`NFTC:${affCode}`)
-            count = Number(count) - 1
-            await redis.set(`NFTC:${affCode}`, Number(count))
+            // await fastify.bull.sendNFT.add(
+            //   {
+            //     email: newUsr.email,
+            //     name: newUsr.name,
+            //     userId: newUsr._id,
+            //     affiliateCode: affCode,
+            //     wallet: newUsr.wallet
+            //   },
+            //   { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
+            // )
+            // let count = await redis.get(`NFTC:${affCode}`)
+            // count = Number(count) - 1
+            // await redis.set(`NFTC:${affCode}`, Number(count))
           }
           const jwt = fastify.jwt.sign(
             {
