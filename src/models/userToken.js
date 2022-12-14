@@ -5,7 +5,10 @@ const mongoose = require('mongoose')
 const UserTokenSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
-    nftId: { type: String, unique: true, required: true }
+    nftId: { type: String, unique: true, required: true },
+    avatar: {
+      type: String
+    }
   },
   { timestamps: true }
 )
@@ -23,7 +26,7 @@ UserTokenSchema.methods = {
 
 UserTokenSchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'user nftId'
+    options.select = options.select || 'user avatar nftId'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -31,7 +34,7 @@ UserTokenSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'user nftId createdAt -__v'
+    const select = options.select || 'user avatar nftId createdAt -__v'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
