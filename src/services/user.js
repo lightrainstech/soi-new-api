@@ -70,7 +70,9 @@ module.exports = async function (fastify, opts) {
           const jwt = fastify.jwt.sign(
             {
               userId: newUsr._id,
-              name: newUsr.name
+              name: newUsr.name,
+              wallet: newUsr.wallet,
+              affiliateCode: affCode ? affCode : ''
             },
             { expiresIn: EXPIRESIN }
           )
@@ -78,6 +80,7 @@ module.exports = async function (fastify, opts) {
             userId: newUsr._id,
             name: newUsr.name,
             userName: newUsr.userName,
+            affiliateCode: affCode ? affCode : '',
             accessToken: jwt
           }
           reply.success({ message: 'Sign up successful', respUser })
