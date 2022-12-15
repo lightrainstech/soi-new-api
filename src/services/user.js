@@ -1,6 +1,9 @@
 'use strict'
 
 const ethUtil = require('ethereumjs-util')
+const fs = require('fs')
+const { pipeline, Duplex } = require('stream')
+const pinataSDK = require('@pinata/sdk')
 
 const User = require('../models/userModel.js')
 const userPayload = require('../payload/userPayload.js')
@@ -9,6 +12,8 @@ const Affiliate = require('../models/affiliateModel.js')
 const { checkSumAddress } = require('../utils/contract')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
+
+const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
 let userModal = new User()
 
@@ -257,6 +262,69 @@ module.exports = async function (fastify, opts) {
         })
         return reply
       }
+    }
+  )
+  // Get available nft details
+  fastify.post(
+    '/asset/upload',
+    {
+      schema: userPayload.uploadAssetSchema
+    },
+    async function (request, reply) {
+      try {
+        let pinataStatus = await pinata.testAuthentication()
+        console.log('PinataStatus: ', pinataStatus)
+        const formData = request.body
+        if (typeof formData.file !== 'object') {
+          reply.error({
+            statusCode: 422,
+            message: 'Failed. Asset should be a file.'
+          })
+          return reply
+        }
+        if (formData.file[0].filename == '') {
+          reply.error({
+            statusCode: 422,
+            message:
+              'Failed to upload. File name is null. Please upload a proper File.'
+          })
+          return reply
+        }
+        const fileDir = `./public/assets`
+        if (!fs.existsSync(fileDir)) {
+          fs.mkdirSync(fileDir, { recursive: true })
+        }
+        const filePath = `${process.cwd()}/public/assets/${Date.now()}${
+          formData.file[0].filename
+        }`
+        const readStream = Duplex()
+        readStream.push(formData.file[0].data)
+        readStream.push(null)
+        pipeline(readStream, fs.createWriteStream(filePath), async err => {
+          if (err) {
+            console.log(err)
+            reply.error({ message: 'Upload failed', error: err.message })
+          }
+          const readableStreamForFile = fs.createReadStream(filePath),
+            { IpfsHash } = await pinata.pinFileToIPFS(readableStreamForFile, {
+              pinataMetadata: {
+                name: formData.file[0].filename
+              }
+            })
+
+          fs.unlinkSync(filePath)
+
+          let assetUrl = 'https://ipfs.io/ipfs/' + IpfsHash
+          reply.success({
+            path: assetUrl,
+            mimeType: formData.file[0].mimetype
+          })
+        })
+      } catch (err) {
+        console.log(err)
+        reply.error({ message: 'Upload Failed', error: err.message })
+      }
+      return reply
     }
   )
 }

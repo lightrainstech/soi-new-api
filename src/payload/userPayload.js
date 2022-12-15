@@ -34,3 +34,7 @@ exports.getMeSchema = {
   security: [{ Bearer: [] }]
 }
 
+exports.uploadAssetSchema = {
+  tags: ['Asset'],
+  summary: 'Upload asset file',
+}
