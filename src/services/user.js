@@ -264,7 +264,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Get available nft details
+  // Upload nft to pinata
   fastify.post(
     '/asset/upload',
     {
