@@ -15,7 +15,7 @@ const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
 const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
-let userModal = new User()
+const userModel = new User()
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -29,8 +29,9 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
+
         // Check email or userName is unique or not
-        const user = await userModal.getUserByUserNameOrEmail(userName, email)
+        const user = await userModel.getUserByUserNameOrEmail(userName, email)
         if (user !== null && user.userName === userName) {
           reply.error({ message: 'User with this user name already exists.' })
           return reply
@@ -40,17 +41,17 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         if (user === null) {
-          userModal.name = name
-          userModal.userName = userName
-          userModal.phone = phone
-          userModal.email = email
-          userModal.country = country
-          userModal.wallet = await checkSumAddress(wallet)
+          userModel.name = name
+          userModel.userName = userName
+          userModel.phone = phone
+          userModel.email = email
+          userModel.country = country
+          userModel.wallet = await checkSumAddress(wallet)
 
           if (affCode) {
-            userModal.role = 'influencer'
+            userModel.role = 'influencer'
           }
-          const newUsr = await userModal.save()
+          const newUsr = await userModel.save()
           console.log('newUsr', newUsr)
 
           if (affCode) {
@@ -58,26 +59,13 @@ module.exports = async function (fastify, opts) {
               user: newUsr._id,
               affiliateCode: affCode
             })
-            // await fastify.bull.sendNFT.add(
-            //   {
-            //     email: newUsr.email,
-            //     name: newUsr.name,
-            //     userId: newUsr._id,
-            //     affiliateCode: affCode,
-            //     wallet: newUsr.wallet
-            //   },
-            //   { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
-            // )
-            // let count = await redis.get(`NFTC:${affCode}`)
-            // count = Number(count) - 1
-            // await redis.set(`NFTC:${affCode}`, Number(count))
           }
           const jwt = fastify.jwt.sign(
             {
               userId: newUsr._id,
               name: newUsr.name,
               wallet: newUsr.wallet,
-              affiliateCode: affCode ? affCode : ''
+              affCode: affCode ? affCode : ''
             },
             { expiresIn: EXPIRESIN }
           )
@@ -85,7 +73,7 @@ module.exports = async function (fastify, opts) {
             userId: newUsr._id,
             name: newUsr.name,
             userName: newUsr.userName,
-            affiliateCode: affCode ? affCode : '',
+            affCode: affCode ? affCode : '',
             accessToken: jwt
           }
           reply.success({ message: 'Sign up successful', respUser })
@@ -103,7 +91,7 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const { userId } = request.user,
-          user = await userModal.getUserById(userId)
+          user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
             message: 'User not found'
@@ -150,7 +138,7 @@ module.exports = async function (fastify, opts) {
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
         const { wallet, signature, message } = request.body,
-          userModal = new User()
+          userModel = new User()
         console.log(wallet, signature)
         const msgBuffer = Buffer.from(message)
         const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
@@ -167,7 +155,7 @@ module.exports = async function (fastify, opts) {
           checkSumAdd = await checkSumAddress(address),
           checkSumWallet = await checkSumAddress(wallet)
         if (checkSumAdd === checkSumWallet) {
-          let userData = await userModal.getUserBywallet(checkSumWallet)
+          let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
             const jwt = fastify.jwt.sign(
               {
@@ -203,12 +191,12 @@ module.exports = async function (fastify, opts) {
   // Add social accounts
   fastify.put(
     '/social/profile',
-    //{ schema: userPayload.getSignMessageSchema },
+    { onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
         const { wallet, socialProfile } = request.body
         // Check user exists or not
-        const user = await userModal.getUserBywallet(wallet)
+        const user = await userModel.getUserBywallet(wallet)
         if (!user) {
           if (!user) {
             reply.code(404).error({
@@ -218,43 +206,44 @@ module.exports = async function (fastify, opts) {
           }
         }
 
+
         // Check social account exists in db for any user
-        const socialAccountExists = await userModal.checkSocialAccountExists(
-          socialProfile
-        )
-        if (socialAccountExists == null) {
-          const addSocialAccounts = await userModal.updateSocialAccounts(
-            wallet,
-            socialProfile
-          )
-          if (!addSocialAccounts) {
-            reply.code(404).error({
-              message: 'Failed to add social accounts.'
-            })
-            return reply
-          } else {
-            // Todo check profile exist in social insider if not add user profile to social insider.
-            reply.success({
-              message: 'Social accounts added successfully.'
-            })
-            return reply
-          }
-        } else {
-          const entries1 = Object.entries(socialProfile),
-            entries2 = Object.entries(socialAccountExists.social),
-            matches = entries1.filter(
-              ([key, value]) =>
-                value &&
-                entries2.some(
-                  ([key2, value2]) => key === key2 && value === value2
-                )
-            )
-          const str = matches.map(([key, value]) => key).join()
-          reply.error({
-            message: `Profile already exists for ${str}.`
-          })
-          return reply
-        }
+        // const socialAccountExists = await userModal.checkSocialAccountExists(
+        //   socialProfile
+        // )
+        // if (socialAccountExists == null) {
+        //   const addSocialAccounts = await userModal.updateSocialAccounts(
+        //     wallet,
+        //     socialProfile
+        //   )
+        //   if (!addSocialAccounts) {
+        //     reply.code(404).error({
+        //       message: 'Failed to add social accounts.'
+        //     })
+        //     return reply
+        //   } else {
+        //     // Todo check profile exist in social insider if not add user profile to social insider.
+        //     reply.success({
+        //       message: 'Social accounts added successfully.'
+        //     })
+        //     return reply
+        //   }
+        // } else {
+        //   const entries1 = Object.entries(socialProfile),
+        //     entries2 = Object.entries(socialAccountExists.social),
+        //     matches = entries1.filter(
+        //       ([key, value]) =>
+        //         value &&
+        //         entries2.some(
+        //           ([key2, value2]) => key === key2 && value === value2
+        //         )
+        //     )
+        //   const str = matches.map(([key, value]) => key).join()
+        //   reply.error({
+        //     message: `Profile already exists for ${str}.`
+        //   })
+        //   return reply
+        // }
       } catch (error) {
         console.log(error)
         reply.error({
@@ -325,6 +314,52 @@ module.exports = async function (fastify, opts) {
         reply.error({ message: 'Upload Failed', error: err.message })
       }
       return reply
+    }
+  )
+  // Mint NFT
+  fastify.post(
+    '/asset/mint',
+    { onRequest: [fastify.authenticate] },
+    async function (request, reply) {
+      const { assetUrl } = request.body,
+        { wallet, affCode, userId } = request.user
+      try {
+        // Static title and description for assets
+        const title = 'SOI',
+          description = 'Sea Of Influencers'
+
+        // Add meta data
+        let metaData = {
+          title,
+          description,
+          assetUrl
+        }
+        const options = {
+          pinataMetadata: {
+            name: title
+          }
+        }
+        const pinataStatus = await pinata.testAuthentication(),
+          result = await pinata.pinJSONToIPFS(metaData, options),
+          metaDataUrl = 'https://gateway.pinata.cloud/ipfs/' + result.IpfsHash
+        await fastify.bull.sendNFT.add(
+          {
+            userId: userId,
+            affCode: affCode,
+            wallet: wallet,
+            metaDataUrl: metaDataUrl,
+            assetUrl: assetUrl
+          },
+          { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
+        )
+        let count = await redis.get(`NFTC:${affCode}`)
+        count = Number(count) - 1
+        await redis.set(`NFTC:${affCode}`, Number(count))
+      } catch (err) {
+        console.log(err)
+        reply.error({ message: 'Failed to mint asset.', error: err.message })
+        return reply
+      }
     }
   )
 }
