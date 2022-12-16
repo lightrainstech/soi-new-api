@@ -50,3 +50,44 @@ exports.mintNftSchema = {
       .required()
   )
 }
+exports.addSocialProfileSchema = {
+  tags: ['User'],
+  summary: 'Add social profile',
+  body: S.object()
+    .prop('type', S.string().enum(['fb', 'ig', 'yt', 'tk', 'tw']).required())
+    .ifThen(
+      S.object().prop('type', S.const('fb')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop('facebook', S.string().required())
+      )
+    )
+    .ifThen(
+      S.object().prop('type', S.const('ig')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop('instagram', S.string().required())
+      )
+    )
+    .ifThen(
+      S.object().prop('type', S.const('yt')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop('youtube', S.string().required())
+      )
+    )
+    .ifThen(
+      S.object().prop('type', S.const('tk')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop('tiktok', S.string().required())
+      )
+    )
+    .ifThen(
+      S.object().prop('type', S.const('tw')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop('twitter', S.string().required())
+      )
+    )
+}

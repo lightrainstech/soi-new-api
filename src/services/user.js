@@ -10,6 +10,7 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
+const { addProfile, errorMessage } = require('../utils/soi')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -190,10 +191,15 @@ module.exports = async function (fastify, opts) {
   // Add social accounts
   fastify.put(
     '/social/profile',
-    { onRequest: [fastify.authenticate] },
+    {
+      //schema: userPayload.addSocialProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
     async function (request, reply) {
       try {
-        const { wallet, socialProfile } = request.body
+        const { socialProfile } = request.body,
+          { wallet } = request.user,
+          socialPlatform = Object.keys(socialProfile)[0]
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
@@ -204,48 +210,48 @@ module.exports = async function (fastify, opts) {
             return reply
           }
         }
+        // Check profile exists in db or not
+        const isSocialProfileExists = await userModel.checkSocialAccountExists(
+          socialProfile
+        )
+        if (isSocialProfileExists) {
+          reply.code(400).error({
+            message: `${socialPlatform} profile already exists.`
+          })
+          return reply
+        }
 
-        // Check social account exists in db for any user
-        // const socialAccountExists = await userModal.checkSocialAccountExists(
-        //   socialProfile
-        // )
-        // if (socialAccountExists == null) {
-        //   const addSocialAccounts = await userModal.updateSocialAccounts(
-        //     wallet,
-        //     socialProfile
-        //   )
-        //   if (!addSocialAccounts) {
-        //     reply.code(404).error({
-        //       message: 'Failed to add social accounts.'
-        //     })
-        //     return reply
-        //   } else {
-        //     // Todo check profile exist in social insider if not add user profile to social insider.
-        //     reply.success({
-        //       message: 'Social accounts added successfully.'
-        //     })
-        //     return reply
-        //   }
-        // } else {
-        //   const entries1 = Object.entries(socialProfile),
-        //     entries2 = Object.entries(socialAccountExists.social),
-        //     matches = entries1.filter(
-        //       ([key, value]) =>
-        //         value &&
-        //         entries2.some(
-        //           ([key2, value2]) => key === key2 && value === value2
-        //         )
-        //     )
-        //   const str = matches.map(([key, value]) => key).join()
-        //   reply.error({
-        //     message: `Profile already exists for ${str}.`
-        //   })
-        //   return reply
-        // }
-      } catch (error) {
-        console.log(error)
+        // Add profile to social insider
+        const result = await addProfile(socialProfile, socialPlatform)
+        if (result.error) {
+          let err = await errorMessage(socialPlatform)
+          reply.code(400).error({
+            message: err
+          })
+          return reply
+        }
+
+        // Add social account of a user to db
+        const addSocialAccounts = await userModel.updateSocialAccounts(
+          wallet,
+          socialProfile
+        )
+        if (!addSocialAccounts) {
+          reply.code(400).error({
+            message: `Failed to add ${socialPlatform} profile.`
+          })
+          return reply
+        } else {
+          reply.success({
+            message: `${socialPlatform} profile added successfully.`
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
         reply.error({
-          message: 'Failed to add social accounts.'
+          message: `Failed to add ${socialPlatform} profile.`,
+          error: err.message
         })
         return reply
       }

@@ -35,11 +35,21 @@ const UserSchema = new mongoose.Schema(
       default: 'user'
     },
     social: {
-      facebook: { type: String },
-      instagram: { type: String },
-      youtube: { type: String },
-      twitter: { type: String },
-      tiktok: { type: String }
+      facebook: {
+        type: String
+      },
+      twitter: {
+        type: String
+      },
+      youtube: {
+        type: String
+      },
+      instagram: {
+        type: String
+      },
+      tiktok: {
+        type: String
+      }
     }
   },
   {
@@ -51,6 +61,16 @@ UserSchema.pre('save', async function (next) {
   this.affiliateCode = nanoidLong()
   next()
 })
+
+let obj = {}
+let key
+const socialAccountMap = {
+  facebook: 'https://www.facebook.com/',
+  instagram: 'https://www.instagram.com/',
+  twitter: 'https://www.twitter.com/',
+  youtube: 'https://www.youtube.com/',
+  tiktok: 'https://www.tiktok.com/'
+}
 
 UserSchema.methods = {
   getUserById: async function (id) {
@@ -106,43 +126,30 @@ UserSchema.methods = {
   },
   updateSocialAccounts: async function (wallet, socialAccounts) {
     const User = mongoose.model('User')
+
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      key = `social.${firstKey}`
+    }
     const result = User.findOneAndUpdate(
       { wallet: wallet },
-      {
-        social: socialAccounts
-      },
+      { [key]: obj },
       {
         new: true
       }
     )
     return result
   },
+
   checkSocialAccountExists: async function (socialAccounts) {
     const User = mongoose.model('User')
-    let query = {
-      $or: [
-        {
-          'social.facebook': socialAccounts.facebook
-        },
-        {
-          'social.instagram': socialAccounts.instagram
-        },
-        {
-          'social.twitter': socialAccounts.twitter
-        },
-        {
-          'social.youtube': socialAccounts.youtube
-        },
-        {
-          'social.tiktok': socialAccounts.tiktok
-        }
-      ]
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      key = `social.${firstKey}`
     }
-    const options = {
-      criteria: query,
-      select: 'email name userName social'
-    }
-    return User.load(options)
+    return User.findOne({ [key]: obj }).select('email name userName social')
   }
 }
 
