@@ -29,7 +29,6 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
-
         // Check email or userName is unique or not
         const user = await userModel.getUserByUserNameOrEmail(userName, email)
         if (user !== null && user.userName === userName) {
@@ -206,7 +205,6 @@ module.exports = async function (fastify, opts) {
           }
         }
 
-
         // Check social account exists in db for any user
         // const socialAccountExists = await userModal.checkSocialAccountExists(
         //   socialProfile
@@ -319,7 +317,7 @@ module.exports = async function (fastify, opts) {
   // Mint NFT
   fastify.post(
     '/asset/mint',
-    { onRequest: [fastify.authenticate] },
+    { schema: userPayload.mintNftSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       const { assetUrl } = request.body,
         { wallet, affCode, userId } = request.user
