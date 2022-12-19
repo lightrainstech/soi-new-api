@@ -210,7 +210,6 @@ module.exports = async function (fastify, opts) {
             return reply
           }
         }
-
         // Check profile exists in db or not
         const isSocialProfileExists = await userModel.checkSocialAccountExists(
           socialProfile

@@ -1,5 +1,4 @@
 const S = require('fluent-json-schema')
-console.log(S)
 
 exports.signUpSchema = {
   tags: ['User'],
@@ -80,7 +79,7 @@ exports.addSocialProfileSchema = {
             'instagram',
             S.string()
               .pattern(
-                '/(?:(?:http|https)://)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)/(w+)/igm'
+                '(?:(?:http|https)://)?(?:www.)?(?:instagram.com|instagr.am)/([A-Za-z0-9-_.]+)'
               )
               .required()
           )
@@ -93,9 +92,7 @@ exports.addSocialProfileSchema = {
           S.object().prop(
             'twitter',
             S.string()
-              .pattern(
-                '/(?:http://)?(?:www.)?twitter.com/(?:(?:w)*#!/)?(?:[w-]*/)*([w-]*)/'
-              )
+              .pattern('http(?:s)?://(?:www.)?twitter.com/([a-zA-Z0-9_]+)')
               .required()
           )
         )
@@ -108,7 +105,7 @@ exports.addSocialProfileSchema = {
           S.object().prop(
             'youtube',
             S.string()
-              .pattern('/^(https?://)?(www.youtube.com|youtu.be)/.+$/')
+              .pattern('^(https?://)?(www.youtube.com|youtu.be)/.+$')
               .required()
           )
         )
@@ -117,7 +114,10 @@ exports.addSocialProfileSchema = {
         S.object().prop('type', S.const('tk')),
         S.object().prop(
           'socialProfile',
-          S.object().prop('tiktok', S.string().required())
+          S.object().prop(
+            'tiktok',
+            S.string().pattern('^(https?://)?(www.tiktok.com)/.+$').required()
+          )
         )
       )
     ])

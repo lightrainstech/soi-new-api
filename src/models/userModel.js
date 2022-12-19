@@ -7,6 +7,7 @@ const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
   8
 )
+const { stripTrailingSlash } = require('../utils/soi')
 
 const UserSchema = new mongoose.Schema(
   {
@@ -130,7 +131,7 @@ UserSchema.methods = {
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
       //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
-      obj = `${socialAccounts[firstKey]}`
+      obj = stripTrailingSlash(socialAccounts[firstKey])
       key = `social.${firstKey}`
     }
     const result = User.findOneAndUpdate(
@@ -148,7 +149,7 @@ UserSchema.methods = {
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
       //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
-      obj = `${socialAccounts[firstKey]}`
+      obj = stripTrailingSlash(socialAccounts[firstKey])
       key = `social.${firstKey}`
     }
     return User.findOne({ [key]: obj }).select('email name userName social')

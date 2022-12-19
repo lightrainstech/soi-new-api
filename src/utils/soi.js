@@ -58,6 +58,17 @@ exports.errorMessage = async socialPlatform => {
     youtube: 'Failed to add Youtube account. Please try again.',
     tiktok: 'Failed to add Tiktok account. Please try again.'
   }
-  console.log(socialAccountMap[socialPlatform])
   return socialAccountMap[socialPlatform]
+}
+
+exports.stripTrailingSlash = str => {
+  if (str.substr(-1) === '/') {
+    str.substr(0, str.length - 1)
+    let url = str.split('/'),
+    arr = url.filter(item => item)
+    return arr.pop()
+  }
+  let url = str.split('/'),
+  arr = url.filter(item => item)
+  return arr.pop()
 }
