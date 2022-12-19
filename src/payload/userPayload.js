@@ -65,7 +65,7 @@ exports.addSocialProfileSchema = {
             'facebook',
             S.string()
               .pattern(
-                '(?:(?:http|https)://)?(?:www.)?facebook.com/(?:(?:w)*#!/)?(?:pages/)?(?:[?w-]*/)?(?:profile.php?id=(?=d.*))?([w-]*)?'
+                '^(https?://)?(www.facebook.com)/(?!.*(profile|page)).+$'
               )
               .required()
           )
