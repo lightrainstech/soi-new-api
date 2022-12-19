@@ -65,11 +65,11 @@ UserSchema.pre('save', async function (next) {
 let obj = {}
 let key
 const socialAccountMap = {
-  facebook: 'https://www.facebook.com/',
-  instagram: 'https://www.instagram.com/',
-  twitter: 'https://www.twitter.com/',
-  youtube: 'https://www.youtube.com/',
-  tiktok: 'https://www.tiktok.com/'
+  facebook: 'facebook',
+  instagram: 'instagram',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  tiktok: 'tiktok'
 }
 
 UserSchema.methods = {
@@ -129,7 +129,8 @@ UserSchema.methods = {
 
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
-      obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      obj = `${socialAccounts[firstKey]}`
       key = `social.${firstKey}`
     }
     const result = User.findOneAndUpdate(
@@ -146,7 +147,8 @@ UserSchema.methods = {
     const User = mongoose.model('User')
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
-      obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
+      obj = `${socialAccounts[firstKey]}`
       key = `social.${firstKey}`
     }
     return User.findOne({ [key]: obj }).select('email name userName social')

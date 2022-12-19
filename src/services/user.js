@@ -192,7 +192,7 @@ module.exports = async function (fastify, opts) {
   fastify.put(
     '/social/profile',
     {
-      //schema: userPayload.addSocialProfileSchema,
+      schema: userPayload.addSocialProfileSchema,
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
@@ -210,6 +210,7 @@ module.exports = async function (fastify, opts) {
             return reply
           }
         }
+
         // Check profile exists in db or not
         const isSocialProfileExists = await userModel.checkSocialAccountExists(
           socialProfile
@@ -222,14 +223,14 @@ module.exports = async function (fastify, opts) {
         }
 
         // Add profile to social insider
-        const result = await addProfile(socialProfile, socialPlatform)
-        if (result.error) {
-          let err = await errorMessage(socialPlatform)
-          reply.code(400).error({
-            message: err
-          })
-          return reply
-        }
+        // const result = await addProfile(socialProfile, socialPlatform)
+        // if (result.error) {
+        //   let err = await errorMessage(socialPlatform)
+        //   reply.code(400).error({
+        //     message: err
+        //   })
+        //   return reply
+        // }
 
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(

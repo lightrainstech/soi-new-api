@@ -1,4 +1,5 @@
 const S = require('fluent-json-schema')
+console.log(S)
 
 exports.signUpSchema = {
   tags: ['User'],
@@ -36,7 +37,7 @@ exports.getMeSchema = {
 
 exports.uploadAssetSchema = {
   tags: ['Asset'],
-  summary: 'Upload asset file',
+  summary: 'Upload asset file'
 }
 
 exports.mintNftSchema = {
@@ -54,40 +55,70 @@ exports.addSocialProfileSchema = {
   tags: ['User'],
   summary: 'Add social profile',
   body: S.object()
-    .prop('type', S.string().enum(['fb', 'ig', 'yt', 'tk', 'tw']).required())
-    .ifThen(
-      S.object().prop('type', S.const('fb')),
-      S.object().prop(
-        'socialProfile',
-        S.object().prop('facebook', S.string().required())
+    .prop('socialProfile', S.object())
+    .prop('type', S.string().enum(['fb', 'ig', 'yt', 'tw', 'tk']).required())
+    .allOf([
+      S.ifThen(
+        S.object().prop('type', S.const('fb')),
+        S.object().prop(
+          'socialProfile',
+          S.object().prop(
+            'facebook',
+            S.string()
+              .pattern(
+                '(?:(?:http|https)://)?(?:www.)?facebook.com/(?:(?:w)*#!/)?(?:pages/)?(?:[?w-]*/)?(?:profile.php?id=(?=d.*))?([w-]*)?'
+              )
+              .required()
+          )
+        )
+      ),
+      S.ifThen(
+        S.object().prop('type', S.const('ig')),
+        S.object().prop(
+          'socialProfile',
+          S.object().prop(
+            'instagram',
+            S.string()
+              .pattern(
+                '/(?:(?:http|https)://)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)/(w+)/igm'
+              )
+              .required()
+          )
+        )
+      ),
+      S.ifThen(
+        S.object().prop('type', S.const('tw')),
+        S.object().prop(
+          'socialProfile',
+          S.object().prop(
+            'twitter',
+            S.string()
+              .pattern(
+                '/(?:http://)?(?:www.)?twitter.com/(?:(?:w)*#!/)?(?:[w-]*/)*([w-]*)/'
+              )
+              .required()
+          )
+        )
+      ),
+
+      S.ifThen(
+        S.object().prop('type', S.const('yt')),
+        S.object().prop(
+          'socialProfile',
+          S.object().prop(
+            'youtube',
+            S.string()
+              .pattern('/^(https?://)?(www.youtube.com|youtu.be)/.+$/')
+              .required()
+          )
+        )
+      ),
+      S.ifThen(
+        S.object().prop('type', S.const('tk')),
+        S.object().prop(
+          'socialProfile',
+          S.object().prop('tiktok', S.string().required())
+        )
       )
-    )
-    .ifThen(
-      S.object().prop('type', S.const('ig')),
-      S.object().prop(
-        'socialProfile',
-        S.object().prop('instagram', S.string().required())
-      )
-    )
-    .ifThen(
-      S.object().prop('type', S.const('yt')),
-      S.object().prop(
-        'socialProfile',
-        S.object().prop('youtube', S.string().required())
-      )
-    )
-    .ifThen(
-      S.object().prop('type', S.const('tk')),
-      S.object().prop(
-        'socialProfile',
-        S.object().prop('tiktok', S.string().required())
-      )
-    )
-    .ifThen(
-      S.object().prop('type', S.const('tw')),
-      S.object().prop(
-        'socialProfile',
-        S.object().prop('twitter', S.string().required())
-      )
-    )
+    ])
 }
