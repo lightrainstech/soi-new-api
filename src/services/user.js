@@ -222,14 +222,14 @@ module.exports = async function (fastify, opts) {
         }
 
         // Add profile to social insider
-        // const result = await addProfile(socialProfile, socialPlatform)
-        // if (result.error) {
-        //   let err = await errorMessage(socialPlatform)
-        //   reply.code(400).error({
-        //     message: err
-        //   })
-        //   return reply
-        // }
+        const result = await addProfile(socialProfile, socialPlatform)
+        if (result.error) {
+          let err = await errorMessage(socialPlatform)
+          reply.code(400).error({
+            message: err
+          })
+          return reply
+        }
 
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(

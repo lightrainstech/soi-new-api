@@ -3,23 +3,18 @@ const axios = require('axios')
 exports.addProfile = async (socialProfile, socialPlatform) => {
   const socialAccountMap = {
     facebook: {
-      url: 'https://www.facebook.com/',
       type: 'facebook_page'
     },
     instagram: {
-      url: 'https://www.instagram.com/',
       type: 'instagram_profile'
     },
     twitter: {
-      url: 'https://www.twitter.com/',
       type: 'twitter_profile'
     },
     youtube: {
-      url: 'https://www.youtube.com/',
       type: 'youtube_channel'
     },
     tiktok: {
-      url: 'https://www.tiktok.com/',
       type: 'tiktok_profile'
     }
   }
@@ -29,7 +24,7 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
     id: 0,
     method: 'socialinsider_api.add_profile',
     params: {
-      profile_url: `${socialAccountMap[socialPlatform].url}${socialProfile[socialPlatform]}`,
+      profile_url: `${socialProfile[socialPlatform]}`,
       profile_type: socialAccountMap[socialPlatform].type,
       history_refresh_months: 3,
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
