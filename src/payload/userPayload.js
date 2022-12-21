@@ -122,3 +122,12 @@ exports.addSocialProfileSchema = {
       )
     ])
 }
+
+exports.checkUsernameSchema = {
+  tags: ['User'],
+  summary: 'Check username exists or not.',
+  querystring: S.object().prop(
+    'userName',
+    S.string().minLength(4).maxLength(40).required()
+  )
+}

@@ -21,6 +21,33 @@ const userModel = new User()
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
 
+  // Check username exists or not
+  fastify.get(
+    '/username/check',
+    { schema: userPayload.checkUsernameSchema },
+    async function (request, reply) {
+      try {
+        const { userName } = request.query,
+          user = await userModel.getUserByUsername(userName)
+        if (user) {
+          reply.code(400).error({
+            message: 'Username already exists.'
+          })
+          return reply
+        } else {
+          reply.success({
+            message: 'Username is available.'
+          })
+          return reply
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+
   // User sign up
   fastify.post(
     '/signup',
@@ -30,12 +57,10 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
-        // Check email or userName is unique or not
-        const user = await userModel.getUserByUserNameOrEmail(userName, email)
-        if (user !== null && user.userName === userName) {
-          reply.error({ message: 'User with this user name already exists.' })
-          return reply
-        }
+        const checkSumWallet = await checkSumAddress(wallet)
+
+        // Check user exists or not
+        const user = await userModel.getUserBywallet(checkSumWallet)
         if (user !== null && user.email === email) {
           reply.error({ message: 'User with this email already exists.' })
           return reply
@@ -46,7 +71,7 @@ module.exports = async function (fastify, opts) {
           userModel.phone = phone
           userModel.email = email
           userModel.country = country
-          userModel.wallet = await checkSumAddress(wallet)
+          userModel.wallet = checkSumWallet
 
           if (affCode) {
             userModel.role = 'influencer'

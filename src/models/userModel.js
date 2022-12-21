@@ -143,7 +143,6 @@ UserSchema.methods = {
     )
     return result
   },
-
   checkSocialAccountExists: async function (socialAccounts) {
     const User = mongoose.model('User')
     const firstKey = Object.keys(socialAccounts)[0]
@@ -153,6 +152,14 @@ UserSchema.methods = {
       key = `social.${firstKey}`
     }
     return User.findOne({ [key]: obj }).select('email name userName social')
+  },
+  getUserByUsername: async function (userName) {
+    const User = mongoose.model('User')
+    let query = { userName }
+    const options = {
+      criteria: query
+    }
+    return User.load(options)
   }
 }
 
