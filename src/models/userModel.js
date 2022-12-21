@@ -107,30 +107,11 @@ UserSchema.methods = {
     }
     return User.load(options)
   },
-  getUserByUserNameOrEmail: async function (userName, email) {
-    const User = mongoose.model('User')
-    let query = {
-      $or: [
-        {
-          userName: userName
-        },
-        {
-          email: email
-        }
-      ]
-    }
-    const options = {
-      criteria: query,
-      select: 'email name userName'
-    }
-    return User.load(options)
-  },
   updateSocialAccounts: async function (wallet, socialAccounts) {
     const User = mongoose.model('User')
 
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
-      //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
       obj = stripTrailingSlash(socialAccounts[firstKey])
       key = `social.${firstKey}`
     }
@@ -147,7 +128,6 @@ UserSchema.methods = {
     const User = mongoose.model('User')
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
-      //obj = ` ${[socialAccountMap[firstKey]]}${socialAccounts[firstKey]}`
       obj = stripTrailingSlash(socialAccounts[firstKey])
       key = `social.${firstKey}`
     }
