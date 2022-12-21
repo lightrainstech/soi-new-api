@@ -143,6 +143,13 @@ module.exports = async function (fastify, opts) {
       const { affCode } = request.query
       try {
         console.log('affCode', affCode)
+        const isExists = await userModel.checkAffiliateCode(affCode)
+        if(!isExists) {
+          reply.code(400).error({
+            message: 'Invalid affiliate code.'
+          })
+          return reply
+        }
         let count = (await redis.get(`NFTC:${affCode}`)) || 0
         console.log('###', count)
         reply.success({
