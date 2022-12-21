@@ -15,7 +15,7 @@ exports.signUpSchema = {
 
 exports.nftAvailableSchema = {
   tags: ['User'],
-  summary: 'Available NFTs',
+  summary: 'Get available number of NFTs',
   params: S.object().prop('affCode', S.string().maxLength(8))
 }
 
