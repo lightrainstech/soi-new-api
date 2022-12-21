@@ -49,9 +49,9 @@ exports.errorMessage = async socialPlatform => {
     facebook: 'Failed to add Facebook profile we support Facebook pages only.',
     instagram:
       'Failed to add Instagram profile we support Instagram business profile only.',
-    twitter: 'Failed to add Twitter account. Please try again.',
-    youtube: 'Failed to add Youtube account. Please try again.',
-    tiktok: 'Failed to add Tiktok account. Please try again.'
+    twitter: 'Failed to add Twitter profile. Please try again.',
+    youtube: 'Failed to add Youtube profile. Please try again.',
+    tiktok: 'Failed to add Tiktok profile. Please try again.'
   }
   return socialAccountMap[socialPlatform]
 }
