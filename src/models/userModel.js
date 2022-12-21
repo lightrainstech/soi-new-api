@@ -109,7 +109,6 @@ UserSchema.methods = {
   },
   updateSocialAccounts: async function (wallet, socialAccounts) {
     const User = mongoose.model('User')
-
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
       obj = stripTrailingSlash(socialAccounts[firstKey])
