@@ -55,10 +55,15 @@ exports.addSocialProfileSchema = {
   summary: 'Add social profile',
   body: S.object()
     .prop('socialProfile', S.object())
-    .prop('type', S.string().enum(['fb', 'ig', 'yt', 'tw', 'tk']).required())
+    .prop(
+      'type',
+      S.string()
+        .enum(['facebook', 'instagram', 'youtube', 'twitter', 'tiktok'])
+        .required()
+    )
     .allOf([
       S.ifThen(
-        S.object().prop('type', S.const('fb')),
+        S.object().prop('type', S.const('facebook')),
         S.object().prop(
           'socialProfile',
           S.object().prop(
@@ -72,7 +77,7 @@ exports.addSocialProfileSchema = {
         )
       ),
       S.ifThen(
-        S.object().prop('type', S.const('ig')),
+        S.object().prop('type', S.const('instagram')),
         S.object().prop(
           'socialProfile',
           S.object().prop(
@@ -86,7 +91,7 @@ exports.addSocialProfileSchema = {
         )
       ),
       S.ifThen(
-        S.object().prop('type', S.const('tw')),
+        S.object().prop('type', S.const('twitter')),
         S.object().prop(
           'socialProfile',
           S.object().prop(
@@ -99,7 +104,7 @@ exports.addSocialProfileSchema = {
       ),
 
       S.ifThen(
-        S.object().prop('type', S.const('yt')),
+        S.object().prop('type', S.const('youtube')),
         S.object().prop(
           'socialProfile',
           S.object().prop(
@@ -111,7 +116,7 @@ exports.addSocialProfileSchema = {
         )
       ),
       S.ifThen(
-        S.object().prop('type', S.const('tk')),
+        S.object().prop('type', S.const('tiktok')),
         S.object().prop(
           'socialProfile',
           S.object().prop(
