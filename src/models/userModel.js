@@ -167,6 +167,43 @@ const socialAccountMap = {
       criteria: query
     }
     return User.load(options)
+  },
+  getProfileDetails: async function (wallet) {
+    const User = mongoose.model('User')
+    return await User.aggregate([
+      {
+        $match: {
+          wallet: wallet
+        }
+      },
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'nftDetails'
+        }
+      },
+      {
+        $unwind: {
+          path: '$nftDetails',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          userName: 1,
+          name: 1,
+          phone: 1,
+          wallet: 1,
+          avatar: 1,
+          nftDetails: 1,
+          email: 1,
+          role: 1
+        }
+      }
+    ])
   }
 }),
   (UserSchema.statics = {

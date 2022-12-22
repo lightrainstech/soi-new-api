@@ -115,8 +115,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
-        const { userId } = request.user,
-          user = await userModel.getUserById(userId)
+        const { userId, wallet } = request.user,
+          user = await userModel.getProfileDetails(wallet)
         if (!user) {
           reply.code(404).error({
             message: 'User not found'
