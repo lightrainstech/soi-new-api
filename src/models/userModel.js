@@ -35,6 +35,9 @@ const UserSchema = new mongoose.Schema(
       enum: ['user', 'influencer', 'agency'],
       default: 'user'
     },
+    avatar: {
+      type: String
+    },
     social: {
       facebook: {
         type: String

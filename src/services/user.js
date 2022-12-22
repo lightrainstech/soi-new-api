@@ -144,7 +144,7 @@ module.exports = async function (fastify, opts) {
       try {
         console.log('affCode', affCode)
         const isExists = await userModel.checkAffiliateCode(affCode)
-        if(!isExists) {
+        if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'
           })
@@ -255,6 +255,7 @@ module.exports = async function (fastify, opts) {
 
         // Add profile to social insider
         const result = await addProfile(socialProfile, socialPlatform)
+        console.log(result)
         if (result.error) {
           let err = await errorMessage(socialPlatform)
           reply.code(400).error({
@@ -394,6 +395,46 @@ module.exports = async function (fastify, opts) {
       } catch (err) {
         console.log(err)
         reply.error({ message: 'Failed to mint asset.', error: err.message })
+        return reply
+      }
+    }
+  )
+
+  // Update avatar
+  fastify.patch(
+    '/avatar',
+    {
+      schema: userPayload.updateAvatar,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      const { avatar } = request.body,
+        { wallet } = request.user
+      try {
+        // Check user exists or not
+        const user = await userModel.getUserBywallet(wallet)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
+          })
+          return reply
+        }
+        user.avatar = avatar
+        const updateAvatar = await user.save()
+        if (updateAvatar) {
+          reply.success({
+            message: 'Avatar updated successfully.'
+          })
+          return reply
+        } else {
+          reply.code(404).error({
+            message: 'Failed to update avatar. Please try again.'
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
+        reply.error({ message: 'Failed to update avatar.', error: err.message })
         return reply
       }
     }

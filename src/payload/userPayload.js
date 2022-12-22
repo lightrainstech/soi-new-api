@@ -136,3 +136,15 @@ exports.checkUsernameSchema = {
     S.string().minLength(4).maxLength(40).required()
   )
 }
+
+exports.updateAvatar = {
+  tags: ['User'],
+  summary: 'Update avatar',
+  body: S.object().prop(
+    'avatar',
+    S.string()
+      .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
+      .format(S.FORMATS.URI)
+      .required()
+  )
+}
