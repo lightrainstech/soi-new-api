@@ -117,7 +117,7 @@ module.exports = async function (fastify, opts) {
       try {
         const { userId, wallet } = request.user,
           user = await userModel.getProfileDetails(wallet)
-        if (!user) {
+        if (!user.length) {
           reply.code(404).error({
             message: 'User not found'
           })
@@ -125,7 +125,7 @@ module.exports = async function (fastify, opts) {
         }
         reply.success({
           message: 'User details',
-          user: user
+          user: user[0]
         })
         return reply
       } catch (error) {
@@ -395,6 +395,9 @@ module.exports = async function (fastify, opts) {
         let count = await redis.get(`NFTC:${affCode}`)
         count = Number(count) - 1
         await redis.set(`NFTC:${affCode}`, Number(count))
+        return reply.success({
+          message: 'NFT minting initiated.'
+        })
       } catch (err) {
         console.log(err)
         reply.error({ message: 'Failed to mint asset.', error: err.message })

@@ -185,12 +185,6 @@ const socialAccountMap = {
         }
       },
       {
-        $unwind: {
-          path: '$nftDetails',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
         $project: {
           _id: 1,
           userName: 1,
