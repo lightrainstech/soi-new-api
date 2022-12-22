@@ -40,19 +40,29 @@ const UserSchema = new mongoose.Schema(
     },
     social: {
       facebook: {
-        type: String
+        name: String,
+        handle: String,
+        socialInsiderId: String
       },
       twitter: {
-        type: String
+        name: String,
+        handle: String,
+        socialInsiderId: String
       },
       youtube: {
-        type: String
+        name: String,
+        handle: String,
+        socialInsiderId: String
       },
       instagram: {
-        type: String
+        name: String,
+        handle: String,
+        socialInsiderId: String
       },
       tiktok: {
-        type: String
+        name: String,
+        handle: String,
+        socialInsiderId: String
       }
     }
   },
@@ -66,8 +76,11 @@ UserSchema.pre('save', async function (next) {
   next()
 })
 
-let obj = {}
-let key
+let val1,
+  val2,
+  val3,
+  obj = {}
+let key, key1, key2, key3
 const socialAccountMap = {
   facebook: 'facebook',
   instagram: 'instagram',
@@ -110,16 +123,20 @@ const socialAccountMap = {
     }
     return User.load(options)
   },
-  updateSocialAccounts: async function (wallet, socialAccounts) {
+  updateSocialAccounts: async function (wallet, socialAccounts, resData) {
     const User = mongoose.model('User')
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
-      obj = stripTrailingSlash(socialAccounts[firstKey])
-      key = `social.${firstKey}`
+      val1 = stripTrailingSlash(socialAccounts[firstKey])
+      key1 = `social.${firstKey}.handle`
+      key2 = `social.${firstKey}.socialInsiderId`
+      val2 = resData.id
+      key3 = `social.${firstKey}.name`
+      val3 = resData.name
     }
     const result = User.findOneAndUpdate(
       { wallet: wallet },
-      { [key]: obj },
+      { [key1]: val1, [key2]: val2, [key3]: val3 },
       {
         new: true
       }
@@ -131,7 +148,7 @@ const socialAccountMap = {
     const firstKey = Object.keys(socialAccounts)[0]
     if (socialAccountMap[firstKey]) {
       obj = stripTrailingSlash(socialAccounts[firstKey])
-      key = `social.${firstKey}`
+      key = `social.${firstKey}.handle`
     }
     return User.findOne({ [key]: obj }).select('email name userName social')
   },

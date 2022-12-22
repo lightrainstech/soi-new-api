@@ -254,8 +254,10 @@ module.exports = async function (fastify, opts) {
         }
 
         // Add profile to social insider
+        const resData = {}
         const result = await addProfile(socialProfile, socialPlatform)
-        console.log(result)
+        resData.id = result.resp.id
+        resData.name = result.resp.name
         if (result.error) {
           let err = await errorMessage(socialPlatform)
           reply.code(400).error({
@@ -267,7 +269,8 @@ module.exports = async function (fastify, opts) {
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(
           wallet,
-          socialProfile
+          socialProfile,
+          resData
         )
         if (!addSocialAccounts) {
           reply.code(400).error({
