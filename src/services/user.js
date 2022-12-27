@@ -110,9 +110,9 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
-        const { userId, wallet } = request.user,
-          user = await userModel.getProfileDetails(wallet)
-        if (!user.length) {
+        const { userId } = request.user,
+          user = await userModel.getUserById(userId)
+        if (!user) {
           reply.code(404).error({
             message: 'User not found'
           })
@@ -120,7 +120,7 @@ module.exports = async function (fastify, opts) {
         }
         reply.success({
           message: 'User details',
-          user: user[0]
+          user: user
         })
         return reply
       } catch (error) {
@@ -288,7 +288,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  
+
   // Update avatar
   fastify.patch(
     '/avatar',
