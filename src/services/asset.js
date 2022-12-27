@@ -13,13 +13,15 @@ module.exports = async function (fastify, opts) {
   fastify.post(
     '/file/upload',
     {
-      schema: assetPayload.uploadAssetSchema
+      schema: assetPayload.uploadAssetSchema,
+      onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
       try {
         let pinataStatus = await pinata.testAuthentication()
         console.log('PinataStatus: ', pinataStatus)
         const formData = request.body
+        console.log(formData)
         if (typeof formData.file !== 'object') {
           reply.error({
             statusCode: 422,
