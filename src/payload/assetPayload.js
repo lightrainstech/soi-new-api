@@ -18,3 +18,13 @@ exports.mintNftSchema = {
       .required()
   )
 }
+
+exports.getUserTokenSchema = {
+  tags: ['Asset'],
+  summary: 'List user assets',
+  security: [{ Bearer: [] }],
+  querystring: S.object().prop(
+    'page',
+    S.number().default(1)
+  )
+}

@@ -1,6 +1,7 @@
 'use strict'
 // External Dependencies
 const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 
 const UserTokenSchema = new mongoose.Schema(
   {
@@ -21,6 +22,15 @@ UserTokenSchema.methods = {
       criteria: query
     }
     return UserToken.load(options)
+  },
+  listUserTokens: async function (userId, page) {
+    const UserToken = mongoose.model('UserToken')
+    let query = { user: ObjectId(userId) }
+    const options = {
+      criteria: query,
+      page: page
+    }
+    return UserToken.list(options)
   }
 }
 
@@ -34,7 +44,7 @@ UserTokenSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'user avatar nftId createdAt -__v'
+    const select = options.select || 'user avatar nftId createdAt'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })

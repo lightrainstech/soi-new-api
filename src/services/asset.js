@@ -2,9 +2,12 @@ const pinataSDK = require('@pinata/sdk')
 const fs = require('fs')
 const { pipeline, Duplex } = require('stream')
 
+const UserToken = require('../models/userToken')
 const assetPayload = require('../payload/assetPayload')
 
 const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
+
+const userTokenModel = new UserToken()
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -120,6 +123,33 @@ module.exports = async function (fastify, opts) {
         console.log(err)
         reply.error({ message: 'Failed to mint asset.', error: err.message })
         return reply
+      }
+    }
+  )
+
+  // List user assets
+  fastify.get(
+    '/',
+    { schema: assetPayload.getUserTokenSchema, onRequest: [fastify.authenticate] },
+    async function (request, reply) {
+      try {
+        const { userId } = request.user,
+          { page } = request.query,
+          userTokens = await userTokenModel.listUserTokens(userId, page)
+        if (!userTokens.length) {
+          reply.code(404).error({
+            message: 'No tokens found.'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'NFTs listed successfully.',
+          nfts: userTokens
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
       }
     }
   )
