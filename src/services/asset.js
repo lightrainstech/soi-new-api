@@ -21,7 +21,6 @@ module.exports = async function (fastify, opts) {
         let pinataStatus = await pinata.testAuthentication()
         console.log('PinataStatus: ', pinataStatus)
         const formData = request.body
-        console.log(formData)
         if (typeof formData.file !== 'object') {
           reply.error({
             statusCode: 422,
