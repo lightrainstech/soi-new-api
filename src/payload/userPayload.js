@@ -141,7 +141,7 @@ exports.checkIsMintedStatusSchema = {
 exports.checkEmailSchema = {
   tags: ['User'],
   summary: 'Check email exists or not.',
-  querystring: S.object().prop(
+  params: S.object().prop(
     'email',
     S.string().format(S.FORMATS.EMAIL).required()
   )

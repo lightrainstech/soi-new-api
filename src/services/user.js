@@ -47,12 +47,12 @@ module.exports = async function (fastify, opts) {
 
   // Check email exists or not
   fastify.get(
-    '/email/check',
+    '/:email/check',
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
-        const { email } = request.query,
-          user = await userModel.getUserByEmail(email)
+        const { email } = request.params,
+          user = await userModel.getUserByEmail(email.toString().toLowerCase())
         if (user) {
           reply.code(400).error({
             message: 'Email already exists.'
