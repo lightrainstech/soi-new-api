@@ -103,7 +103,8 @@ const socialAccountMap = {
     const User = mongoose.model('User')
     let query = { email }
     const options = {
-      criteria: query
+      criteria: query,
+      select: 'email userName wallet role avatar social name'
     }
     return User.load(options)
   },
@@ -122,7 +123,7 @@ const socialAccountMap = {
     const options = {
       criteria: query
     }
-    return User.load(options)
+    return await User.load(options)
   },
   updateSocialAccounts: async function (wallet, socialAccounts, resData) {
     const User = mongoose.model('User')

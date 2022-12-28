@@ -137,3 +137,12 @@ exports.checkIsMintedStatusSchema = {
   tags: ['User'],
   summary: 'Check user has already minted the nft or not.'
 }
+
+exports.checkEmailSchema = {
+  tags: ['User'],
+  summary: 'Check email exists or not.',
+  querystring: S.object().prop(
+    'email',
+    S.string().format(S.FORMATS.EMAIL).required()
+  )
+}

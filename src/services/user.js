@@ -45,6 +45,33 @@ module.exports = async function (fastify, opts) {
     }
   )
 
+  // Check email exists or not
+  fastify.get(
+    '/email/check',
+    { schema: userPayload.checkEmailSchema },
+    async function (request, reply) {
+      try {
+        const { email } = request.query,
+          user = await userModel.getUserByEmail(email)
+        if (user) {
+          reply.code(400).error({
+            message: 'Email already exists.'
+          })
+          return reply
+        } else {
+          reply.success({
+            message: 'Email is available.'
+          })
+          return reply
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+
   // User sign up
   fastify.post(
     '/signup',
@@ -55,14 +82,9 @@ module.exports = async function (fastify, opts) {
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
         const checkSumWallet = await checkSumAddress(wallet)
-
         // Check user exists or not
         const user = await userModel.getUserBywallet(checkSumWallet)
-        if (user !== null && user.email === email) {
-          reply.error({ message: 'User with this email already exists.' })
-          return reply
-        }
-        if (user === null) {
+        if (user === null || !user) {
           userModel.name = name
           userModel.userName = userName
           userModel.phone = phone
@@ -253,6 +275,7 @@ module.exports = async function (fastify, opts) {
         // Add profile to social insider
         const resData = {}
         const result = await addProfile(socialProfile, socialPlatform)
+        console.log(result)
         resData.id = result.resp.id
         resData.name = result.resp.name
         if (result.error) {
