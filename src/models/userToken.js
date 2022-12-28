@@ -15,7 +15,7 @@ const UserTokenSchema = new mongoose.Schema(
 )
 
 UserTokenSchema.methods = {
-  getUserById: async function (id) {
+  getUserTokenById: async function (id) {
     const UserToken = mongoose.model('UserToken')
     let query = { _id: id }
     const options = {
@@ -31,6 +31,14 @@ UserTokenSchema.methods = {
       page: page
     }
     return UserToken.list(options)
+  },
+  getUserTokenByUserId: async function (userId) {
+    const UserToken = mongoose.model('UserToken')
+    let query = { user: ObjectId(userId) }
+    const options = {
+      criteria: query
+    }
+    return UserToken.load(options)
   }
 }
 

@@ -3,6 +3,7 @@
 const ethUtil = require('ethereumjs-util')
 
 const User = require('../models/userModel.js')
+const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
@@ -12,6 +13,7 @@ const { addProfile, errorMessage } = require('../utils/soi')
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
 const userModel = new User()
+const userTokenModel = new UserToken()
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -324,6 +326,46 @@ module.exports = async function (fastify, opts) {
       } catch (err) {
         console.log(err)
         reply.error({ message: 'Failed to update avatar.', error: err.message })
+        return reply
+      }
+    }
+  )
+
+  // Check user has already minted the nft or not
+  fastify.get(
+    '/mint/status',
+    {
+      schema: userPayload.checkIsMintedStatusSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      const { affCode } = request.query,
+        { userId } = request.user
+      try {
+        const isExists = await userModel.checkAffiliateCode(affCode)
+        if (!isExists) {
+          reply.code(400).error({
+            message: 'Invalid affiliate code.'
+          })
+          return reply
+        }
+        let count = (await redis.get(`NFTC:${affCode}`)) || 0,
+          isMinted = await userTokenModel.getUserTokenByUserId(userId)
+        if (!isMinted && Number(count) > 0) {
+          reply.success({
+            isEligibleToMint: true
+          })
+          return reply
+        } else {
+          reply.success({
+            isEligibleToMint: false
+          })
+          return reply
+        }
+      } catch (error) {
+        reply.error({
+          message: error
+        })
         return reply
       }
     }
