@@ -339,8 +339,7 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
-      const { affCode } = request.query,
-        { userId } = request.user
+      const { userId, affCode } = request.user
       try {
         const isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {

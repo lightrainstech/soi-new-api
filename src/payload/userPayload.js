@@ -135,6 +135,5 @@ exports.updateAvatar = {
 
 exports.checkIsMintedStatusSchema = {
   tags: ['User'],
-  summary: 'Check user has already minted the nft or not.',
-  params: S.object().prop('affCode', S.string().maxLength(8))
+  summary: 'Check user has already minted the nft or not.'
 }
