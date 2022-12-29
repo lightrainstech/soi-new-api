@@ -103,7 +103,7 @@ module.exports = async function (fastify, opts) {
         const pinataStatus = await pinata.testAuthentication(),
           result = await pinata.pinJSONToIPFS(metaData, options),
           metaDataUrl = 'https://gateway.pinata.cloud/ipfs/' + result.IpfsHash
-        await fastify.bull.sendNFT.add(
+        const job = await fastify.bull.sendNFT.add(
           {
             userId: userId,
             affCode: affCode,
@@ -117,7 +117,8 @@ module.exports = async function (fastify, opts) {
         count = Number(count) - 1
         await redis.set(`NFTC:${affCode}`, Number(count))
         return reply.success({
-          message: 'NFT minting initiated.'
+          message: 'NFT minting initiated.',
+          jobId: job.id
         })
       } catch (err) {
         console.log(err)
@@ -130,7 +131,10 @@ module.exports = async function (fastify, opts) {
   // List user assets
   fastify.get(
     '/',
-    { schema: assetPayload.getUserTokenSchema, onRequest: [fastify.authenticate] },
+    {
+      schema: assetPayload.getUserTokenSchema,
+      onRequest: [fastify.authenticate]
+    },
     async function (request, reply) {
       try {
         const { userId } = request.user,
@@ -153,7 +157,39 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // Check minting completed or not
+  fastify.get(
+    '/job/:jobId',
+    {
+      schema: assetPayload.checkJobStatusSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      const { jobId } = request.params
+      try {
+        const jobData = await fastify.bull.sendNFT,
+          job = await jobData.getJob(jobId)
+        if ((job && job.finishedOn) || !job) {
+          reply.success({
+            message: `Job has completed.`,
+            isMintingCompleted: true
+          })
+          return reply
+        } else {
+          reply.success({
+            message: `Job has not completed.`,
+            isMintingCompleted: false
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: error
+        })
+        return reply
+      }
+    }
+  )
 }
-
 
 module.exports.autoPrefix = '/assets'
