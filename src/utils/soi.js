@@ -1,5 +1,6 @@
 const axios = require('axios')
 
+// Add profile to social insider
 exports.addProfile = async (socialProfile, socialPlatform) => {
   const socialAccountMap = {
     facebook: {
@@ -26,7 +27,6 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
     params: {
       profile_url: `${socialProfile[socialPlatform]}`,
       profile_type: socialAccountMap[socialPlatform].type,
-      history_refresh_months: 3,
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
     }
   }
@@ -44,6 +44,7 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
   return result.data
 }
 
+// Custom error messages
 exports.errorMessage = async socialPlatform => {
   const socialAccountMap = {
     facebook: 'Failed to add Facebook profile we support Facebook pages only.',
@@ -56,6 +57,7 @@ exports.errorMessage = async socialPlatform => {
   return socialAccountMap[socialPlatform]
 }
 
+// Remove trailing slash
 exports.stripTrailingSlash = str => {
   if (str.substr(-1) === '/') {
     str.substr(0, str.length - 1)
