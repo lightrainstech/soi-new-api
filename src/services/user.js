@@ -14,6 +14,8 @@ const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
 const userModel = new User()
 const userTokenModel = new UserToken()
+const affiliateModel = new Affiliate()
+
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -208,11 +210,13 @@ module.exports = async function (fastify, opts) {
         if (checkSumAdd === checkSumWallet) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
+            let affiliateData = await affiliateModel.getUserById(userData._id)
             const jwt = fastify.jwt.sign(
               {
                 userId: userData._id,
                 name: userData.name,
-                wallet: userData.wallet
+                wallet: userData.wallet,
+                affCode: affiliateData.affiliateCode
               },
               { expiresIn: EXPIRESIN }
             )

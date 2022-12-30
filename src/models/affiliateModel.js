@@ -1,6 +1,7 @@
 'use strict'
 // External Dependencies
 const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 
 const AffiliateSchema = new mongoose.Schema(
   {
@@ -13,7 +14,7 @@ const AffiliateSchema = new mongoose.Schema(
 AffiliateSchema.methods = {
   getUserById: async function (id) {
     const Affiliate = mongoose.model('Affiliate')
-    let query = { _id: id }
+    let query = { user: ObjectId(id) }
     const options = {
       criteria: query
     }
