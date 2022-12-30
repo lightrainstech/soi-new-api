@@ -275,7 +275,6 @@ module.exports = async function (fastify, opts) {
         // Add profile to social insider
         const resData = {}
         const result = await addProfile(socialProfile, socialPlatform)
-        console.log(result)
         resData.id = result.resp.id
         resData.name = result.resp.name
         if (result.error) {
