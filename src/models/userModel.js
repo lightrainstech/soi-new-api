@@ -121,7 +121,8 @@ const socialAccountMap = {
     const User = mongoose.model('User')
     let query = { wallet }
     const options = {
-      criteria: query
+      criteria: query,
+      select: 'email userName wallet role avatar social name'
     }
     return await User.load(options)
   },

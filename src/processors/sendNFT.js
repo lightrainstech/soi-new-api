@@ -5,10 +5,10 @@ const { mintNFT } = require('../utils/contract')
 
 const UserToken = require('../models/userToken.js')
 module.exports = async function (args, done) {
-  const { wallet, affCode, userId, metaDataUrl, assetUrl } = args.data
+  const { wallet, userId, metaDataUrl, assetUrl } = args.data
   console.log('--------Inside processor---------')
   try {
-    console.log(wallet, affCode, userId)
+    console.log(wallet, userId)
     const db = await mongoose.connect(process.env.MONGO_CONN, {
       useNewUrlParser: true,
       useUnifiedTopology: true

@@ -211,13 +211,15 @@ module.exports = async function (fastify, opts) {
             const jwt = fastify.jwt.sign(
               {
                 userId: userData._id,
-                name: userData.name
+                name: userData.name,
+                wallet: userData.wallet
               },
               { expiresIn: EXPIRESIN }
             )
             let respUser = {
               userId: userData._id,
               name: userData.name,
+              wallet: userData.wallet,
               accessToken: jwt
             }
 
@@ -251,6 +253,7 @@ module.exports = async function (fastify, opts) {
         const { socialProfile } = request.body,
           { wallet } = request.user,
           socialPlatform = Object.keys(socialProfile)[0]
+
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
