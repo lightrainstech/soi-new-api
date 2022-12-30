@@ -1,5 +1,4 @@
 const axios = require('axios')
-const { concat } = require('ethers/lib/utils')
 
 // Header details
 const headers = {
@@ -75,9 +74,10 @@ exports.stripTrailingSlash = str => {
 
 // Get social insider profile details
 exports.getProfileDetails = async (socialInsiderId, profile_type, platform) => {
-  let currentTimestamp = Date.now()
-  let oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000
-  let oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds
+  let currentTimestamp = Date.now(),
+  oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
+  oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds
+  
   const obj = {
     jsonrpc: '2.0',
     id: 0,
