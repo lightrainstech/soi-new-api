@@ -254,13 +254,12 @@ module.exports = async function (fastify, opts) {
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
-          if (!user) {
-            reply.code(404).error({
-              message: 'User not found'
-            })
-            return reply
-          }
+          reply.code(404).error({
+            message: 'User not found'
+          })
+          return reply
         }
+
         // Check profile exists in db or not
         const isSocialProfileExists = await userModel.checkSocialAccountExists(
           socialProfile
