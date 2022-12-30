@@ -146,3 +146,8 @@ exports.checkEmailSchema = {
     S.string().format(S.FORMATS.EMAIL).required()
   )
 }
+
+exports.checkFollowersCountSchema = {
+  tags: ['User'],
+  summary: 'Get social profile followers count.'
+}

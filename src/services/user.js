@@ -8,7 +8,7 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
-const { addProfile, errorMessage } = require('../utils/soi')
+const { addProfile, errorMessage, getProfileDetails } = require('../utils/soi')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -388,6 +388,66 @@ module.exports = async function (fastify, opts) {
         reply.error({
           message: error
         })
+        return reply
+      }
+    }
+  )
+
+  // Get profile details from social insider
+  fastify.get(
+    '/social/details',
+    {
+      schema: userPayload.checkFollowersCountSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { userId } = request.user,
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
+          })
+          return reply
+        }
+        const socialAccountMap = {
+          facebook: {
+            type: 'facebook_page'
+          },
+          instagram: {
+            type: 'instagram_profile'
+          },
+          twitter: {
+            type: 'twitter_profile'
+          },
+          youtube: {
+            type: 'youtube_channel'
+          },
+          tiktok: {
+            type: 'tiktok_profile'
+          }
+        }
+        const profileDetails = []
+        for await (const key of Object.keys(user.social)) {
+          if (JSON.stringify(user.social[key]) !== '{}') {
+            let result = await getProfileDetails(
+              user.social[key].socialInsiderId,
+              socialAccountMap[key].type,
+              key
+            )
+            profileDetails.push(result)
+          }
+        }
+        if (profileDetails.length) {
+          reply.success({
+            profileDetails
+          })
+          return reply
+        }
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
         return reply
       }
     }

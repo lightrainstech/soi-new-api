@@ -1,4 +1,11 @@
 const axios = require('axios')
+const { concat } = require('ethers/lib/utils')
+
+// Header details
+const headers = {
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
+}
 
 // Add profile to social insider
 exports.addProfile = async (socialProfile, socialPlatform) => {
@@ -19,7 +26,6 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
       type: 'tiktok_profile'
     }
   }
-
   const jsonObject = {
     jsonrpc: '2.0',
     id: 0,
@@ -30,10 +36,7 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
     }
   }
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
-  }
+
   const result = await axios.post(
     process.env.SOCIAL_INSIDER_API_URL,
     jsonObject,
@@ -62,10 +65,51 @@ exports.stripTrailingSlash = str => {
   if (str.substr(-1) === '/') {
     str.substr(0, str.length - 1)
     let url = str.split('/'),
-    arr = url.filter(item => item)
+      arr = url.filter(item => item)
     return arr.pop()
   }
   let url = str.split('/'),
-  arr = url.filter(item => item)
+    arr = url.filter(item => item)
   return arr.pop()
+}
+
+// Get social insider profile details
+exports.getProfileDetails = async (socialInsiderId, profile_type, platform) => {
+  let currentTimestamp = Date.now()
+  let oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000
+  let oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds
+  const obj = {
+    jsonrpc: '2.0',
+    id: 0,
+    method: 'socialinsider_api.get_profile_data',
+    params: {
+      id: socialInsiderId,
+      profile_type: profile_type,
+      date: {
+        start: oneMonthAgoTimestamp,
+        end: currentTimestamp,
+        timezone: 'Asia/Kolkata'
+      }
+    }
+  }
+
+  const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
+    headers: headers
+  })
+  let profileData = result.data.resp[socialInsiderId]
+  let highestFollowersCount = 0
+  if (!profileData.err) {
+    for (let date in profileData) {
+      let currentFollowersCount = profileData[date].followers
+        ? profileData[date].followers
+        : 0
+      if (currentFollowersCount > highestFollowersCount) {
+        highestFollowersCount = currentFollowersCount
+      }
+    }
+  }
+  let resObj = {
+    [platform]: highestFollowersCount
+  }
+  return resObj
 }
