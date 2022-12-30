@@ -340,7 +340,7 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         } else {
-          reply.code(404).error({
+          reply.error({
             message: 'Failed to update avatar. Please try again.'
           })
           return reply
@@ -426,24 +426,28 @@ module.exports = async function (fastify, opts) {
             type: 'tiktok_profile'
           }
         }
-        const profileDetails = []
-        for await (const key of Object.keys(user.social)) {
-          if (JSON.stringify(user.social[key]) !== '{}') {
-            let result = await getProfileDetails(
+
+        const profileDetailsPromises = Object.keys(user.social)
+          .filter(key => JSON.stringify(user.social[key]) !== '{}')
+          .map(async key => {
+            return getProfileDetails(
               user.social[key].socialInsiderId,
               socialAccountMap[key].type,
               key
             )
-            profileDetails.push(result)
-          }
-        }
-        if (profileDetails.length) {
+          })
+        const profileDetails = await Promise.all(profileDetailsPromises)
+        if (profileDetails) {
           reply.success({
             profileDetails
           })
           return reply
+        } else {
+          reply.error({
+            message: 'Failed to fetch profile details. Please try again.'
+          })
+          return reply
         }
-        return reply
       } catch (error) {
         console.log(error)
         reply.error({ message: `Something went wrong: ${error}` })
