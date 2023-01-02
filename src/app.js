@@ -11,6 +11,7 @@ const cors = require('@fastify/cors')
 
 // Import Swagger Options
 const swaggerConf = require('./config/swagger')
+const fastifyMultipart = require('@fastify/multipart')
 
 module.exports = function (fastify, opts, next) {
   fastify.register(cors, {
@@ -21,6 +22,9 @@ module.exports = function (fastify, opts, next) {
   })
   fastify.register(swagger, swaggerConf.options)
   fastify.register(Etag)
+  fastify.register(fastifyMultipart, {
+    addToBody: true
+  })
 
   fastify.register(autoload, {
     dir: path.join(__dirname, 'plugins')
