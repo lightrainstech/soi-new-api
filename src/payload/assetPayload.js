@@ -23,17 +23,11 @@ exports.getUserTokenSchema = {
   tags: ['Asset'],
   summary: 'List user assets',
   security: [{ Bearer: [] }],
-  querystring: S.object().prop(
-    'page',
-    S.number().default(1)
-  )
+  querystring: S.object().prop('page', S.number().default(1))
 }
 
 exports.checkJobStatusSchema = {
   tags: ['Asset'],
   summary: 'Check minting completed or not.',
-  params: S.object().prop(
-    'jobId',
-    S.number().minimum(1).required()
-  )
+  params: S.object().prop('jobId', S.number().minimum(1).required())
 }

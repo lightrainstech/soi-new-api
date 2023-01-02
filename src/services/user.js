@@ -8,14 +8,18 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
-const { addProfile, errorMessage, getProfileDetails, getAccountType } = require('../utils/soi')
+const {
+  addProfile,
+  errorMessage,
+  getProfileDetails,
+  getAccountType
+} = require('../utils/soi')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
 const userModel = new User()
 const userTokenModel = new UserToken()
 const affiliateModel = new Affiliate()
-
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -415,7 +419,7 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        
+
         const profileDetailsPromises = Object.keys(user.social)
           .filter(key => JSON.stringify(user.social[key]) !== '{}')
           .map(async key => {
