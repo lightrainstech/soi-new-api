@@ -17,8 +17,8 @@ const apiCall = async obj => {
   return result
 }
 
-// Add profile to social insider
-exports.addProfile = async (socialProfile, socialPlatform) => {
+// Function to return account type
+const getAccountType = socialPlatform => {
   const socialAccountMap = {
     facebook: {
       type: 'facebook_page'
@@ -36,11 +36,15 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
       type: 'tiktok_profile'
     }
   }
+  return socialAccountMap[socialPlatform].type
+}
 
+// Add profile to social insider
+const addProfile = async (socialProfile, socialPlatform) => {
   let method = 'socialinsider_api.add_profile',
     params = {
       profile_url: `${socialProfile[socialPlatform]}`,
-      profile_type: socialAccountMap[socialPlatform].type,
+      profile_type: getAccountType(socialPlatform),
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
     }
 
@@ -52,7 +56,7 @@ exports.addProfile = async (socialProfile, socialPlatform) => {
 }
 
 // Custom error messages
-exports.errorMessage = async socialPlatform => {
+const errorMessage = async socialPlatform => {
   const socialAccountMap = {
     facebook: 'Failed to add Facebook profile we support Facebook pages only.',
     instagram:
@@ -65,7 +69,7 @@ exports.errorMessage = async socialPlatform => {
 }
 
 // Remove trailing slash
-exports.stripTrailingSlash = str => {
+const stripTrailingSlash = str => {
   if (str.substr(-1) === '/') {
     str.substr(0, str.length - 1)
     let url = str.split('/'),
@@ -78,7 +82,7 @@ exports.stripTrailingSlash = str => {
 }
 
 // Get social insider profile details
-exports.getProfileDetails = async (socialInsiderId, profile_type, platform) => {
+const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   let currentTimestamp = Date.now(),
     oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
     oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
@@ -110,4 +114,12 @@ exports.getProfileDetails = async (socialInsiderId, profile_type, platform) => {
     [platform]: highestFollowersCount
   }
   return resObj
+}
+
+module.exports = {
+  getAccountType,
+  addProfile,
+  errorMessage,
+  stripTrailingSlash,
+  getProfileDetails
 }

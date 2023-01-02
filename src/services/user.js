@@ -8,7 +8,7 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
-const { addProfile, errorMessage, getProfileDetails } = require('../utils/soi')
+const { addProfile, errorMessage, getProfileDetails, getAccountType } = require('../utils/soi')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -415,30 +415,13 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        const socialAccountMap = {
-          facebook: {
-            type: 'facebook_page'
-          },
-          instagram: {
-            type: 'instagram_profile'
-          },
-          twitter: {
-            type: 'twitter_profile'
-          },
-          youtube: {
-            type: 'youtube_channel'
-          },
-          tiktok: {
-            type: 'tiktok_profile'
-          }
-        }
-
+        
         const profileDetailsPromises = Object.keys(user.social)
           .filter(key => JSON.stringify(user.social[key]) !== '{}')
           .map(async key => {
             return getProfileDetails(
               user.social[key].socialInsiderId,
-              socialAccountMap[key].type,
+              getAccountType(key),
               key
             )
           })
