@@ -7,8 +7,6 @@ const assetPayload = require('../payload/assetPayload')
 
 const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
-const userTokenModel = new UserToken()
-
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
 
@@ -137,6 +135,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
+        const userTokenModel = new UserToken()
         const { userId } = request.user,
           { page } = request.query,
           userTokens = await userTokenModel.listUserTokens(userId, page)
