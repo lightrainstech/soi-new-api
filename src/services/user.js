@@ -17,10 +17,6 @@ const {
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
-const userModel = new User()
-const userTokenModel = new UserToken()
-const affiliateModel = new Affiliate()
-
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
 
@@ -30,6 +26,7 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkUsernameSchema },
     async function (request, reply) {
       try {
+        const userModel = new User()
         const { userName } = request.query,
           user = await userModel.getUserByUsername(userName)
         if (user) {
@@ -57,6 +54,7 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
+        const userModel = new User()
         const { email } = request.params,
           user = await userModel.getUserByEmail(email.toString().toLowerCase())
         if (user) {
@@ -87,6 +85,7 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
+        const userModel = new User()
         const checkSumWallet = await checkSumAddress(wallet)
         // Check user exists or not
         const user = await userModel.getUserBywallet(checkSumWallet)
@@ -140,6 +139,7 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
+        const userModel = new User()
         const { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
@@ -168,6 +168,7 @@ module.exports = async function (fastify, opts) {
       const { affCode } = request.query
       try {
         console.log('affCode', affCode)
+        const userModel = new User()
         const isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
@@ -214,6 +215,7 @@ module.exports = async function (fastify, opts) {
         if (checkSumAdd === checkSumWallet) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
+            const affiliateModel = new Affiliate()
             let affiliateData = await affiliateModel.getUserById(userData._id)
             const jwt = fastify.jwt.sign(
               {
@@ -258,6 +260,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
+        const userModel = new User()
         const { socialProfile } = request.body,
           { wallet } = request.user,
           socialPlatform = Object.keys(socialProfile)[0]
@@ -335,6 +338,7 @@ module.exports = async function (fastify, opts) {
         { wallet } = request.user
       try {
         // Check user exists or not
+        const userModel = new User()
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
           reply.code(404).error({
@@ -373,6 +377,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { userId, affCode } = request.user
       try {
+        const userTokenModel = new UserToken()
+        const userModel = new User()
         const isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
@@ -411,6 +417,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
+        const userModel = new User()
         const { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
