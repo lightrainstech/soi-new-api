@@ -102,14 +102,9 @@ exports.getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   let profileData = result.data.resp[socialInsiderId]
   let highestFollowersCount = 0
   if (!profileData.err) {
-    for (let date in profileData) {
-      let currentFollowersCount = profileData[date].followers
-        ? profileData[date].followers
-        : 0
-      if (currentFollowersCount > highestFollowersCount) {
-        highestFollowersCount = currentFollowersCount
-      }
-    }
+    highestFollowersCount = Math.max(
+      ...Object.values(profileData).map(d => d.followers || 0)
+    )
   }
   let resObj = {
     [platform]: highestFollowersCount
