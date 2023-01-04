@@ -293,7 +293,7 @@ module.exports = async function (fastify, opts) {
         if (result.error) {
           let err = await errorMessage(socialPlatform)
           reply.code(400).error({
-            message: err
+            message: err ? err : result.error.message
           })
           return reply
         }
