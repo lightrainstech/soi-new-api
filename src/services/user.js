@@ -335,7 +335,8 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       const { avatar } = request.body,
-        { wallet } = request.user
+        { wallet } = request.user,
+        { isBanner } = request.query
       try {
         // Check user exists or not
         const userModel = new User()
@@ -346,11 +347,17 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        user.avatar = avatar
+        if (isBanner) {
+          user.bannerImage = avatar
+        } else {
+          user.avatar = avatar
+        }
         const updateAvatar = await user.save()
         if (updateAvatar) {
           reply.success({
-            message: 'Avatar updated successfully.'
+            message: isBanner
+              ? 'Banner updated successfully'
+              : 'Avatar updated successfully.'
           })
           return reply
         } else {

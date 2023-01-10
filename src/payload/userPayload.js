@@ -130,6 +130,10 @@ exports.updateAvatar = {
       .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
       .format(S.FORMATS.URI)
       .required()
+  ),
+  querystring: S.object().prop(
+    'isBanner',
+    S.boolean().default(false)
   )
 }
 

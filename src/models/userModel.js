@@ -38,6 +38,9 @@ const UserSchema = new mongoose.Schema(
     avatar: {
       type: String
     },
+    bannerImage: {
+      type: String
+    },
     social: {
       facebook: {
         name: String,
@@ -95,7 +98,7 @@ const socialAccountMap = {
     let query = { _id: id }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select: 'email userName wallet role avatar bannerImage social name'
     }
     return User.load(options)
   },
@@ -104,7 +107,7 @@ const socialAccountMap = {
     let query = { email }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select: 'email userName wallet role avatar bannerImage social name'
     }
     return User.load(options)
   },
@@ -122,7 +125,7 @@ const socialAccountMap = {
     let query = { wallet }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select: 'email userName wallet role avatar bannerImage social name'
     }
     return await User.load(options)
   },
@@ -195,6 +198,7 @@ const socialAccountMap = {
           phone: 1,
           wallet: 1,
           avatar: 1,
+          bannerImage: 1,
           nftDetails: 1,
           email: 1,
           role: 1
