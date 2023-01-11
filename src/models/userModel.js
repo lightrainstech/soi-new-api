@@ -205,6 +205,15 @@ const socialAccountMap = {
         }
       }
     ])
+  },
+  updateProfile: async function (userId, updateObj) {
+    const User = mongoose.model('User')
+    let data = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateObj },
+      { new: true }
+    )
+    return data
   }
 }),
   (UserSchema.statics = {

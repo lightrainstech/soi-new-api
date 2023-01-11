@@ -1,6 +1,7 @@
 'use strict'
 
 const ethUtil = require('ethereumjs-util')
+const omitEmpty = require('omit-empty')
 
 const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
@@ -14,6 +15,7 @@ const {
   getProfileDetails,
   getAccountType
 } = require('../utils/soi')
+const { unPinFromPinata } = require('../utils/utils')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -455,6 +457,56 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+  // Update user profile
+  fastify.put(
+    '/profile',
+    {
+      schema: userPayload.updateProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userModel = new User(),
+          { userId } = request.user,
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
+          })
+          return reply
+        }
+
+        let updateObj = {
+            name: request.body.name,
+            avatar: request.body.avatar,
+            country: request.body.country,
+            phone: request.body.country,
+            bannerImage: request.body.bannerImage
+          },
+          cleanObj = omitEmpty(updateObj)
+        if (cleanObj.avatar || cleanObj.coverPic) {
+          const avatar = cleanObj.avatar ? cleanObj.avatar : null,
+            bannerImage = cleanObj.bannerImage ? cleanObj.bannerImage : null
+          await unPinFromPinata(user, avatar, bannerImage)
+        }
+
+        let result = await userModel.updateProfile(userId, cleanObj)
+        if (result) {
+          reply.success({
+            message: 'Profile updated successfully',
+            data: result
+          })
+        } else {
+          reply.error({ message: 'Failed to update profile.' })
+        }
+        return reply
       } catch (error) {
         console.log(error)
         reply.error({ message: `Something went wrong: ${error}` })

@@ -155,3 +155,20 @@ exports.checkFollowersCountSchema = {
   tags: ['User'],
   summary: 'Get social profile followers count.'
 }
+
+exports.updateProfileSchema = {
+  tags: ['User'],
+  summary: 'Update user profile',
+  body: S.object()
+    .prop('name', S.string().minLength(4).maxLength(40))
+    .prop('phone', S.string())
+    .prop('country', S.string().required())
+    .prop(
+      'avatar',
+      S.string().pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs').format(S.FORMATS.URI)
+    )
+    .prop(
+      'bannerImage',
+      S.string().pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs').format(S.FORMATS.URI)
+    )
+}
