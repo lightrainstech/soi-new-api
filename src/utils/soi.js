@@ -113,7 +113,7 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   return resObj
 }
 
-// Add profile to social insider
+// Remove profile from social insider
 const removeProfile = async (socialInsiderId, socialPlatform) => {
   let method = 'socialinsider_api.delete_profile',
     params = {
