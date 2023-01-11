@@ -13,7 +13,8 @@ const {
   addProfile,
   errorMessage,
   getProfileDetails,
-  getAccountType
+  getAccountType,
+  removeProfile
 } = require('../utils/soi')
 const { unPinFromPinata } = require('../utils/utils')
 
@@ -503,13 +504,81 @@ module.exports = async function (fastify, opts) {
             message: 'Profile updated successfully',
             data: result
           })
+          return reply
         } else {
           reply.error({ message: 'Failed to update profile.' })
+          return reply
         }
         return reply
       } catch (error) {
         console.log(error)
         reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+  // Remove social accounts
+  fastify.delete(
+    '/social/profile',
+    {
+      schema: userPayload.removeSocialProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userModel = new User()
+        let { socialProfile } = request.body,
+          { wallet, userId } = request.user,
+          socialPlatform = Object.keys(socialProfile)[0]
+
+        // Check user exists or not
+        const user = await userModel.getUserBywallet(wallet)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
+          })
+          return reply
+        }
+
+        // Check profile exists in db or not
+        const isSocialProfileExists = await userModel.checkSocialAccountExists(
+          socialProfile
+        )
+
+        if (!isSocialProfileExists) {
+          reply.code(404).error({
+            message: 'Profile not found.'
+          })
+          return reply
+        }
+        // Remove profile from social insider
+        const result = await removeProfile(
+          isSocialProfileExists.social[socialPlatform].socialInsiderId,
+          socialPlatform
+        )
+        if (result.resp === 'success') {
+          const removeProfileFromDb = await userModel.removeAccount(
+            socialProfile,
+            userId
+          )
+          if (removeProfileFromDb) {
+            reply.success({
+              message: `${socialPlatform} profile removed successfully.`
+            })
+            return reply
+          }
+        } else {
+          reply.error({
+            message: `Failed to remove ${socialPlatform} profile.`
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
+        reply.error({
+          message: `Failed to remove ${socialPlatform} profile.`,
+          error: err.message
+        })
         return reply
       }
     }

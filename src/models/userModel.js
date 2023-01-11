@@ -214,6 +214,21 @@ const socialAccountMap = {
       { new: true }
     )
     return data
+  },
+  removeAccount: async function (socialAccounts, userId) {
+    const User = mongoose.model('User')
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = stripTrailingSlash(socialAccounts[firstKey])
+      key = `social.${firstKey}`
+    }
+    return User.findByIdAndUpdate(
+      { _id: userId },
+      { $unset: { [key]: '' } },
+      {
+        new: true
+      }
+    )
   }
 }),
   (UserSchema.statics = {

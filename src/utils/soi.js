@@ -113,10 +113,28 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   return resObj
 }
 
+// Add profile to social insider
+const removeProfile = async (socialInsiderId, socialPlatform) => {
+  let method = 'socialinsider_api.delete_profile',
+    params = {
+      id: socialInsiderId,
+      profile_type: getAccountType(socialPlatform),
+      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+    }
+
+  jsonObject.method = method
+  jsonObject.params = params
+
+  const result = await apiCall(jsonObject)
+  return result.data
+}
+
+
 module.exports = {
   getAccountType,
   addProfile,
   errorMessage,
   stripTrailingSlash,
-  getProfileDetails
+  getProfileDetails,
+  removeProfile
 }
