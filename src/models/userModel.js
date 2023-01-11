@@ -92,7 +92,7 @@ const socialAccountMap = {
   tiktok: 'tiktok'
 }
 
-;(UserSchema.methods = {
+;;;(UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
     let query = { _id: id }
@@ -197,6 +197,12 @@ const socialAccountMap = {
         new: true
       }
     )
+  },
+  getCount: async function (role) {
+    const User = mongoose.model('User')
+    return User.count({
+      role: role
+    })
   }
 }),
   (UserSchema.statics = {
