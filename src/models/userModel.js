@@ -174,38 +174,6 @@ const socialAccountMap = {
     }
     return User.load(options)
   },
-  getProfileDetails: async function (wallet) {
-    const User = mongoose.model('User')
-    return await User.aggregate([
-      {
-        $match: {
-          wallet: wallet
-        }
-      },
-      {
-        $lookup: {
-          from: 'usertokens',
-          localField: '_id',
-          foreignField: 'user',
-          as: 'nftDetails'
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          userName: 1,
-          name: 1,
-          phone: 1,
-          wallet: 1,
-          avatar: 1,
-          bannerImage: 1,
-          nftDetails: 1,
-          email: 1,
-          role: 1
-        }
-      }
-    ])
-  },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
     let data = await User.findOneAndUpdate(
