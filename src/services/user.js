@@ -557,6 +557,7 @@ module.exports = async function (fastify, opts) {
           socialPlatform
         )
         if (result.resp === 'success') {
+          // Remove profile from db
           const removeProfileFromDb = await userModel.removeAccount(
             socialProfile,
             userId
@@ -569,7 +570,7 @@ module.exports = async function (fastify, opts) {
           }
         } else {
           reply.error({
-            message: `Failed to remove ${socialPlatform} profile.`
+            message: `Failed to remove ${socialPlatform} profile. Please try again.`
           })
           return reply
         }
