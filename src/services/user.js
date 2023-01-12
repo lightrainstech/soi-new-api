@@ -290,9 +290,17 @@ module.exports = async function (fastify, opts) {
 
         // Add profile to social insider
         const resData = {},
-        result = await addProfile(socialProfile, socialPlatform)
+          result = await addProfile(socialProfile, socialPlatform)
         resData.id = result.resp.id
         resData.name = result.resp.name
+
+        if (result.error) {
+          let err = await errorMessage(socialPlatform)
+          reply.code(400).error({
+            message: err ? err : result.error.message
+          })
+          return reply
+        }
 
         // Get followers count
         const profileData = await getProfileDetails(
@@ -301,14 +309,6 @@ module.exports = async function (fastify, opts) {
           socialPlatform
         )
         resData.followers = profileData[socialPlatform]
-        
-        if (result.error) {
-          let err = await errorMessage(socialPlatform)
-          reply.code(400).error({
-            message: err ? err : result.error.message
-          })
-          return reply
-        }
 
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(
