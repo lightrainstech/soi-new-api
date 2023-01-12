@@ -289,10 +289,19 @@ module.exports = async function (fastify, opts) {
         }
 
         // Add profile to social insider
-        const resData = {}
-        const result = await addProfile(socialProfile, socialPlatform)
+        const resData = {},
+        result = await addProfile(socialProfile, socialPlatform)
         resData.id = result.resp.id
         resData.name = result.resp.name
+
+        // Get followers count
+        const profileData = await getProfileDetails(
+          result.resp.id,
+          getAccountType(socialPlatform),
+          socialPlatform
+        )
+        resData.followers = profileData[socialPlatform]
+        
         if (result.error) {
           let err = await errorMessage(socialPlatform)
           reply.code(400).error({

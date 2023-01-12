@@ -102,8 +102,13 @@ UserSchema.pre('save', async function (next) {
 let val1,
   val2,
   val3,
+  val4,
+  key,
+  key1,
+  key2,
+  key3,
+  key4,
   obj = {}
-let key, key1, key2, key3
 const socialAccountMap = {
   facebook: 'facebook',
   instagram: 'instagram',
@@ -112,7 +117,7 @@ const socialAccountMap = {
   tiktok: 'tiktok'
 }
 
-;;;(UserSchema.methods = {
+;(UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
     let query = { _id: id }
@@ -159,10 +164,12 @@ const socialAccountMap = {
       val2 = resData.id
       key3 = `social.${firstKey}.name`
       val3 = resData.name
+      key4 = `social.${firstKey}.followers`
+      val4 = resData.followers
     }
     const result = User.findOneAndUpdate(
       { wallet: wallet },
-      { [key1]: val1, [key2]: val2, [key3]: val3 },
+      { [key1]: val1, [key2]: val2, [key3]: val3, [key4]: val4 },
       {
         new: true
       }
