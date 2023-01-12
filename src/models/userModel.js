@@ -239,6 +239,37 @@ const socialAccountMap = {
       {
         new: true
       })
+  },
+  getTotalFollowersInDifferentPlatform: async function (userId, data ) {
+    const User = mongoose.model('User')
+    return User.aggregate([
+      {
+        $project: {
+          social: 1,
+          totalFollowers: {
+            $sum: [
+              '$social.facebook.followers',
+              '$social.twitter.followers',
+              '$social.youtube.followers',
+              '$social.instagram.followers',
+              '$social.tiktok.followers'
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          facebookFollowers: { $sum: '$social.facebook.followers' },
+          twitterFollowers: { $sum: '$social.twitter.followers' },
+          youtubeFollowers: { $sum: '$social.youtube.followers' },
+          instagramFollowers: { $sum: '$social.instagram.followers' },
+          tiktokFollowers: { $sum: '$social.tiktok.followers' },
+          totalFollowers: { $sum: '$totalFollowers' }
+        }
+      }
+    ])
+
   }
 }),
   (UserSchema.statics = {

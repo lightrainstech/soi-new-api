@@ -10,15 +10,20 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const userModel = new User()
-        const totalInfluencerCount = await userModel.getCount('influencer')
-        if (totalInfluencerCount) {
+        const totalInfluencerCount = await userModel.getCount('influencer'),
+          followersCount =
+            await userModel.getTotalFollowersInDifferentPlatform()
+        if (totalInfluencerCount || followersCount) {
           reply.success({
             message: 'Status',
-            totalInfluencers: totalInfluencerCount
+            totalInfluencers: totalInfluencerCount ? totalInfluencerCount : 0,
+            totalFollowers: followersCount
+              ? followersCount[0].totalFollowers
+              : 0
           })
           return reply
         } else {
-          reply.code(400).error({
+          reply.error({
             message: 'Failed to fetch data. Please try again.'
           })
           return reply
