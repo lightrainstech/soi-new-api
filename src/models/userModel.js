@@ -45,27 +45,47 @@ const UserSchema = new mongoose.Schema(
       facebook: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       twitter: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       youtube: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       instagram: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       tiktok: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       }
     }
   },
