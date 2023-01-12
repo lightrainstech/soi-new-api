@@ -123,7 +123,7 @@ const socialAccountMap = {
     let query = { _id: id }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar bannerImage social name'
+      select: 'email userName wallet role avatar bannerImage social name country phone'
     }
     return User.load(options)
   },
@@ -132,7 +132,8 @@ const socialAccountMap = {
     let query = { email }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar bannerImage social name'
+      select:
+        'email userName wallet role avatar bannerImage social name country phone'
     }
     return User.load(options)
   },
@@ -150,7 +151,8 @@ const socialAccountMap = {
     let query = { wallet }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar bannerImage social name'
+      select:
+        'email userName wallet role avatar bannerImage social name country phone'
     }
     return await User.load(options)
   },
