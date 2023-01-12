@@ -265,7 +265,7 @@ module.exports = async function (fastify, opts) {
       try {
         const userModel = new User()
         const { socialProfile } = request.body,
-          { wallet } = request.user,
+          { wallet, userId } = request.user,
           socialPlatform = Object.keys(socialProfile)[0]
 
         // Check user exists or not
@@ -275,6 +275,13 @@ module.exports = async function (fastify, opts) {
             message: 'User not found'
           })
           return reply
+        }
+
+        // Remove redis cache
+        const key = `${userId}_social_profile_data`,
+          cachedData = await fastify.redis.get(key)
+        if (cachedData) {
+          await fastify.redis.del(key)
         }
 
         // Check profile exists in db or not
@@ -600,6 +607,12 @@ module.exports = async function (fastify, opts) {
             socialProfile,
             userId
           )
+          // Remove redis cache
+          const key = `${userId}_social_profile_data`,
+            cachedData = await fastify.redis.get(key)
+          if (cachedData) {
+            await fastify.redis.del(key)
+          }
           if (removeProfileFromDb) {
             reply.success({
               message: `${socialPlatform} profile removed successfully.`
