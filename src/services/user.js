@@ -446,37 +446,55 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        const socialKeys = Object.keys(user.social).filter(
-            key => user.social[key].socialInsiderId !== undefined
-          ),
-          profileDetailsPromises = socialKeys.map(async key => {
-            return getProfileDetails(
-              user.social[key].socialInsiderId,
-              getAccountType(key),
-              key
-            )
-          })
-        // Get followers count
-        const profileDetails = await Promise.all(profileDetailsPromises)
-        if (profileDetails) {
-          // Update count in db
-          const updatePromises = socialKeys.map(async key => {
-            const value = profileDetails.find(obj => obj[key])[key]
-            const updateData = {
-              [`social.${key}.followers`]: value
-            }
-            await userModel.updateFollowers(userId, updateData)
-          })
-          await Promise.all(updatePromises)
+        // get data from redis cache
+        const key = `${userId}_social_profile_data`,
+          cachedData = await fastify.redis.get(key)
+        if (cachedData) {
           reply.success({
-            profileDetails
+            profileDetails: JSON.parse(cachedData)
           })
           return reply
         } else {
-          reply.error({
-            message: 'Failed to fetch profile details. Please try again.'
-          })
-          return reply
+          // Get social profile details from social insider
+          const socialKeys = Object.keys(user.social).filter(
+              key => user.social[key].socialInsiderId !== undefined
+            ),
+            profileDetailsPromises = socialKeys.map(async key => {
+              return getProfileDetails(
+                user.social[key].socialInsiderId,
+                getAccountType(key),
+                key
+              )
+            })
+          // Get followers count
+          const profileDetails = await Promise.all(profileDetailsPromises)
+          if (profileDetails) {
+            // Cache response in redis
+            await fastify.redis.set(
+              key,
+              JSON.stringify(profileDetails),
+              'EX',
+              86400
+            )
+            // Update followers count in db
+            const updatePromises = socialKeys.map(async key => {
+              const value = profileDetails.find(obj => obj[key])[key]
+              const updateData = {
+                [`social.${key}.followers`]: value
+              }
+              await userModel.updateFollowers(userId, updateData)
+            })
+            await Promise.all(updatePromises)
+            reply.success({
+              profileDetails
+            })
+            return reply
+          } else {
+            reply.error({
+              message: 'Failed to fetch profile details. Please try again.'
+            })
+            return reply
+          }
         }
       } catch (error) {
         console.log(error)
