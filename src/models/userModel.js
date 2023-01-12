@@ -230,6 +230,15 @@ const socialAccountMap = {
     return User.count({
       role: role
     })
+  },
+  updateFollowers: async function (userId, data ) {
+    const User = mongoose.model('User')
+    return User.findByIdAndUpdate(
+      { _id: userId },
+      { $set: data },
+      {
+        new: true
+      })
   }
 }),
   (UserSchema.statics = {

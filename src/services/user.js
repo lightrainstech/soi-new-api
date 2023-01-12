@@ -446,17 +446,28 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        const profileDetailsPromises = Object.keys(user.social)
-          .filter(key => JSON.stringify(user.social[key]) !== '{}')
-          .map(async key => {
+        const socialKeys = Object.keys(user.social).filter(
+            key => user.social[key].socialInsiderId !== undefined
+          ),
+          profileDetailsPromises = socialKeys.map(async key => {
             return getProfileDetails(
               user.social[key].socialInsiderId,
               getAccountType(key),
               key
             )
           })
+        // Get followers count
         const profileDetails = await Promise.all(profileDetailsPromises)
         if (profileDetails) {
+          // Update count in db
+          const updatePromises = socialKeys.map(async key => {
+            const value = profileDetails.find(obj => obj[key])[key]
+            const updateData = {
+              [`social.${key}.followers`]: value
+            }
+            await userModel.updateFollowers(userId, updateData)
+          })
+          await Promise.all(updatePromises)
           reply.success({
             profileDetails
           })
