@@ -528,12 +528,12 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-
+        console.log('request', request.body)
         let updateObj = {
             name: request.body.name,
             avatar: request.body.avatar,
             country: request.body.country,
-            phone: request.body.country,
+            phone: request.body.phone,
             bannerImage: request.body.bannerImage
           },
           cleanObj = omitEmpty(updateObj)
