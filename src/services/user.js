@@ -443,8 +443,8 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userId } = request.user,
+        const userModel = new User(),
+          { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
