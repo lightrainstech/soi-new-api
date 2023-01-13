@@ -29,8 +29,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkUsernameSchema },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userName } = request.query,
+        const userModel = new User(),
+          { userName } = request.query,
           user = await userModel.getUserByUsername(userName)
         if (user) {
           reply.code(400).error({
@@ -57,8 +57,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { email } = request.params,
+        const userModel = new User(),
+          { email } = request.params,
           user = await userModel.getUserByEmail(email.toString().toLowerCase())
         if (user) {
           reply.code(400).error({
@@ -88,8 +88,8 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
-        const userModel = new User()
-        const checkSumWallet = await checkSumAddress(wallet)
+        const userModel = new User(),
+          checkSumWallet = await checkSumAddress(wallet)
         // Check user exists or not
         const user = await userModel.getUserBywallet(checkSumWallet)
         if (user === null || !user) {
@@ -142,8 +142,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userId } = request.user,
+        const userModel = new User(),
+          { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
@@ -171,8 +171,8 @@ module.exports = async function (fastify, opts) {
       const { affCode } = request.query
       try {
         console.log('affCode', affCode)
-        const userModel = new User()
-        const isExists = await userModel.checkAffiliateCode(affCode)
+        const userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'
@@ -199,36 +199,35 @@ module.exports = async function (fastify, opts) {
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
         const { wallet, signature, message } = request.body,
-          userModel = new User()
-        console.log(wallet, signature)
-        const msgBuffer = Buffer.from(message)
-        const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
-        const signatureBuffer = ethUtil.toBuffer(signature)
-        const signatureParams = ethUtil.fromRpcSig(signatureBuffer)
-        const publicKey = ethUtil.ecrecover(
-          msgHash,
-          signatureParams.v,
-          signatureParams.r,
-          signatureParams.s
-        )
-        const addressBuffer = ethUtil.publicToAddress(publicKey)
-        const address = ethUtil.bufferToHex(addressBuffer),
+          userModel = new User(),
+          msgBuffer = Buffer.from(message),
+          msgHash = ethUtil.hashPersonalMessage(msgBuffer),
+          signatureBuffer = ethUtil.toBuffer(signature),
+          signatureParams = ethUtil.fromRpcSig(signatureBuffer),
+          publicKey = ethUtil.ecrecover(
+            msgHash,
+            signatureParams.v,
+            signatureParams.r,
+            signatureParams.s
+          ),
+          addressBuffer = ethUtil.publicToAddress(publicKey),
+          address = ethUtil.bufferToHex(addressBuffer),
           checkSumAdd = await checkSumAddress(address),
           checkSumWallet = await checkSumAddress(wallet)
         if (checkSumAdd === checkSumWallet) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
-            const affiliateModel = new Affiliate()
-            let affiliateData = await affiliateModel.getUserById(userData._id)
-            const jwt = fastify.jwt.sign(
-              {
-                userId: userData._id,
-                name: userData.name,
-                wallet: userData.wallet,
-                affCode: affiliateData.affiliateCode
-              },
-              { expiresIn: EXPIRESIN }
-            )
+            const affiliateModel = new Affiliate(),
+              affiliateData = await affiliateModel.getUserById(userData._id),
+              jwt = fastify.jwt.sign(
+                {
+                  userId: userData._id,
+                  name: userData.name,
+                  wallet: userData.wallet,
+                  affCode: affiliateData.affiliateCode
+                },
+                { expiresIn: EXPIRESIN }
+              )
             let respUser = {
               userId: userData._id,
               name: userData.name,
@@ -263,8 +262,8 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { socialProfile } = request.body,
+        const userModel = new User(),
+          { socialProfile } = request.body,
           { wallet, userId } = request.user,
           socialPlatform = Object.keys(socialProfile)[0]
 
@@ -404,9 +403,9 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { userId, affCode } = request.user
       try {
-        const userTokenModel = new UserToken()
-        const userModel = new User()
-        const isExists = await userModel.checkAffiliateCode(affCode)
+        const userTokenModel = new UserToken(),
+          userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'
@@ -554,7 +553,6 @@ module.exports = async function (fastify, opts) {
           reply.error({ message: 'Failed to update profile.' })
           return reply
         }
-        return reply
       } catch (error) {
         console.log(error)
         reply.error({ message: `Something went wrong: ${error}` })
@@ -571,6 +569,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
+        console.log('token data', request.user, request.body)
         const userModel = new User()
         let { socialProfile } = request.body,
           { wallet, userId } = request.user,
