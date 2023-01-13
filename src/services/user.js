@@ -558,8 +558,8 @@ module.exports = async function (fastify, opts) {
     }
   )
   // Remove social accounts
-  fastify.delete(
-    '/social/profile',
+  fastify.put(
+    '/social/profile/remove',
     {
       schema: userPayload.removeSocialProfileSchema,
       onRequest: [fastify.authenticate]
@@ -592,6 +592,7 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
+        
         // Remove profile from social insider
         const result = await removeProfile(
           isSocialProfileExists.social[socialPlatform].socialInsiderId,
