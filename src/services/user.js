@@ -16,7 +16,7 @@ const {
   getAccountType,
   removeProfile
 } = require('../utils/soi')
-const { unPinFromPinata } = require('../utils/utils')
+const { unpin } = require('../utils/utils')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -358,8 +358,8 @@ module.exports = async function (fastify, opts) {
         { isBanner } = request.query
       try {
         // Check user exists or not
-        const userModel = new User()
-        const user = await userModel.getUserBywallet(wallet)
+        const userModel = new User(),
+        user = await userModel.getUserBywallet(wallet)
         if (!user) {
           reply.code(404).error({
             message: 'User not found.'
@@ -367,8 +367,12 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         if (isBanner) {
+          let currentBannerHash = user.bannerImage.split('/').pop()
+          await unpin(currentBannerHash)
           user.bannerImage = avatar
         } else {
+          let currentAvatarHash = user.avatar.split('/').pop()
+          await unpin(currentAvatarHash)
           user.avatar = avatar
         }
         const updateAvatar = await user.save()
@@ -376,7 +380,8 @@ module.exports = async function (fastify, opts) {
           reply.success({
             message: isBanner
               ? 'Banner updated successfully'
-              : 'Avatar updated successfully.'
+              : 'Avatar updated successfully.',
+            user: updateAvatar
           })
           return reply
         } else {
@@ -530,18 +535,10 @@ module.exports = async function (fastify, opts) {
         }
         let updateObj = {
             name: request.body.name,
-            avatar: request.body.avatar,
             country: request.body.country,
             phone: request.body.phone,
-            bannerImage: request.body.bannerImage
           },
           cleanObj = omitEmpty(updateObj)
-        if (cleanObj.avatar || cleanObj.coverPic) {
-          const avatar = cleanObj.avatar ? cleanObj.avatar : null,
-            bannerImage = cleanObj.bannerImage ? cleanObj.bannerImage : null
-          await unPinFromPinata(user, avatar, bannerImage)
-        }
-
         let result = await userModel.updateProfile(userId, cleanObj)
         if (result) {
           reply.success({
