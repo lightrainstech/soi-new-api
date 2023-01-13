@@ -263,9 +263,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const userModel = new User(),
-          { socialProfile } = request.body,
-          { wallet, userId } = request.user,
-          socialPlatform = Object.keys(socialProfile)[0]
+          { socialProfile, type } = request.body,
+          { wallet, userId } = request.user
 
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
@@ -289,19 +288,19 @@ module.exports = async function (fastify, opts) {
         )
         if (isSocialProfileExists) {
           reply.code(400).error({
-            message: `${socialPlatform} profile already exists.`
+            message: `${type} profile already exists.`
           })
           return reply
         }
 
         // Add profile to social insider
         const resData = {},
-          result = await addProfile(socialProfile, socialPlatform)
+          result = await addProfile(socialProfile, type)
         resData.id = result.resp.id
         resData.name = result.resp.name
 
         if (result.error) {
-          let err = await errorMessage(socialPlatform)
+          let err = await errorMessage(type)
           reply.code(400).error({
             message: err ? err : result.error.message
           })
@@ -310,11 +309,11 @@ module.exports = async function (fastify, opts) {
 
         // Get followers count
         const profileData = await getProfileDetails(
-          result.resp.id,
-          getAccountType(socialPlatform),
-          socialPlatform
+          resData.id,
+          getAccountType(type),
+          type
         )
-        resData.followers = profileData[socialPlatform]
+        resData.followers = profileData[type]
 
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(
@@ -324,12 +323,12 @@ module.exports = async function (fastify, opts) {
         )
         if (!addSocialAccounts) {
           reply.code(400).error({
-            message: `Failed to add ${socialPlatform} profile.`
+            message: `Failed to add ${type} profile.`
           })
           return reply
         } else {
           reply.success({
-            message: `${socialPlatform} profile added successfully.`,
+            message: `${type} profile added successfully.`,
             user: addSocialAccounts
           })
           return reply
@@ -337,7 +336,7 @@ module.exports = async function (fastify, opts) {
       } catch (err) {
         console.log(err)
         reply.error({
-          message: `Failed to add ${socialPlatform} profile.`,
+          message: `Failed to add ${type} profile.`,
           error: err.message
         })
         return reply
@@ -359,7 +358,7 @@ module.exports = async function (fastify, opts) {
       try {
         // Check user exists or not
         const userModel = new User(),
-        user = await userModel.getUserBywallet(wallet)
+          user = await userModel.getUserBywallet(wallet)
         if (!user) {
           reply.code(404).error({
             message: 'User not found.'
@@ -536,7 +535,7 @@ module.exports = async function (fastify, opts) {
         let updateObj = {
             name: request.body.name,
             country: request.body.country,
-            phone: request.body.phone,
+            phone: request.body.phone
           },
           cleanObj = omitEmpty(updateObj)
         let result = await userModel.updateProfile(userId, cleanObj)
@@ -567,7 +566,7 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const userModel = new User()
-        let { socialProfile } = request.body,
+        let { socialProfile, type } = request.body,
           { wallet, userId } = request.user,
           socialPlatform = Object.keys(socialProfile)[0]
 
@@ -603,11 +602,10 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-
         // Remove profile from social insider
         const result = await removeProfile(
-          isSocialProfileExists.social[socialPlatform].socialInsiderId,
-          socialPlatform
+          isSocialProfileExists.social[type].socialInsiderId,
+          type
         )
         if (result.resp === 'success') {
           // Remove profile from db
@@ -623,21 +621,21 @@ module.exports = async function (fastify, opts) {
           }
           if (removeProfileFromDb) {
             reply.success({
-              message: `${socialPlatform} profile removed successfully.`,
+              message: `${type} profile removed successfully.`,
               user: removeProfileFromDb
             })
             return reply
           }
         } else {
           reply.error({
-            message: `Failed to remove ${socialPlatform} profile. Please try again.`
+            message: `Failed to remove ${type} profile. Please try again.`
           })
           return reply
         }
       } catch (err) {
         console.log(err)
         reply.error({
-          message: `Failed to remove ${socialPlatform} profile.`,
+          message: `Failed to remove ${type} profile.`,
           error: err.message
         })
         return reply
