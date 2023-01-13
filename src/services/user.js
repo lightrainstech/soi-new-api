@@ -330,7 +330,8 @@ module.exports = async function (fastify, opts) {
           return reply
         } else {
           reply.success({
-            message: `${socialPlatform} profile added successfully.`
+            message: `${socialPlatform} profile added successfully.`,
+            user: addSocialAccounts
           })
           return reply
         }
@@ -528,7 +529,6 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        console.log('request', request.body)
         let updateObj = {
             name: request.body.name,
             avatar: request.body.avatar,
@@ -547,7 +547,7 @@ module.exports = async function (fastify, opts) {
         if (result) {
           reply.success({
             message: 'Profile updated successfully',
-            data: result
+            user: result
           })
           return reply
         } else {
@@ -615,7 +615,8 @@ module.exports = async function (fastify, opts) {
           }
           if (removeProfileFromDb) {
             reply.success({
-              message: `${socialPlatform} profile removed successfully.`
+              message: `${socialPlatform} profile removed successfully.`,
+              user: removeProfileFromDb
             })
             return reply
           }
