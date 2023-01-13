@@ -566,7 +566,6 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        console.log('token data', request.user, request.body)
         const userModel = new User()
         let { socialProfile } = request.body,
           { wallet, userId } = request.user,
@@ -592,7 +591,19 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        
+
+        const socialKeys = Object.keys(isSocialProfileExists.social).filter(
+          key => isSocialProfileExists.social[key].socialInsiderId !== undefined
+        )
+
+        if (Object.keys(socialKeys).length == 2) {
+          reply.error({
+            message: 'At least two profile is required.'
+          })
+          return reply
+        }
+
+
         // Remove profile from social insider
         const result = await removeProfile(
           isSocialProfileExists.social[socialPlatform].socialInsiderId,
