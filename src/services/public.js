@@ -9,8 +9,8 @@ module.exports = async function (fastify, opts) {
     { schema: publicPayload.influencerStatusSchema },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const totalInfluencerCount = await userModel.getCount('influencer'),
+        const userModel = new User(),
+        totalInfluencerCount = await userModel.getCount('influencer'),
           followersCount =
             await userModel.getTotalFollowersInDifferentPlatform()
         if (totalInfluencerCount || followersCount) {
