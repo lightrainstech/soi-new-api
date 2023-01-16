@@ -14,12 +14,12 @@ module.exports = async function (fastify, opts) {
           followersCount =
             await userModel.getTotalFollowersInDifferentPlatform()
         if (totalInfluencerCount || followersCount) {
+          const followerDetails =followersCount[0]
+          delete followerDetails._id
           reply.success({
             message: 'Status',
             totalInfluencers: totalInfluencerCount ? totalInfluencerCount : 0,
-            totalFollowers: followersCount
-              ? followersCount[0].totalFollowers
-              : 0
+            followerDetails: followerDetails
           })
           return reply
         } else {
