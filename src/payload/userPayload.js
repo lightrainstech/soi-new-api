@@ -34,82 +34,88 @@ exports.getMeSchema = {
   security: [{ Bearer: [] }]
 }
 
+const socialProfileSchema = S.object()
+  .prop('socialProfile', S.object())
+  .prop(
+    'type',
+    S.string()
+      .enum(['facebook', 'instagram', 'youtube', 'twitter', 'tiktok'])
+      .required()
+  )
+  .allOf([
+    S.ifThen(
+      S.object().prop('type', S.const('facebook')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop(
+          'facebook',
+          S.string()
+            .pattern('^(https?://)?(www.facebook.com)/(?!.*(profile|page)).+$')
+            .required()
+        )
+      )
+    ),
+    S.ifThen(
+      S.object().prop('type', S.const('instagram')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop(
+          'instagram',
+          S.string()
+            .pattern(
+              '(?:(?:http|https)://)?(?:www.)?(?:instagram.com|instagr.am)/([A-Za-z0-9-_.]+)'
+            )
+            .required()
+        )
+      )
+    ),
+    S.ifThen(
+      S.object().prop('type', S.const('twitter')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop(
+          'twitter',
+          S.string()
+            .pattern('http(?:s)?://(?:www.)?twitter.com/([a-zA-Z0-9_]+)')
+            .required()
+        )
+      )
+    ),
+
+    S.ifThen(
+      S.object().prop('type', S.const('youtube')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop(
+          'youtube',
+          S.string()
+            .pattern('^(https?://)?(www.youtube.com|youtu.be)/.+$')
+            .required()
+        )
+      )
+    ),
+    S.ifThen(
+      S.object().prop('type', S.const('tiktok')),
+      S.object().prop(
+        'socialProfile',
+        S.object().prop(
+          'tiktok',
+          S.string().pattern('^(https?://)?(www.tiktok.com)/.+$').required()
+        )
+      )
+    )
+  ])
+
 exports.addSocialProfileSchema = {
   tags: ['User'],
   summary: 'Add social profile',
-  body: S.object()
-    .prop('socialProfile', S.object())
-    .prop(
-      'type',
-      S.string()
-        .enum(['facebook', 'instagram', 'youtube', 'twitter', 'tiktok'])
-        .required()
-    )
-    .allOf([
-      S.ifThen(
-        S.object().prop('type', S.const('facebook')),
-        S.object().prop(
-          'socialProfile',
-          S.object().prop(
-            'facebook',
-            S.string()
-              .pattern(
-                '^(https?://)?(www.facebook.com)/(?!.*(profile|page)).+$'
-              )
-              .required()
-          )
-        )
-      ),
-      S.ifThen(
-        S.object().prop('type', S.const('instagram')),
-        S.object().prop(
-          'socialProfile',
-          S.object().prop(
-            'instagram',
-            S.string()
-              .pattern(
-                '(?:(?:http|https)://)?(?:www.)?(?:instagram.com|instagr.am)/([A-Za-z0-9-_.]+)'
-              )
-              .required()
-          )
-        )
-      ),
-      S.ifThen(
-        S.object().prop('type', S.const('twitter')),
-        S.object().prop(
-          'socialProfile',
-          S.object().prop(
-            'twitter',
-            S.string()
-              .pattern('http(?:s)?://(?:www.)?twitter.com/([a-zA-Z0-9_]+)')
-              .required()
-          )
-        )
-      ),
+  body: socialProfileSchema
+}
 
-      S.ifThen(
-        S.object().prop('type', S.const('youtube')),
-        S.object().prop(
-          'socialProfile',
-          S.object().prop(
-            'youtube',
-            S.string()
-              .pattern('^(https?://)?(www.youtube.com|youtu.be)/.+$')
-              .required()
-          )
-        )
-      ),
-      S.ifThen(
-        S.object().prop('type', S.const('tiktok')),
-        S.object().prop(
-          'socialProfile',
-          S.object().prop(
-            'tiktok',
-            S.string().pattern('^(https?://)?(www.tiktok.com)/.+$').required()
-          )
-        )
-      )
-    ])
+exports.removeSocialProfileSchema = {
+  tags: ['User'],
+  summary: 'Remove social profile',
+  body: socialProfileSchema
 }
 
 exports.checkUsernameSchema = {
@@ -130,6 +136,10 @@ exports.updateAvatar = {
       .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
       .format(S.FORMATS.URI)
       .required()
+  ),
+  querystring: S.object().prop(
+    'isBanner',
+    S.boolean().default(false)
   )
 }
 
@@ -150,4 +160,13 @@ exports.checkEmailSchema = {
 exports.checkFollowersCountSchema = {
   tags: ['User'],
   summary: 'Get social profile followers count.'
+}
+
+exports.updateProfileSchema = {
+  tags: ['User'],
+  summary: 'Update user profile',
+  body: S.object()
+    .prop('name', S.string().minLength(4).maxLength(40))
+    .prop('phone', S.string())
+    .prop('country', S.string().required())
 }

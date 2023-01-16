@@ -45,10 +45,10 @@ const mintNFT = (toAddress, metaDataUrl) =>
 
 const calculateGas = async () => {
   try {
-    let feeData = web3.utils.formatUnits(feeData.maxFeePerGas, 'gwei')
-    return feeData
+    let feeData = await provider.getFeeData()
+    return feeData.gasPrice.toString()
   } catch (error) {
-    return 60000000000
+    return 10000000000
   }
 }
 

@@ -38,31 +38,54 @@ const UserSchema = new mongoose.Schema(
     avatar: {
       type: String
     },
+    bannerImage: {
+      type: String
+    },
     social: {
       facebook: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       twitter: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       youtube: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       instagram: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       },
       tiktok: {
         name: String,
         handle: String,
-        socialInsiderId: String
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
       }
     }
   },
@@ -79,8 +102,13 @@ UserSchema.pre('save', async function (next) {
 let val1,
   val2,
   val3,
+  val4,
+  key,
+  key1,
+  key2,
+  key3,
+  key4,
   obj = {}
-let key, key1, key2, key3
 const socialAccountMap = {
   facebook: 'facebook',
   instagram: 'instagram',
@@ -95,7 +123,7 @@ const socialAccountMap = {
     let query = { _id: id }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select: 'email userName wallet role avatar bannerImage social name country phone'
     }
     return User.load(options)
   },
@@ -104,7 +132,8 @@ const socialAccountMap = {
     let query = { email }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select:
+        'email userName wallet role avatar bannerImage social name country phone'
     }
     return User.load(options)
   },
@@ -122,7 +151,8 @@ const socialAccountMap = {
     let query = { wallet }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar social name'
+      select:
+        'email userName wallet role avatar bannerImage social name country phone'
     }
     return await User.load(options)
   },
@@ -136,10 +166,12 @@ const socialAccountMap = {
       val2 = resData.id
       key3 = `social.${firstKey}.name`
       val3 = resData.name
+      key4 = `social.${firstKey}.followers`
+      val4 = resData.followers
     }
     const result = User.findOneAndUpdate(
       { wallet: wallet },
-      { [key1]: val1, [key2]: val2, [key3]: val3 },
+      { [key1]: val1, [key2]: val2, [key3]: val3, [key4]: val4 },
       {
         new: true
       }
@@ -171,36 +203,75 @@ const socialAccountMap = {
     }
     return User.load(options)
   },
-  getProfileDetails: async function (wallet) {
+  updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
-    return await User.aggregate([
+    let data = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateObj },
+      { new: true }
+    )
+    return data
+  },
+  removeAccount: async function (socialAccounts, userId) {
+    const User = mongoose.model('User')
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = stripTrailingSlash(socialAccounts[firstKey])
+      key = `social.${firstKey}`
+    }
+    return User.findByIdAndUpdate(
+      { _id: userId },
+      { $unset: { [key]: '' } },
       {
-        $match: {
-          wallet: wallet
-        }
-      },
+        new: true
+      }
+    )
+  },
+  getCount: async function (role) {
+    const User = mongoose.model('User')
+    return User.count({
+      role: role
+    })
+  },
+  updateFollowers: async function (userId, data ) {
+    const User = mongoose.model('User')
+    return User.findByIdAndUpdate(
+      { _id: userId },
+      { $set: data },
       {
-        $lookup: {
-          from: 'usertokens',
-          localField: '_id',
-          foreignField: 'user',
-          as: 'nftDetails'
-        }
-      },
+        new: true
+      })
+  },
+  getTotalFollowersInDifferentPlatform: async function (userId, data ) {
+    const User = mongoose.model('User')
+    return User.aggregate([
       {
         $project: {
-          _id: 1,
-          userName: 1,
-          name: 1,
-          phone: 1,
-          wallet: 1,
-          avatar: 1,
-          nftDetails: 1,
-          email: 1,
-          role: 1
+          social: 1,
+          totalFollowers: {
+            $sum: [
+              '$social.facebook.followers',
+              '$social.twitter.followers',
+              '$social.youtube.followers',
+              '$social.instagram.followers',
+              '$social.tiktok.followers'
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          facebookFollowers: { $sum: '$social.facebook.followers' },
+          twitterFollowers: { $sum: '$social.twitter.followers' },
+          youtubeFollowers: { $sum: '$social.youtube.followers' },
+          instagramFollowers: { $sum: '$social.instagram.followers' },
+          tiktokFollowers: { $sum: '$social.tiktok.followers' },
+          totalFollowers: { $sum: '$totalFollowers' }
         }
       }
     ])
+
   }
 }),
   (UserSchema.statics = {

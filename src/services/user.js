@@ -1,6 +1,7 @@
 'use strict'
 
 const ethUtil = require('ethereumjs-util')
+const omitEmpty = require('omit-empty')
 
 const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
@@ -12,8 +13,10 @@ const {
   addProfile,
   errorMessage,
   getProfileDetails,
-  getAccountType
+  getAccountType,
+  removeProfile
 } = require('../utils/soi')
+const { unpin } = require('../utils/utils')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -26,8 +29,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkUsernameSchema },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userName } = request.query,
+        const userModel = new User(),
+          { userName } = request.query,
           user = await userModel.getUserByUsername(userName)
         if (user) {
           reply.code(400).error({
@@ -54,8 +57,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { email } = request.params,
+        const userModel = new User(),
+          { email } = request.params,
           user = await userModel.getUserByEmail(email.toString().toLowerCase())
         if (user) {
           reply.code(400).error({
@@ -85,8 +88,8 @@ module.exports = async function (fastify, opts) {
         email = request.body.email.toString().toLowerCase()
       console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
-        const userModel = new User()
-        const checkSumWallet = await checkSumAddress(wallet)
+        const userModel = new User(),
+          checkSumWallet = await checkSumAddress(wallet)
         // Check user exists or not
         const user = await userModel.getUserBywallet(checkSumWallet)
         if (user === null || !user) {
@@ -139,8 +142,8 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.getMeSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userId } = request.user,
+        const userModel = new User(),
+          { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
@@ -168,8 +171,8 @@ module.exports = async function (fastify, opts) {
       const { affCode } = request.query
       try {
         console.log('affCode', affCode)
-        const userModel = new User()
-        const isExists = await userModel.checkAffiliateCode(affCode)
+        const userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'
@@ -196,36 +199,35 @@ module.exports = async function (fastify, opts) {
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
         const { wallet, signature, message } = request.body,
-          userModel = new User()
-        console.log(wallet, signature)
-        const msgBuffer = Buffer.from(message)
-        const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
-        const signatureBuffer = ethUtil.toBuffer(signature)
-        const signatureParams = ethUtil.fromRpcSig(signatureBuffer)
-        const publicKey = ethUtil.ecrecover(
-          msgHash,
-          signatureParams.v,
-          signatureParams.r,
-          signatureParams.s
-        )
-        const addressBuffer = ethUtil.publicToAddress(publicKey)
-        const address = ethUtil.bufferToHex(addressBuffer),
+          userModel = new User(),
+          msgBuffer = Buffer.from(message),
+          msgHash = ethUtil.hashPersonalMessage(msgBuffer),
+          signatureBuffer = ethUtil.toBuffer(signature),
+          signatureParams = ethUtil.fromRpcSig(signatureBuffer),
+          publicKey = ethUtil.ecrecover(
+            msgHash,
+            signatureParams.v,
+            signatureParams.r,
+            signatureParams.s
+          ),
+          addressBuffer = ethUtil.publicToAddress(publicKey),
+          address = ethUtil.bufferToHex(addressBuffer),
           checkSumAdd = await checkSumAddress(address),
           checkSumWallet = await checkSumAddress(wallet)
         if (checkSumAdd === checkSumWallet) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
-            const affiliateModel = new Affiliate()
-            let affiliateData = await affiliateModel.getUserById(userData._id)
-            const jwt = fastify.jwt.sign(
-              {
-                userId: userData._id,
-                name: userData.name,
-                wallet: userData.wallet,
-                affCode: affiliateData.affiliateCode
-              },
-              { expiresIn: EXPIRESIN }
-            )
+            const affiliateModel = new Affiliate(),
+              affiliateData = await affiliateModel.getUserById(userData._id),
+              jwt = fastify.jwt.sign(
+                {
+                  userId: userData._id,
+                  name: userData.name,
+                  wallet: userData.wallet,
+                  affCode: affiliateData.affiliateCode
+                },
+                { expiresIn: EXPIRESIN }
+              )
             let respUser = {
               userId: userData._id,
               name: userData.name,
@@ -260,10 +262,9 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { socialProfile } = request.body,
-          { wallet } = request.user,
-          socialPlatform = Object.keys(socialProfile)[0]
+        const userModel = new User(),
+          { socialProfile, type } = request.body,
+          { wallet, userId } = request.user
 
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
@@ -274,29 +275,45 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
+        // Remove redis cache
+        const key = `${userId}_social_profile_data`,
+          cachedData = await fastify.redis.get(key)
+        if (cachedData) {
+          await fastify.redis.del(key)
+        }
+
         // Check profile exists in db or not
         const isSocialProfileExists = await userModel.checkSocialAccountExists(
           socialProfile
         )
         if (isSocialProfileExists) {
           reply.code(400).error({
-            message: `${socialPlatform} profile already exists.`
+            message: `${type} profile already exists.`
           })
           return reply
         }
 
         // Add profile to social insider
-        const resData = {}
-        const result = await addProfile(socialProfile, socialPlatform)
+        const resData = {},
+          result = await addProfile(socialProfile, type)
         resData.id = result.resp.id
         resData.name = result.resp.name
+
         if (result.error) {
-          let err = await errorMessage(socialPlatform)
+          let err = await errorMessage(type)
           reply.code(400).error({
             message: err ? err : result.error.message
           })
           return reply
         }
+
+        // Get followers count
+        const profileData = await getProfileDetails(
+          resData.id,
+          getAccountType(type),
+          type
+        )
+        resData.followers = profileData[type]
 
         // Add social account of a user to db
         const addSocialAccounts = await userModel.updateSocialAccounts(
@@ -306,19 +323,20 @@ module.exports = async function (fastify, opts) {
         )
         if (!addSocialAccounts) {
           reply.code(400).error({
-            message: `Failed to add ${socialPlatform} profile.`
+            message: `Failed to add ${type} profile.`
           })
           return reply
         } else {
           reply.success({
-            message: `${socialPlatform} profile added successfully.`
+            message: `${type} profile added successfully.`,
+            user: addSocialAccounts
           })
           return reply
         }
       } catch (err) {
         console.log(err)
         reply.error({
-          message: `Failed to add ${socialPlatform} profile.`,
+          message: `Failed to add ${type} profile.`,
           error: err.message
         })
         return reply
@@ -335,22 +353,34 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       const { avatar } = request.body,
-        { wallet } = request.user
+        { wallet } = request.user,
+        { isBanner } = request.query
       try {
         // Check user exists or not
-        const userModel = new User()
-        const user = await userModel.getUserBywallet(wallet)
+        const userModel = new User(),
+          user = await userModel.getUserBywallet(wallet)
         if (!user) {
           reply.code(404).error({
             message: 'User not found.'
           })
           return reply
         }
-        user.avatar = avatar
+        if (isBanner) {
+          let currentBannerHash = user.bannerImage.split('/').pop()
+          await unpin(currentBannerHash)
+          user.bannerImage = avatar
+        } else {
+          let currentAvatarHash = user.avatar.split('/').pop()
+          await unpin(currentAvatarHash)
+          user.avatar = avatar
+        }
         const updateAvatar = await user.save()
         if (updateAvatar) {
           reply.success({
-            message: 'Avatar updated successfully.'
+            message: isBanner
+              ? 'Banner updated successfully'
+              : 'Avatar updated successfully.',
+            user: updateAvatar
           })
           return reply
         } else {
@@ -377,9 +407,9 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { userId, affCode } = request.user
       try {
-        const userTokenModel = new UserToken()
-        const userModel = new User()
-        const isExists = await userModel.checkAffiliateCode(affCode)
+        const userTokenModel = new UserToken(),
+          userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'
@@ -417,8 +447,8 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const userModel = new User()
-        const { userId } = request.user,
+        const userModel = new User(),
+          { userId } = request.user,
           user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
@@ -427,30 +457,187 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        const profileDetailsPromises = Object.keys(user.social)
-          .filter(key => JSON.stringify(user.social[key]) !== '{}')
-          .map(async key => {
-            return getProfileDetails(
-              user.social[key].socialInsiderId,
-              getAccountType(key),
-              key
-            )
-          })
-        const profileDetails = await Promise.all(profileDetailsPromises)
-        if (profileDetails) {
+        // get data from redis cache
+        const key = `${userId}_social_profile_data`,
+          cachedData = await fastify.redis.get(key)
+        if (cachedData) {
           reply.success({
-            profileDetails
+            profileDetails: JSON.parse(cachedData)
           })
           return reply
         } else {
-          reply.error({
-            message: 'Failed to fetch profile details. Please try again.'
+          // Get social profile details from social insider
+          const socialKeys = Object.keys(user.social).filter(
+              key => user.social[key].socialInsiderId !== undefined
+            ),
+            profileDetailsPromises = socialKeys.map(async key => {
+              return getProfileDetails(
+                user.social[key].socialInsiderId,
+                getAccountType(key),
+                key
+              )
+            })
+          // Get followers count
+          const profileDetails = await Promise.all(profileDetailsPromises)
+          if (profileDetails) {
+            // Cache response in redis
+            await fastify.redis.set(
+              key,
+              JSON.stringify(profileDetails),
+              'EX',
+              86400
+            )
+            // Update followers count in db
+            const updatePromises = socialKeys.map(async key => {
+              const value = profileDetails.find(obj => obj[key])[key]
+              const updateData = {
+                [`social.${key}.followers`]: value
+              }
+              await userModel.updateFollowers(userId, updateData)
+            })
+            await Promise.all(updatePromises)
+            reply.success({
+              profileDetails
+            })
+            return reply
+          } else {
+            reply.error({
+              message: 'Failed to fetch profile details. Please try again.'
+            })
+            return reply
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+  // Update user profile
+  fastify.put(
+    '/profile',
+    {
+      schema: userPayload.updateProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userModel = new User(),
+          { userId } = request.user,
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
           })
+          return reply
+        }
+        let updateObj = {
+            name: request.body.name,
+            country: request.body.country,
+            phone: request.body.phone
+          },
+          cleanObj = omitEmpty(updateObj)
+        let result = await userModel.updateProfile(userId, cleanObj)
+        if (result) {
+          reply.success({
+            message: 'Profile updated successfully',
+            user: result
+          })
+          return reply
+        } else {
+          reply.error({ message: 'Failed to update profile.' })
           return reply
         }
       } catch (error) {
         console.log(error)
         reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
+  // Remove social accounts
+  fastify.put(
+    '/social/profile/remove',
+    {
+      schema: userPayload.removeSocialProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userModel = new User()
+        let { socialProfile, type } = request.body,
+          { wallet, userId } = request.user,
+          socialPlatform = Object.keys(socialProfile)[0]
+
+        // Check user exists or not
+        const user = await userModel.getUserBywallet(wallet)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found.'
+          })
+          return reply
+        }
+
+        // Check profile exists in db or not
+        const isSocialProfileExists = await userModel.checkSocialAccountExists(
+          socialProfile
+        )
+
+        if (!isSocialProfileExists) {
+          reply.code(404).error({
+            message: 'Profile not found.'
+          })
+          return reply
+        }
+
+        const socialKeys = Object.keys(isSocialProfileExists.social).filter(
+          key => isSocialProfileExists.social[key].socialInsiderId !== undefined
+        )
+
+        if (Object.keys(socialKeys).length == 2) {
+          reply.error({
+            message: 'At least two profile is required.'
+          })
+          return reply
+        }
+
+        // Remove profile from social insider
+        const result = await removeProfile(
+          isSocialProfileExists.social[type].socialInsiderId,
+          type
+        )
+        if (result.resp === 'success') {
+          // Remove profile from db
+          const removeProfileFromDb = await userModel.removeAccount(
+            socialProfile,
+            userId
+          )
+          // Remove redis cache
+          const key = `${userId}_social_profile_data`,
+            cachedData = await fastify.redis.get(key)
+          if (cachedData) {
+            await fastify.redis.del(key)
+          }
+          if (removeProfileFromDb) {
+            reply.success({
+              message: `${type} profile removed successfully.`,
+              user: removeProfileFromDb
+            })
+            return reply
+          }
+        } else {
+          reply.error({
+            message: `Failed to remove ${type} profile. Please try again.`
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
+        reply.error({
+          message: `Failed to remove ${type} profile.`,
+          error: err.message
+        })
         return reply
       }
     }

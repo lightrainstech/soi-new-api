@@ -2994,6 +2994,11 @@ keyv@^4.0.0:
   dependencies:
     json-buffer "3.0.1"
 
+kind-of@^6.0.2:
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
+  integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
+
 light-my-request@^5.6.1:
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/light-my-request/-/light-my-request-5.7.0.tgz#9195e25fcda1bc6916d94d6fb475056aa120a230"
@@ -3450,6 +3455,13 @@ oboe@2.1.5:
   integrity sha512-zRFWiF+FoicxEs3jNI/WYUrVEgA7DeET/InK0XQuudGHRg8iIob3cNPrJTKaz4004uaA9Pbe+Dwa8iluhjLZWA==
   dependencies:
     http-https "^1.0.0"
+
+omit-empty@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/omit-empty/-/omit-empty-1.0.0.tgz#827ad1fdc569511bb9fb3f038a9171a7f10d9040"
+  integrity sha512-eaWd8kwqDyChgf7IYVyfZf2b9b9JOIhpAow4cegg8CVx29U2mZKgCvpfvOSeJctmRTqjGWTZeO2Us58ebDtQ4A==
+  dependencies:
+    kind-of "^6.0.2"
 
 on-exit-leak-free@^2.1.0:
   version "2.1.0"
