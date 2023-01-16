@@ -567,9 +567,8 @@ module.exports = async function (fastify, opts) {
       try {
         const userModel = new User()
         let { socialProfile, type } = request.body,
-          { wallet, userId } = request.user,
-          socialPlatform = Object.keys(socialProfile)[0]
-
+          { wallet, userId } = request.user
+          
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
