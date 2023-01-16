@@ -14,7 +14,7 @@ module.exports = async function (fastify, opts) {
           followersCount =
             await userModel.getTotalFollowersInDifferentPlatform()
         if (totalInfluencerCount || followersCount) {
-          const followerDetails =followersCount[0]
+          const followerDetails = followersCount[0]
           delete followerDetails._id
           reply.success({
             message: 'Status',

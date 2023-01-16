@@ -489,7 +489,7 @@ module.exports = async function (fastify, opts) {
               key,
               JSON.stringify(profileDetails),
               'EX',
-              86400
+              process.env?.CACHE_EXPIRY || 10800
             )
             // Update followers count in db
             const updatePromises = socialKeys.map(async key => {
