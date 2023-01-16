@@ -99,19 +99,18 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   jsonObject.params = params
 
   const result = await apiCall(jsonObject)
-  if (!result.data.err) {
-    console.log(result.data)
+  console.log(result.data)
+  let highestFollowersCount = 0
+  if (result.data.error == null) {
     let profileData = result.data.resp[socialInsiderId]
-    let highestFollowersCount = 0
     highestFollowersCount = Math.max(
       ...Object.values(profileData).map(d => d.followers || 0)
     )
-
-    let resObj = {
-      [platform]: highestFollowersCount
-    }
-    return resObj
   }
+  let resObj = {
+    [platform]: highestFollowersCount
+  }
+  return resObj
 }
 
 // Remove profile from social insider
