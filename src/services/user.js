@@ -366,11 +366,11 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         if (isBanner) {
-          let currentBannerHash = user.bannerImage.split('/').pop()
+          let currentBannerHash = user?.bannerImage?.split('/').pop()
           await unpin(currentBannerHash)
           user.bannerImage = avatar
         } else {
-          let currentAvatarHash = user.avatar.split('/').pop()
+          let currentAvatarHash = user?.avatar?.split('/').pop()
           await unpin(currentAvatarHash)
           user.avatar = avatar
         }
@@ -568,7 +568,7 @@ module.exports = async function (fastify, opts) {
         const userModel = new User()
         let { socialProfile, type } = request.body,
           { wallet, userId } = request.user
-          
+
         // Check user exists or not
         const user = await userModel.getUserBywallet(wallet)
         if (!user) {
