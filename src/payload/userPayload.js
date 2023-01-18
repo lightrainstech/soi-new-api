@@ -170,3 +170,15 @@ exports.updateProfileSchema = {
     .prop('phone', S.string())
     .prop('country', S.string().required())
 }
+
+exports.s3SignatureVerificationSchema = {
+  tags: ['User'],
+  summary: 'S3 signature verification.',
+  description: 'S3 signature verification.',
+  body: S.object()
+    .prop('fileType', S.string().required()),
+  querystring: S.object().prop(
+    'isBanner',
+    S.boolean().default(false)
+  )
+}
