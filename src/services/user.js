@@ -670,7 +670,7 @@ module.exports = async function (fastify, opts) {
         if (isBanner) {
           uniqFileName = 'banner'
         }
-        let fileDirPath = `${userId}/${uniqFileName}`
+        let fileDirPath = `${userId}/${uniqFileName}.${fileType}`
 
         // fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
         // let fileDirPath
