@@ -374,16 +374,8 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         if (isBanner) {
-          let currentBannerHash = user?.bannerImage?.split('/').pop() || ''
-          if (currentBannerHash !== '') {
-            await unpin(currentBannerHash)
-          }
           user.bannerImage = avatar
         } else {
-          let currentAvatarHash = user?.avatar?.split('/').pop() || ''
-          if (currentAvatarHash !== '') {
-            await unpin(currentAvatarHash)
-          }
           user.avatar = avatar
         }
         const updateAvatar = await user.save()

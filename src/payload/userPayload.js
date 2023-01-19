@@ -133,7 +133,6 @@ exports.updateAvatar = {
   body: S.object().prop(
     'avatar',
     S.string()
-      .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
       .format(S.FORMATS.URI)
       .required()
   ),
