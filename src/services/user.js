@@ -664,7 +664,15 @@ module.exports = async function (fastify, opts) {
       try {
         const { fileType } = request.body,
           { userId } = request.user,
-          { isBanner } = request.query
+          { isBanner } = request.query,
+          userModel = new User(),
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found'
+          })
+          return reply
+        }
 
         let uniqFileName = 'avatar'
         if (isBanner) {
