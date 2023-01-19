@@ -672,6 +672,16 @@ module.exports = async function (fastify, opts) {
         }
         let fileDirPath = `${userId}/${uniqFileName}`
 
+        // fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
+        // let fileDirPath
+
+        // const uniqFileName = `${Date.now()}-${fileName}`
+        // if (isBanner) {
+        //   fileDirPath = `${userId}/banner/${uniqFileName}`
+        // } else {
+        //   fileDirPath = `${userId}/avatar/${uniqFileName}`
+        // }
+
         const s3Params = {
           Bucket: process.env.S3_BUCKET_NAME,
           Key: fileDirPath,
@@ -680,13 +690,13 @@ module.exports = async function (fastify, opts) {
           ACL: 'public-read'
         }
 
-        // Delete current image
-        await s3Client
-          .deleteObject({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: fileDirPath
-          })
-          .promise()
+        // // Delete current image
+        // await s3Client
+        //   .deleteObject({
+        //     Bucket: process.env.S3_BUCKET_NAME,
+        //     Key: fileDirPath
+        //   })
+        //   .promise()
 
         // Generate signed url
         await s3Client.getSignedUrl('putObject', s3Params, (err, data) => {
