@@ -17,7 +17,7 @@ const {
   getAccountType,
   removeProfile
 } = require('../utils/soi')
-const { unpin } = require('../utils/utils')
+
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -673,7 +673,7 @@ module.exports = async function (fastify, opts) {
         let fileDirPath = `${userId}/${uniqFileName}`
 
         const s3Params = {
-          Bucket: 'soi-buckets',
+          Bucket: process.env.S3_BUCKET_NAME,
           Key: fileDirPath,
           Expires: 60 * 3,
           ContentType: fileType,
@@ -683,7 +683,7 @@ module.exports = async function (fastify, opts) {
         // Delete current image
         await s3Client
           .deleteObject({
-            Bucket: 'soi-buckets',
+            Bucket: process.env.S3_BUCKET_NAME,
             Key: fileDirPath
           })
           .promise()
