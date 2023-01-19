@@ -493,7 +493,8 @@ module.exports = async function (fastify, opts) {
             )
             // Update followers count in db
             const updatePromises = socialKeys.map(async key => {
-              const value = profileDetails.find(obj => obj[key])[key]
+              let followerData = profileDetails.find(obj => obj[key])
+              let value = followerData ? followerData[key] : 0
               const updateData = {
                 [`social.${key}.followers`]: value
               }
