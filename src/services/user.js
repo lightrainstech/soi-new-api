@@ -704,7 +704,7 @@ module.exports = async function (fastify, opts) {
       } catch (error) {
         console.log(error)
         reply.error({
-          message: 'Failed to verify signature. Please try again.'
+          message: `Failed to verify signature. Please try again. - ${error}`
         })
         return reply
       }
