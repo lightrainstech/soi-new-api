@@ -2,6 +2,7 @@
 
 const ethUtil = require('ethereumjs-util')
 const omitEmpty = require('omit-empty')
+const s3 = require('aws-sdk/clients/s3')
 
 const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
@@ -19,6 +20,13 @@ const {
 const { unpin } = require('../utils/utils')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
+
+// Configure S3
+const s3Client = new s3({
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  accessKeyId: process.env.S3_ACCESS_KEY_ID,
+  region: process.env.S3_REGION
+})
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -367,13 +375,13 @@ module.exports = async function (fastify, opts) {
         }
         if (isBanner) {
           let currentBannerHash = user?.bannerImage?.split('/').pop() || ''
-          if(currentBannerHash !== ''){
+          if (currentBannerHash !== '') {
             await unpin(currentBannerHash)
           }
           user.bannerImage = avatar
         } else {
           let currentAvatarHash = user?.avatar?.split('/').pop() || ''
-          if(currentAvatarHash !== '') {
+          if (currentAvatarHash !== '') {
             await unpin(currentAvatarHash)
           }
           user.avatar = avatar
@@ -640,6 +648,63 @@ module.exports = async function (fastify, opts) {
         reply.error({
           message: `Failed to remove ${type} profile.`,
           error: err.message
+        })
+        return reply
+      }
+    }
+  )
+  // Verify S3 signature
+  fastify.post(
+    '/profile/verify-signature',
+    {
+      schema: userPayload.s3SignatureVerificationSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { fileType } = request.body,
+          { userId } = request.user,
+          { isBanner } = request.query
+
+        let uniqFileName = 'avatar'
+        if (isBanner) {
+          uniqFileName = 'banner'
+        }
+        let fileDirPath = `${userId}/${uniqFileName}`
+
+        const s3Params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: fileDirPath,
+          Expires: 60 * 3,
+          ContentType: fileType,
+          ACL: 'public-read'
+        }
+
+        // Delete current image
+        await s3Client
+          .deleteObject({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: fileDirPath
+          })
+          .promise()
+
+        // Generate signed url
+        await s3Client.getSignedUrl('putObject', s3Params, (err, data) => {
+          if (err) {
+            reply.error({ message: err })
+          }
+          reply.success({
+            signedRequest: data,
+            url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${fileDirPath}`,
+            uniqFileName: uniqFileName,
+            fileDirPath: fileDirPath
+          })
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to verify signature. Please try again.'
         })
         return reply
       }
