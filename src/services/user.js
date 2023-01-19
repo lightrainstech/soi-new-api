@@ -17,7 +17,7 @@ const {
   getAccountType,
   removeProfile
 } = require('../utils/soi')
-const { unpin } = require('../utils/utils')
+
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
