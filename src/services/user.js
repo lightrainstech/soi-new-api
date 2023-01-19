@@ -654,7 +654,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const { fileType } = request.body,
+        let { fileName, fileType } = request.body,
           { userId } = request.user,
           { isBanner } = request.query,
           userModel = new User(),
@@ -666,21 +666,21 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        let uniqFileName = 'avatar'
-        if (isBanner) {
-          uniqFileName = 'banner'
-        }
-        let fileDirPath = `${userId}/${uniqFileName}.${fileType}`
-
-        // fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
-        // let fileDirPath
-
-        // const uniqFileName = `${Date.now()}-${fileName}`
+        // let uniqFileName = 'avatar'
         // if (isBanner) {
-        //   fileDirPath = `${userId}/banner/${uniqFileName}`
-        // } else {
-        //   fileDirPath = `${userId}/avatar/${uniqFileName}`
+        //   uniqFileName = 'banner'
         // }
+        // let fileDirPath = `${userId}/${uniqFileName}.${fileType}`
+
+        fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
+        let fileDirPath
+
+        const uniqFileName = `${Date.now()}-${fileName}`
+        if (isBanner) {
+          fileDirPath = `${userId}/banner/${uniqFileName}`
+        } else {
+          fileDirPath = `${userId}/avatar/${uniqFileName}`
+        }
 
         const s3Params = {
           Bucket: process.env.S3_BUCKET_NAME,
