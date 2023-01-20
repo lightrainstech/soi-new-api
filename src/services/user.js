@@ -18,7 +18,6 @@ const {
   removeProfile
 } = require('../utils/soi')
 
-
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
 // Configure S3
@@ -657,6 +656,7 @@ module.exports = async function (fastify, opts) {
       try {
         let { fileName, fileType } = request.body,
           { userId } = request.user,
+          { isBanner } = request.query,
           userModel = new User(),
           user = await userModel.getUserById(userId)
         if (!user) {
@@ -666,8 +666,30 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        const uniqFileName = fileName.replace(/[^a-zA-Z0-9.]/g, ''),
-        fileDirPath = `${userId}/${uniqFileName}`
+        function getPath(image) {
+          return image.split('/').slice(-2).join('/')
+        }
+
+        let pathToDelete =
+          isBanner && user.bannerImage
+            ? getPath(user.bannerImage)
+            : !isBanner && user.avatar
+            ? getPath(user.bannerImage)
+            : undefined
+
+        if (pathToDelete) {
+          // Delete current image
+          await s3Client
+            .deleteObject({
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: pathToDelete
+            })
+            .promise()
+        }
+
+        fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
+        const uniqFileName = `${Date.now()}-${fileName}`,
+          fileDirPath = `${userId}/${uniqFileName}`
 
         const s3Params = {
           Bucket: process.env.S3_BUCKET_NAME,
@@ -676,14 +698,6 @@ module.exports = async function (fastify, opts) {
           ContentType: fileType,
           ACL: 'public-read'
         }
-
-        // Delete current image
-        await s3Client
-          .deleteObject({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: fileDirPath
-          })
-          .promise()
 
         // Generate signed url
         await s3Client.getSignedUrl('putObject', s3Params, (err, data) => {

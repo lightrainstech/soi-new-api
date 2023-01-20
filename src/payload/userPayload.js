@@ -177,4 +177,5 @@ exports.s3SignatureVerificationSchema = {
   body: S.object()
     .prop('fileType', S.string().required())
     .prop('fileName', S.string().required()),
-  }
+  querystring: S.object().prop('isBanner', S.boolean().default(false))
+}
