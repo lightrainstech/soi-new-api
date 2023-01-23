@@ -86,7 +86,7 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
     date = {
       start: oneMonthAgoTimestamp,
       end: currentTimestamp,
-      timezone: 'Asia/Kolkata'
+      timezone: 'UTC'
     },
     method = 'socialinsider_api.get_profile_data',
     params = {
