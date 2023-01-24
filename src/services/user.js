@@ -418,10 +418,10 @@ module.exports = async function (fastify, opts) {
       try {
         const userTokenModel = new UserToken(),
           userModel = new User(),
-          isExists = await userModel.checkAffiliateCode(affCode)
-        if (!isExists) {
-          reply.code(400).error({
-            message: 'Invalid affiliate code.'
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found'
           })
           return reply
         }
