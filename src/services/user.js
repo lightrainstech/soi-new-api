@@ -188,6 +188,11 @@ module.exports = async function (fastify, opts) {
         }
         let count = (await redis.get(`NFTC:${affCode}`)) || 0
         console.log('###', count)
+        if (Number(count) === 0) {
+          return reply.error({
+            message: 'Invalid agency code.'
+          })
+        }
         reply.success({
           message: 'Remaining NFts',
           data: Number(count)
