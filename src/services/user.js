@@ -303,8 +303,6 @@ module.exports = async function (fastify, opts) {
         // Add profile to social insider
         const resData = {},
           result = await addProfile(socialProfile, type)
-        resData.id = result.resp.id
-        resData.name = result.resp.name
 
         if (result.error) {
           let err = await errorMessage(type)
@@ -313,6 +311,9 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
+
+        resData.id = result.resp.id
+        resData.name = result.resp.name
 
         // Get followers count
         const profileData = await getProfileDetails(
