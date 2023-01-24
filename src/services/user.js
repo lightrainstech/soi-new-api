@@ -188,6 +188,11 @@ module.exports = async function (fastify, opts) {
         }
         let count = (await redis.get(`NFTC:${affCode}`)) || 0
         console.log('###', count)
+        if (Number(count) === 0) {
+          return reply.error({
+            message: 'Invalid agency code.'
+          })
+        }
         reply.success({
           message: 'Remaining NFts',
           data: Number(count)
@@ -413,10 +418,10 @@ module.exports = async function (fastify, opts) {
       try {
         const userTokenModel = new UserToken(),
           userModel = new User(),
-          isExists = await userModel.checkAffiliateCode(affCode)
-        if (!isExists) {
-          reply.code(400).error({
-            message: 'Invalid affiliate code.'
+          user = await userModel.getUserById(userId)
+        if (!user) {
+          reply.code(404).error({
+            message: 'User not found'
           })
           return reply
         }
