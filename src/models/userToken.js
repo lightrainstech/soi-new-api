@@ -9,6 +9,9 @@ const UserTokenSchema = new mongoose.Schema(
     nftId: { type: String, unique: true, required: true },
     avatar: {
       type: String
+    },
+    thumbnail: {
+      type: String
     }
   },
   { timestamps: true }
@@ -44,7 +47,7 @@ UserTokenSchema.methods = {
 
 UserTokenSchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'user avatar nftId'
+    options.select = options.select || 'user avatar thumbnail nftId'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -52,7 +55,7 @@ UserTokenSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'user avatar nftId createdAt'
+    const select = options.select || 'user avatar thumbnail nftId createdAt'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
