@@ -10,13 +10,15 @@ exports.mintNftSchema = {
   tags: ['Asset'],
   summary: 'Mint nft',
   security: [{ Bearer: [] }],
-  body: S.object().prop(
-    'assetUrl',
-    S.string()
-      .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
-      .format(S.FORMATS.URI)
-      .required()
-  )
+  body: S.object()
+    .prop(
+      'assetUrl',
+      S.string()
+        .pattern('([a-zA-Z]+(.[a-zA-Z]+)+).*ipfs')
+        .format(S.FORMATS.URI)
+        .required()
+    )
+    .prop('thumbnail', S.string().format(S.FORMATS.URI).required())
 }
 
 exports.getUserTokenSchema = {

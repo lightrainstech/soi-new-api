@@ -81,7 +81,7 @@ module.exports = async function (fastify, opts) {
     '/mint',
     { schema: assetPayload.mintNftSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
-      const { assetUrl } = request.body,
+      const { assetUrl, thumbnail } = request.body,
         { wallet, affCode, userId } = request.user
       try {
         // Static title and description for assets
@@ -108,7 +108,8 @@ module.exports = async function (fastify, opts) {
             affCode: affCode,
             wallet: wallet,
             metaDataUrl: metaDataUrl,
-            assetUrl: assetUrl
+            assetUrl: assetUrl,
+            thumbnail: thumbnail
           },
           { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
         )
