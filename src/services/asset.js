@@ -7,6 +7,8 @@ const assetPayload = require('../payload/assetPayload')
 
 const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
+const {createThumbnailAndPushToS3} = require('../utils/thumbnail')
+
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
 
@@ -59,12 +61,17 @@ module.exports = async function (fastify, opts) {
               }
             })
 
+          // Create thumbnail and get S3 link
+          const result = await createThumbnailAndPushToS3(filePath, formData)
+
+          // Remove file from disk storage
           fs.unlinkSync(filePath)
 
           let assetUrl = 'https://ipfs.io/ipfs/' + IpfsHash
           reply.success({
             path: assetUrl,
-            mimeType: formData.file[0].mimetype
+            mimeType: formData.file[0].mimetype,
+            thumbnail: result?.link
           })
         })
       } catch (err) {
