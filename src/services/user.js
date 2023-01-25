@@ -16,7 +16,13 @@ const {
   getAccountType,
   removeProfile
 } = require('../utils/soi')
-const S3 = require('../utils/S3Config')
+
+const s3 = require('aws-sdk/clients/s3')
+const s3Client = new s3({
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  accessKeyId: process.env.S3_ACCESS_KEY_ID,
+  region: process.env.S3_REGION
+})
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -678,10 +684,12 @@ module.exports = async function (fastify, opts) {
 
         if (pathToDelete) {
           // Delete current image
-          await S3.deleteObject({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: pathToDelete
-          }).promise()
+          await s3Client
+            .deleteObject({
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: pathToDelete
+            })
+            .promise()
         }
 
         fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
@@ -697,7 +705,7 @@ module.exports = async function (fastify, opts) {
         }
 
         // Generate signed url
-        await S3.getSignedUrl('putObject', s3Params, (err, data) => {
+        await s3Client.getSignedUrl('putObject', s3Params, (err, data) => {
           if (err) {
             reply.error({ message: err })
           }
