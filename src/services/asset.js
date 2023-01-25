@@ -7,7 +7,12 @@ const assetPayload = require('../payload/assetPayload')
 
 const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
-const {createThumbnailAndPushToS3} = require('../utils/thumbnail')
+const { createThumbnailAndPushToS3 } = require('../utils/thumbnail')
+
+const fileDir = `./public/assets`
+if (!fs.existsSync(fileDir)) {
+  fs.mkdirSync(fileDir, { recursive: true })
+}
 
 module.exports = async function (fastify, opts) {
   let { redis } = fastify
@@ -23,31 +28,20 @@ module.exports = async function (fastify, opts) {
       try {
         let pinataStatus = await pinata.testAuthentication()
         console.log('PinataStatus: ', pinataStatus)
-        const formData = request.body
-        if (typeof formData.file !== 'object') {
+        const { file } = request.body
+        if (!Array.isArray(file) || !file[0].filename) {
           reply.error({
             statusCode: 422,
-            message: 'Failed. Asset should be a file.'
+            message: 'Upload Failed. Please select a valid file.'
           })
           return reply
         }
-        if (formData.file[0].filename == '') {
-          reply.error({
-            statusCode: 422,
-            message:
-              'Failed to upload. File name is null. Please upload a proper File.'
-          })
-          return reply
-        }
-        const fileDir = `./public/assets`
-        if (!fs.existsSync(fileDir)) {
-          fs.mkdirSync(fileDir, { recursive: true })
-        }
+
         const filePath = `${process.cwd()}/public/assets/${Date.now()}${
-          formData.file[0].filename
+          file[0].filename
         }`
         const readStream = Duplex()
-        readStream.push(formData.file[0].data)
+        readStream.push(file[0].data)
         readStream.push(null)
         pipeline(readStream, fs.createWriteStream(filePath), async err => {
           if (err) {
@@ -57,12 +51,12 @@ module.exports = async function (fastify, opts) {
           const readableStreamForFile = fs.createReadStream(filePath),
             { IpfsHash } = await pinata.pinFileToIPFS(readableStreamForFile, {
               pinataMetadata: {
-                name: formData.file[0].filename
+                name: file[0].filename
               }
             })
 
           // Create thumbnail and get S3 link
-          const result = await createThumbnailAndPushToS3(filePath, formData)
+          const { link } = await createThumbnailAndPushToS3(filePath, file)
 
           // Remove file from disk storage
           fs.unlinkSync(filePath)
@@ -70,8 +64,8 @@ module.exports = async function (fastify, opts) {
           let assetUrl = 'https://ipfs.io/ipfs/' + IpfsHash
           reply.success({
             path: assetUrl,
-            mimeType: formData.file[0].mimetype,
-            thumbnail: result?.link
+            mimeType: file[0].mimetype,
+            thumbnail: link
           })
         })
       } catch (err) {
