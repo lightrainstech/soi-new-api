@@ -40,11 +40,11 @@ agencySchema.pre('save', async function (next) {
 })
 
 agencySchema.methods = {
-  getAgencyByWallet: async function(wallet) {
+  getAgencyByWallet: async function (wallet) {
     const Agency = mongoose.model('Agency')
     let query = { wallet: wallet }
     const options = {
-      criteria: query,
+      criteria: query
     }
     return Agency.load(options)
   }
