@@ -229,16 +229,22 @@ module.exports = async function (fastify, opts) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
             const affiliateModel = new Affiliate(),
-              affiliateData = await affiliateModel.getUserById(userData._id),
-              jwt = fastify.jwt.sign(
-                {
-                  userId: userData._id,
-                  name: userData.name,
-                  wallet: userData.wallet,
-                  affCode: affiliateData?.affiliateCode
-                },
-                { expiresIn: EXPIRESIN }
-              )
+              affiliateData = await affiliateModel.getUserById(userData._id)
+            if (!affiliateData) {
+              return reply.code(400).error({
+                message:
+                  'You must need an influencer account. Contact admin for more information.'
+              })
+            }
+            const jwt = fastify.jwt.sign(
+              {
+                userId: userData._id,
+                name: userData.name,
+                wallet: userData.wallet,
+                affCode: affiliateData?.affiliateCode
+              },
+              { expiresIn: EXPIRESIN }
+            )
             let respUser = {
               userId: userData._id,
               name: userData.name,
