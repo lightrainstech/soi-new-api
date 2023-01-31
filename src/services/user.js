@@ -229,16 +229,22 @@ module.exports = async function (fastify, opts) {
           let userData = await userModel.getUserBywallet(checkSumWallet)
           if (userData) {
             const affiliateModel = new Affiliate(),
-              affiliateData = await affiliateModel.getUserById(userData._id),
-              jwt = fastify.jwt.sign(
-                {
-                  userId: userData._id,
-                  name: userData.name,
-                  wallet: userData.wallet,
-                  affCode: affiliateData.affiliateCode
-                },
-                { expiresIn: EXPIRESIN }
-              )
+              affiliateData = await affiliateModel.getUserById(userData._id)
+            if (!affiliateData) {
+              return reply.code(400).error({
+                message:
+                  'You must need an influencer account. Contact admin for more information.'
+              })
+            }
+            const jwt = fastify.jwt.sign(
+              {
+                userId: userData._id,
+                name: userData.name,
+                wallet: userData.wallet,
+                affCode: affiliateData?.affiliateCode
+              },
+              { expiresIn: EXPIRESIN }
+            )
             let respUser = {
               userId: userData._id,
               name: userData.name,
@@ -486,27 +492,30 @@ module.exports = async function (fastify, opts) {
               )
             })
           // Get followers count
+          let resArray = []
           const profileDetails = await Promise.all(profileDetailsPromises)
           if (profileDetails) {
-            // Cache response in redis
+            // Update followers count in db
+            const updatePromises = socialKeys.map(async key => {
+              let followerData = profileDetails.find(obj => obj[key]),
+                value = followerData ? followerData[key] : 0,
+                k = `social.${key}.followers`,
+                v = value === 0 ? null : value
+              const update = await userModel.updateFollowers(userId, k, v)
+              resArray.push({
+                [`${key}`]: update.social[key].followers
+              })
+            })
+            await Promise.all(updatePromises)
+            //Cache response in redis
             await fastify.redis.set(
               key,
-              JSON.stringify(profileDetails),
+              JSON.stringify(resArray),
               'EX',
               process.env?.CACHE_EXPIRY || 10800
             )
-            // Update followers count in db
-            const updatePromises = socialKeys.map(async key => {
-              let followerData = profileDetails.find(obj => obj[key])
-              let value = followerData ? followerData[key] : 0
-              const updateData = {
-                [`social.${key}.followers`]: value
-              }
-              await userModel.updateFollowers(userId, updateData)
-            })
-            await Promise.all(updatePromises)
             reply.success({
-              profileDetails
+              profileDetails: resArray
             })
             return reply
           } else {
