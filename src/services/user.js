@@ -492,6 +492,7 @@ module.exports = async function (fastify, opts) {
               )
             })
           // Get followers count
+          let resArray = []
           const profileDetails = await Promise.all(profileDetailsPromises)
           if (profileDetails) {
             // Update followers count in db
@@ -500,25 +501,21 @@ module.exports = async function (fastify, opts) {
                 value = followerData ? followerData[key] : 0,
                 k = `social.${key}.followers`,
                 v = value === 0 ? null : value
-              await userModel.updateFollowers(userId, k, v)
+              const update = await userModel.updateFollowers(userId, k, v)
+              resArray.push({
+                [`${key}`]: update.social[key].followers
+              })
             })
             await Promise.all(updatePromises)
-            const socialProfileDetails = await userModel.getUserById(userId),
-            result = Object.entries(socialProfileDetails.social).map(
-              ([key, value]) => ({
-                [key]: value.followers
-              })
-            )
-            // Cache response in redis
+            //Cache response in redis
             await fastify.redis.set(
               key,
-              JSON.stringify(result),
+              JSON.stringify(resArray),
               'EX',
               process.env?.CACHE_EXPIRY || 10800
             )
-
             reply.success({
-              profileDetails: result
+              profileDetails: resArray
             })
             return reply
           } else {
