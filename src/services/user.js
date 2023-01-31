@@ -688,7 +688,7 @@ module.exports = async function (fastify, opts) {
           isBanner && user.bannerImage
             ? getPath(user.bannerImage)
             : !isBanner && user.avatar
-            ? getPath(user.bannerImage)
+            ? getPath(user.avatar)
             : undefined
 
         if (pathToDelete) {
