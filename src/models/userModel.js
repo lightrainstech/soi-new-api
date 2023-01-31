@@ -123,7 +123,8 @@ const socialAccountMap = {
     let query = { _id: id }
     const options = {
       criteria: query,
-      select: 'email userName wallet role avatar bannerImage social name country phone'
+      select:
+        'email userName wallet role avatar bannerImage social name country phone'
     }
     return User.load(options)
   },
@@ -233,16 +234,17 @@ const socialAccountMap = {
       role: role
     })
   },
-  updateFollowers: async function (userId, data ) {
+  updateFollowers: async function (userId, key, value) {
     const User = mongoose.model('User')
     return User.findByIdAndUpdate(
       { _id: userId },
-      { $set: data },
+      { $set: { key: { $ifNull: [value, key] } } },
       {
         new: true
-      })
+      }
+    )
   },
-  getTotalFollowersInDifferentPlatform: async function (userId, data ) {
+  getTotalFollowersInDifferentPlatform: async function (userId, data) {
     const User = mongoose.model('User')
     return User.aggregate([
       {
@@ -271,7 +273,6 @@ const socialAccountMap = {
         }
       }
     ])
-
   }
 }),
   (UserSchema.statics = {
