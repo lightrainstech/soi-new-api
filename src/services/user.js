@@ -495,14 +495,14 @@ module.exports = async function (fastify, opts) {
           // Get followers count
           let resArray = []
           const profileDetails = await Promise.all(profileDetailsPromises)
+          console.log('profileDetails', profileDetails)
           if (profileDetails) {
             // Update followers count in db
             const updatePromises = socialKeys.map(async key => {
               let followerData = profileDetails.find(obj => obj[key]),
                 value = followerData ? followerData[key] : 0,
-                k = `social.${key}.followers`,
-                v = value === 0 ? null : value
-              const update = await userModel.updateFollowers(userId, k, v)
+                k = `social.${key}.followers`
+              const update = await userModel.updateFollowers(userId, k, value)
               resArray.push({
                 [`${key}`]: update.social[key].followers
               })
