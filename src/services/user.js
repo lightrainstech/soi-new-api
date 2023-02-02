@@ -476,6 +476,7 @@ module.exports = async function (fastify, opts) {
           cachedData = await fastify.redis.get(key)
         if (cachedData) {
           reply.success({
+            isCache: true,
             profileDetails: JSON.parse(cachedData)
           })
           return reply
@@ -515,6 +516,7 @@ module.exports = async function (fastify, opts) {
               process.env?.CACHE_EXPIRY || 10800
             )
             reply.success({
+              isCache: false,
               profileDetails: resArray
             })
             return reply
