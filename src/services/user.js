@@ -495,6 +495,7 @@ module.exports = async function (fastify, opts) {
           // Get followers count
           let resArray = []
           const profileDetails = await Promise.all(profileDetailsPromises)
+          console.log('profileDetails', profileDetails)
           if (profileDetails) {
             // Update followers count in db
             const updatePromises = socialKeys.map(async key => {

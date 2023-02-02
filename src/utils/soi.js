@@ -110,6 +110,7 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   let resObj = {
     [platform]: highestFollowersCount
   }
+  console.log('resObj', resObj)
   return resObj
 }
 
