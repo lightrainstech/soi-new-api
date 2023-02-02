@@ -236,13 +236,18 @@ const socialAccountMap = {
   },
   updateFollowers: async function (userId, key, value) {
     const User = mongoose.model('User')
-    return User.findByIdAndUpdate(
-      { _id: userId },
-      { $set: { key: { $ifNull: [value, key] } } },
-      {
-        new: true
-      }
-    )
+    if(value !== 0) {
+      return User.findByIdAndUpdate(
+        { _id: userId },
+        { $set: { [key]: value } },
+        {
+          new: true
+        }
+      )
+    }else {
+      return User.findById(userId)
+    }
+
   },
   getTotalFollowersInDifferentPlatform: async function (userId, data) {
     const User = mongoose.model('User')

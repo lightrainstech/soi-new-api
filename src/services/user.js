@@ -501,9 +501,8 @@ module.exports = async function (fastify, opts) {
             const updatePromises = socialKeys.map(async key => {
               let followerData = profileDetails.find(obj => obj[key]),
                 value = followerData ? followerData[key] : 0,
-                k = `social.${key}.followers`,
-                v = value === 0 ? null : value
-              const update = await userModel.updateFollowers(userId, k, v)
+                k = `social.${key}.followers`
+              const update = await userModel.updateFollowers(userId, k, value)
               resArray.push({
                 [`${key}`]: update.social[key].followers
               })
