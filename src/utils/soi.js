@@ -130,11 +130,24 @@ const removeProfile = async (socialInsiderId, socialPlatform) => {
   return result.data
 }
 
+// Function to return error when a profile not exists in SI
+const getProfileNotExistError = platform => {
+  const socialAccountMap = {
+    facebook: 'No profile with provided id and platform. fb',
+    instagram: 'No profile with provided id and platform. ig',
+    twitter: 'No profile with provided id and platform. tw',
+    youtube: 'No profile with provided id and platform. yt',
+    tiktok: 'No profile with provided id and platform. tk'
+  }
+  return socialAccountMap[platform]
+}
+
 module.exports = {
   getAccountType,
   addProfile,
   errorMessage,
   stripTrailingSlash,
   getProfileDetails,
-  removeProfile
+  removeProfile,
+  getProfileNotExistError
 }
