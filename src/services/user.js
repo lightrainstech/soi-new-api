@@ -14,7 +14,8 @@ const {
   errorMessage,
   getProfileDetails,
   getAccountType,
-  removeProfile
+  removeProfile,
+  getProfileNotExistError
 } = require('../utils/soi')
 
 const s3 = require('aws-sdk/clients/s3')
@@ -626,7 +627,11 @@ module.exports = async function (fastify, opts) {
           isSocialProfileExists.social[type].socialInsiderId,
           type
         )
-        if (result.resp === 'success') {
+        if (
+          result.resp === 'success' ||
+          (isSocialProfileExists &&
+            result.error.message === getProfileNotExistError(type))
+        ) {
           // Remove profile from db
           const removeProfileFromDb = await userModel.removeAccount(
             socialProfile,
