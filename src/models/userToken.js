@@ -12,6 +12,53 @@ const UserTokenSchema = new mongoose.Schema(
     },
     thumbnail: {
       type: String
+    },
+    social: {
+      facebook: {
+        name: String,
+        handle: String,
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
+      },
+      twitter: {
+        name: String,
+        handle: String,
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
+      },
+      youtube: {
+        name: String,
+        handle: String,
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
+      },
+      instagram: {
+        name: String,
+        handle: String,
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
+      },
+      tiktok: {
+        name: String,
+        handle: String,
+        socialInsiderId: String,
+        followers: {
+          type: Number,
+          default: 0
+        }
+      }
     }
   },
   { timestamps: true }
@@ -47,7 +94,7 @@ UserTokenSchema.methods = {
 
 UserTokenSchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'user avatar thumbnail nftId'
+    options.select = options.select || 'user avatar thumbnail nftId social'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -55,7 +102,8 @@ UserTokenSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'user avatar thumbnail nftId createdAt'
+    const select =
+      options.select || 'user avatar thumbnail nftId social createdAt'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
