@@ -158,7 +158,6 @@ UserTokenSchema.methods = {
     )
   },
   getTotalFollowersInDifferentPlatform: async function () {
-    console.log('gagag')
     const UserToken = mongoose.model('UserToken')
     return UserToken.aggregate([
       {
@@ -187,6 +186,37 @@ UserTokenSchema.methods = {
         }
       }
     ])
+  },
+  listTokens: async function (userId) {
+    const UserToken = mongoose.model('UserToken')
+    let query = {
+      user: ObjectId(userId),
+      $or: [
+        { 'social.facebook.socialInsiderId': { $exists: true } },
+        { 'social.twitter.socialInsiderId': { $exists: true } },
+        { 'social.youtube.socialInsiderId': { $exists: true } },
+        { 'social.instagram.socialInsiderId': { $exists: true } },
+        { 'social.tiktok.socialInsiderId': { $exists: true } }
+      ]
+    }
+    const options = {
+      criteria: query
+    }
+    return UserToken.find(options.criteria).select('_id user nftId social')
+  },
+  updateFollowers: async function (nftId, key, value) {
+    const UserToken = mongoose.model('UserToken')
+    if (value !== 0) {
+      return UserToken.findOneAndUpdate(
+        { nftId: nftId },
+        { $set: { [key]: value } },
+        {
+          new: true
+        }
+      )
+    } else {
+      return UserToken.findOne({ nftId: nftId })
+    }
   }
 }
 

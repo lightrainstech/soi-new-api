@@ -117,3 +117,8 @@ exports.removeSocialProfileSchema = {
   summary: 'Remove social profile',
   body: socialProfileSchema
 }
+
+exports.checkFollowersCountSchema = {
+  tags: ['Asset'],
+  summary: 'Get social profile followers count.'
+}

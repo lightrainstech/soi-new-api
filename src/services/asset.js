@@ -224,11 +224,11 @@ module.exports = async function (fastify, opts) {
         }
 
         // Remove redis cache
-        // const key = `${userId}_social_profile_data`,
-        //   cachedData = await fastify.redis.get(key)
-        // if (cachedData) {
-        //   await fastify.redis.del(key)
-        // }
+        const key = `FOLLOWERC:${userId}`,
+          cachedData = await fastify.redis.get(key)
+        if (cachedData) {
+          await fastify.redis.del(key)
+        }
 
         // Check profile exists in db or not
         const isSocialProfileExists =
@@ -352,12 +352,12 @@ module.exports = async function (fastify, opts) {
             userId,
             nftId
           )
-          // Remove redis cache
-          // const key = `${userId}_social_profile_data`,
-          //   cachedData = await fastify.redis.get(key)
-          // if (cachedData) {
-          //   await fastify.redis.del(key)
-          // }
+          //Remove redis cache
+          const key = `FOLLOWERC:${userId}`,
+            cachedData = await fastify.redis.get(key)
+          if (cachedData) {
+            await fastify.redis.del(key)
+          }
           if (removeProfileFromDb) {
             reply.success({
               message: `${type} profile removed successfully.`,
@@ -377,6 +377,96 @@ module.exports = async function (fastify, opts) {
           message: `Failed to remove ${type} profile. Please try again.`,
           error: err.message
         })
+        return reply
+      }
+    }
+  )
+  // Get profile details from social insider
+  fastify.get(
+    '/social/details',
+    {
+      schema: assetPayload.checkFollowersCountSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userTokenModel = new UserToken(),
+          { userId } = request.user,
+          nfts = await userTokenModel.listTokens(userId)
+
+        if (!nfts.length) {
+          reply.code(404).error({
+            message: 'Assets not found.'
+          })
+          return reply
+        }
+
+        // Check for cached value
+        const key = `FOLLOWERC:${userId}`
+        const cachedData = await fastify.redis.get(key)
+        if (cachedData) {
+          reply.success({
+            isCache: true,
+            profileDetails: JSON.parse(cachedData)
+          })
+          return reply
+        }
+
+        let resArray = []
+        const updatePromises = nfts.map(async nft => {
+          const socialKeys = Object.keys(nft.social).filter(
+              key => nft.social[key].socialInsiderId !== undefined
+            ),
+            profileDetailsPromises = socialKeys.map(async key => {
+              return getProfileDetails(
+                nft.social[key].socialInsiderId,
+                getAccountType(key),
+                key
+              )
+            })
+          const profileDetails = await Promise.all(profileDetailsPromises)
+          if (profileDetails) {
+            // Update followers count in db
+            const updateFollowerPromises = socialKeys.map(async key => {
+              let followerData = profileDetails.find(obj => obj[key]),
+                value = followerData ? followerData[key] : 0,
+                k = `social.${key}.followers`
+              const update = await userTokenModel.updateFollowers(
+                nft.nftId,
+                k,
+                value
+              )
+              if (update) {
+                const foundObject = resArray.find(obj => key in obj)
+                if (foundObject) {
+                  const index = resArray.indexOf(foundObject)
+                  resArray[index] = Object.assign({}, foundObject, {
+                    [key]: foundObject[key] + update.social[key].followers
+                  })
+                } else {
+                  resArray.push({ [key]: update.social[key].followers })
+                }
+              }
+            })
+            await Promise.all(updateFollowerPromises)
+          }
+        })
+        await Promise.all(updatePromises)
+        //Cache response in redis
+        await fastify.redis.set(
+          key,
+          JSON.stringify(resArray),
+          'EX',
+          process.env?.CACHE_EXPIRY || 10800
+        )
+        reply.success({
+          isCache: false,
+          profileDetails: resArray
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
         return reply
       }
     }
