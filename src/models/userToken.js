@@ -2,6 +2,7 @@
 // External Dependencies
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
+const { stripTrailingSlash } = require('../utils/soi')
 
 const UserTokenSchema = new mongoose.Schema(
   {
@@ -64,10 +65,29 @@ const UserTokenSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+
+let val1,
+  val2,
+  val3,
+  val4,
+  key,
+  key1,
+  key2,
+  key3,
+  key4,
+  obj = {}
+const socialAccountMap = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  twitter: 'twitter',
+  youtube: 'youtube',
+  tiktok: 'tiktok'
+}
+
 UserTokenSchema.methods = {
-  getUserTokenById: async function (id) {
+  getUserTokenById: async function (nftId, userId) {
     const UserToken = mongoose.model('UserToken')
-    let query = { _id: id }
+    let query = { nftId: nftId, user: ObjectId(userId) }
     const options = {
       criteria: query
     }
@@ -89,6 +109,39 @@ UserTokenSchema.methods = {
       criteria: query
     }
     return UserToken.load(options)
+  },
+  updateSocialAccounts: async function (nftId, socialAccounts, resData) {
+    const UserToken = mongoose.model('UserToken')
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      val1 = stripTrailingSlash(socialAccounts[firstKey])
+      key1 = `social.${firstKey}.handle`
+      key2 = `social.${firstKey}.socialInsiderId`
+      val2 = resData.id
+      key3 = `social.${firstKey}.name`
+      val3 = resData.name
+      key4 = `social.${firstKey}.followers`
+      val4 = resData.followers
+    }
+    const result = UserToken.findOneAndUpdate(
+      { nftId: nftId },
+      { [key1]: val1, [key2]: val2, [key3]: val3, [key4]: val4 },
+      {
+        new: true
+      }
+    )
+    return result
+  },
+  checkSocialAccountExists: async function (socialAccounts) {
+    const UserToken = mongoose.model('UserToken')
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = stripTrailingSlash(socialAccounts[firstKey])
+      key = `social.${firstKey}.handle`
+    }
+    return UserToken.findOne({ [key]: obj }).select(
+      'user avatar thumbnail nftId social'
+    )
   }
 }
 

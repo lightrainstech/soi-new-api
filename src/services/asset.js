@@ -9,6 +9,15 @@ const pinata = new pinataSDK(process.env.PINATA_API, process.env.PINATA_SECRET)
 
 const { createThumbnailAndPushToS3 } = require('../utils/thumbnail')
 
+const {
+  addProfile,
+  errorMessage,
+  getProfileDetails,
+  getAccountType,
+  removeProfile,
+  getProfileNotExistError
+} = require('../utils/soi')
+
 const fileDir = `./public/assets`
 if (!fs.existsSync(fileDir)) {
   fs.mkdirSync(fileDir, { recursive: true })
@@ -186,6 +195,97 @@ module.exports = async function (fastify, opts) {
         console.log(error)
         reply.error({
           message: error
+        })
+        return reply
+      }
+    }
+  )
+  // Link nft to profile
+  fastify.put(
+    '/:nftId/social/profile',
+    {
+      schema: assetPayload.addSocialProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userTokenModel = new UserToken(),
+          { socialProfile, type } = request.body,
+          { userId } = request.user,
+          { nftId } = request.params
+
+        // Check NFT exists or not
+        const nft = await userTokenModel.getUserTokenById(nftId, userId)
+        if (!nft) {
+          reply.code(404).error({
+            message: 'Asset not found.'
+          })
+          return reply
+        }
+
+        // Remove redis cache
+        // const key = `${userId}_social_profile_data`,
+        //   cachedData = await fastify.redis.get(key)
+        // if (cachedData) {
+        //   await fastify.redis.del(key)
+        // }
+
+        // Check profile exists in db or not
+        const isSocialProfileExists =
+          await userTokenModel.checkSocialAccountExists(socialProfile)
+        if (isSocialProfileExists) {
+          reply.code(400).error({
+            message: `${type} profile already exists.`
+          })
+          return reply
+        }
+
+        // Add profile to social insider
+        const resData = {},
+          result = await addProfile(socialProfile, type)
+
+        if (result.error) {
+          let err = await errorMessage(type)
+          reply.code(400).error({
+            message: err ? err : result.error.message
+          })
+          return reply
+        }
+
+        resData.id = result.resp.id
+        resData.name = result.resp.name
+
+        // Get followers count
+        const profileData = await getProfileDetails(
+          resData.id,
+          getAccountType(type),
+          type
+        )
+        resData.followers = profileData[type]
+
+        // Add social account of a user to db
+        const addSocialAccounts = await userTokenModel.updateSocialAccounts(
+          nftId,
+          socialProfile,
+          resData
+        )
+        if (!addSocialAccounts) {
+          reply.code(400).error({
+            message: `Failed to add ${type} profile.`
+          })
+          return reply
+        } else {
+          reply.success({
+            message: `${type} profile added successfully.`,
+            nft: addSocialAccounts
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
+        reply.error({
+          message: `Failed to add ${type} profile.`,
+          error: err.message
         })
         return reply
       }
