@@ -578,94 +578,94 @@ module.exports = async function (fastify, opts) {
     }
   )
   // Remove social accounts
-  fastify.put(
-    '/social/profile/remove',
-    {
-      schema: userPayload.removeSocialProfileSchema,
-      onRequest: [fastify.authenticate]
-    },
-    async function (request, reply) {
-      try {
-        const userModel = new User()
-        let { socialProfile, type } = request.body,
-          { wallet, userId } = request.user
+  // fastify.put(
+  //   '/social/profile/remove',
+  //   {
+  //     schema: userPayload.removeSocialProfileSchema,
+  //     onRequest: [fastify.authenticate]
+  //   },
+  //   async function (request, reply) {
+  //     try {
+  //       const userModel = new User()
+  //       let { socialProfile, type } = request.body,
+  //         { wallet, userId } = request.user
 
-        // Check user exists or not
-        const user = await userModel.getUserBywallet(wallet)
-        if (!user) {
-          reply.code(404).error({
-            message: 'User not found.'
-          })
-          return reply
-        }
+  //       // Check user exists or not
+  //       const user = await userModel.getUserBywallet(wallet)
+  //       if (!user) {
+  //         reply.code(404).error({
+  //           message: 'User not found.'
+  //         })
+  //         return reply
+  //       }
 
-        // Check profile exists in db or not
-        const isSocialProfileExists = await userModel.checkSocialAccountExists(
-          socialProfile
-        )
+  //       // Check profile exists in db or not
+  //       const isSocialProfileExists = await userModel.checkSocialAccountExists(
+  //         socialProfile
+  //       )
 
-        if (!isSocialProfileExists) {
-          reply.code(404).error({
-            message: 'Profile not found.'
-          })
-          return reply
-        }
+  //       if (!isSocialProfileExists) {
+  //         reply.code(404).error({
+  //           message: 'Profile not found.'
+  //         })
+  //         return reply
+  //       }
 
-        const socialKeys = Object.keys(isSocialProfileExists.social).filter(
-          key => isSocialProfileExists.social[key].socialInsiderId !== undefined
-        )
+  //       const socialKeys = Object.keys(isSocialProfileExists.social).filter(
+  //         key => isSocialProfileExists.social[key].socialInsiderId !== undefined
+  //       )
 
-        if (Object.keys(socialKeys).length == 2) {
-          reply.error({
-            message: 'At least two profile is required.'
-          })
-          return reply
-        }
+  //       if (Object.keys(socialKeys).length == 2) {
+  //         reply.error({
+  //           message: 'At least two profile is required.'
+  //         })
+  //         return reply
+  //       }
 
-        // Remove profile from social insider
-        const result = await removeProfile(
-          isSocialProfileExists.social[type].socialInsiderId,
-          type
-        )
-        if (
-          result.resp === 'success' ||
-          (isSocialProfileExists &&
-            result.error.message === getProfileNotExistError(type))
-        ) {
-          // Remove profile from db
-          const removeProfileFromDb = await userModel.removeAccount(
-            socialProfile,
-            userId
-          )
-          // Remove redis cache
-          const key = `${userId}_social_profile_data`,
-            cachedData = await fastify.redis.get(key)
-          if (cachedData) {
-            await fastify.redis.del(key)
-          }
-          if (removeProfileFromDb) {
-            reply.success({
-              message: `${type} profile removed successfully.`,
-              user: removeProfileFromDb
-            })
-            return reply
-          }
-        } else {
-          reply.error({
-            message: `Failed to remove ${type} profile. Please try again.`
-          })
-          return reply
-        }
-      } catch (err) {
-        console.log(err)
-        reply.error({
-          message: `Failed to remove ${type} profile. Please try again.`,
-          error: err.message
-        })
-        return reply
-      }
-    }
-  )
+  //       // Remove profile from social insider
+  //       const result = await removeProfile(
+  //         isSocialProfileExists.social[type].socialInsiderId,
+  //         type
+  //       )
+  //       if (
+  //         result.resp === 'success' ||
+  //         (isSocialProfileExists &&
+  //           result.error.message === getProfileNotExistError(type))
+  //       ) {
+  //         // Remove profile from db
+  //         const removeProfileFromDb = await userModel.removeAccount(
+  //           socialProfile,
+  //           userId
+  //         )
+  //         // Remove redis cache
+  //         const key = `${userId}_social_profile_data`,
+  //           cachedData = await fastify.redis.get(key)
+  //         if (cachedData) {
+  //           await fastify.redis.del(key)
+  //         }
+  //         if (removeProfileFromDb) {
+  //           reply.success({
+  //             message: `${type} profile removed successfully.`,
+  //             user: removeProfileFromDb
+  //           })
+  //           return reply
+  //         }
+  //       } else {
+  //         reply.error({
+  //           message: `Failed to remove ${type} profile. Please try again.`
+  //         })
+  //         return reply
+  //       }
+  //     } catch (err) {
+  //       console.log(err)
+  //       reply.error({
+  //         message: `Failed to remove ${type} profile. Please try again.`,
+  //         error: err.message
+  //       })
+  //       return reply
+  //     }
+  //   }
+  // )
   // Verify S3 signature
   fastify.post(
     '/profile/verify-signature',
