@@ -65,7 +65,6 @@ const UserTokenSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-
 let val1,
   val2,
   val3,
@@ -141,6 +140,21 @@ UserTokenSchema.methods = {
     }
     return UserToken.findOne({ [key]: obj }).select(
       'user avatar thumbnail nftId social'
+    )
+  },
+  removeAccount: async function (socialAccounts, userId, nftId) {
+    const UserToken = mongoose.model('UserToken')
+    const firstKey = Object.keys(socialAccounts)[0]
+    if (socialAccountMap[firstKey]) {
+      obj = stripTrailingSlash(socialAccounts[firstKey])
+      key = `social.${firstKey}`
+    }
+    return UserToken.findOneAndUpdate(
+      { user: ObjectId(userId), nftId: nftId },
+      { $unset: { [key]: '' } },
+      {
+        new: true
+      }
     )
   }
 }

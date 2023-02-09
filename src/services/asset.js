@@ -200,7 +200,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Link nft to profile
+  // Link social profile to nft
   fastify.put(
     '/:nftId/social/profile',
     {
@@ -285,6 +285,96 @@ module.exports = async function (fastify, opts) {
         console.log(err)
         reply.error({
           message: `Failed to add ${type} profile.`,
+          error: err.message
+        })
+        return reply
+      }
+    }
+  )
+  // Remove social accounts linked from nft
+  fastify.put(
+    '/:nftId/social/profile/remove',
+    {
+      schema: assetPayload.removeSocialProfileSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userTokenModel = new UserToken(),
+          { socialProfile, type } = request.body,
+          { userId } = request.user,
+          { nftId } = request.params
+
+        // Check NFT exists or not
+        const nft = await userTokenModel.getUserTokenById(nftId, userId)
+        if (!nft) {
+          reply.code(404).error({
+            message: 'Asset not found.'
+          })
+          return reply
+        }
+
+        // Check profile exists in db or not
+        const isSocialProfileExists =
+          await userTokenModel.checkSocialAccountExists(socialProfile)
+
+        if (!isSocialProfileExists) {
+          reply.code(404).error({
+            message: 'Profile not found.'
+          })
+          return reply
+        }
+
+        const socialKeys = Object.keys(isSocialProfileExists.social).filter(
+          key => isSocialProfileExists.social[key].socialInsiderId !== undefined
+        )
+
+        if (Object.keys(socialKeys).length == 2) {
+          reply.error({
+            message: 'At least two profile is required.'
+          })
+          return reply
+        }
+
+        // Remove profile from social insider
+        const result = await removeProfile(
+          isSocialProfileExists.social[type].socialInsiderId,
+          type
+        )
+        if (
+          result.resp === 'success' ||
+          (isSocialProfileExists &&
+            result.error.message === getProfileNotExistError(type))
+        ) {
+          // Remove profile from db
+          const removeProfileFromDb = await userTokenModel.removeAccount(
+            socialProfile,
+            userId,
+            nftId
+          )
+          // Remove redis cache
+          // const key = `${userId}_social_profile_data`,
+          //   cachedData = await fastify.redis.get(key)
+          // if (cachedData) {
+          //   await fastify.redis.del(key)
+          // }
+          if (removeProfileFromDb) {
+            reply.success({
+              message: `${type} profile removed successfully.`,
+              nft: removeProfileFromDb
+            })
+            return reply
+          }
+        } else {
+          reply.error({
+            message: `Failed to remove ${type} profile. Please try again.`
+          })
+          return reply
+        }
+      } catch (err) {
+        console.log(err)
+        reply.error({
+          message: `Failed to remove ${type} profile. Please try again.`,
           error: err.message
         })
         return reply

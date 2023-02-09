@@ -111,3 +111,9 @@ exports.addSocialProfileSchema = {
   summary: 'Add social profile',
   body: socialProfileSchema
 }
+
+exports.removeSocialProfileSchema = {
+  tags: ['Asset'],
+  summary: 'Remove social profile',
+  body: socialProfileSchema
+}

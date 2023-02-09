@@ -272,96 +272,96 @@ module.exports = async function (fastify, opts) {
     )
 
   // Add social accounts
-  fastify.put(
-    '/social/profile',
-    {
-      schema: userPayload.addSocialProfileSchema,
-      onRequest: [fastify.authenticate]
-    },
-    async function (request, reply) {
-      try {
-        const userModel = new User(),
-          { socialProfile, type } = request.body,
-          { wallet, userId } = request.user
+  // fastify.put(
+  //   '/social/profile',
+  //   {
+  //     schema: userPayload.addSocialProfileSchema,
+  //     onRequest: [fastify.authenticate]
+  //   },
+  //   async function (request, reply) {
+  //     try {
+  //       const userModel = new User(),
+  //         { socialProfile, type } = request.body,
+  //         { wallet, userId } = request.user
 
-        // Check user exists or not
-        const user = await userModel.getUserBywallet(wallet)
-        if (!user) {
-          reply.code(404).error({
-            message: 'User not found'
-          })
-          return reply
-        }
+  //       // Check user exists or not
+  //       const user = await userModel.getUserBywallet(wallet)
+  //       if (!user) {
+  //         reply.code(404).error({
+  //           message: 'User not found'
+  //         })
+  //         return reply
+  //       }
 
-        // Remove redis cache
-        const key = `${userId}_social_profile_data`,
-          cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          await fastify.redis.del(key)
-        }
+  //       // Remove redis cache
+  //       const key = `${userId}_social_profile_data`,
+  //         cachedData = await fastify.redis.get(key)
+  //       if (cachedData) {
+  //         await fastify.redis.del(key)
+  //       }
 
-        // Check profile exists in db or not
-        const isSocialProfileExists = await userModel.checkSocialAccountExists(
-          socialProfile
-        )
-        if (isSocialProfileExists) {
-          reply.code(400).error({
-            message: `${type} profile already exists.`
-          })
-          return reply
-        }
+  //       // Check profile exists in db or not
+  //       const isSocialProfileExists = await userModel.checkSocialAccountExists(
+  //         socialProfile
+  //       )
+  //       if (isSocialProfileExists) {
+  //         reply.code(400).error({
+  //           message: `${type} profile already exists.`
+  //         })
+  //         return reply
+  //       }
 
-        // Add profile to social insider
-        const resData = {},
-          result = await addProfile(socialProfile, type)
+  //       // Add profile to social insider
+  //       const resData = {},
+  //         result = await addProfile(socialProfile, type)
 
-        if (result.error) {
-          let err = await errorMessage(type)
-          reply.code(400).error({
-            message: err ? err : result.error.message
-          })
-          return reply
-        }
+  //       if (result.error) {
+  //         let err = await errorMessage(type)
+  //         reply.code(400).error({
+  //           message: err ? err : result.error.message
+  //         })
+  //         return reply
+  //       }
 
-        resData.id = result.resp.id
-        resData.name = result.resp.name
+  //       resData.id = result.resp.id
+  //       resData.name = result.resp.name
 
-        // Get followers count
-        const profileData = await getProfileDetails(
-          resData.id,
-          getAccountType(type),
-          type
-        )
-        resData.followers = profileData[type]
+  //       // Get followers count
+  //       const profileData = await getProfileDetails(
+  //         resData.id,
+  //         getAccountType(type),
+  //         type
+  //       )
+  //       resData.followers = profileData[type]
 
-        // Add social account of a user to db
-        const addSocialAccounts = await userModel.updateSocialAccounts(
-          wallet,
-          socialProfile,
-          resData
-        )
-        if (!addSocialAccounts) {
-          reply.code(400).error({
-            message: `Failed to add ${type} profile.`
-          })
-          return reply
-        } else {
-          reply.success({
-            message: `${type} profile added successfully.`,
-            user: addSocialAccounts
-          })
-          return reply
-        }
-      } catch (err) {
-        console.log(err)
-        reply.error({
-          message: `Failed to add ${type} profile.`,
-          error: err.message
-        })
-        return reply
-      }
-    }
-  )
+  //       // Add social account of a user to db
+  //       const addSocialAccounts = await userModel.updateSocialAccounts(
+  //         wallet,
+  //         socialProfile,
+  //         resData
+  //       )
+  //       if (!addSocialAccounts) {
+  //         reply.code(400).error({
+  //           message: `Failed to add ${type} profile.`
+  //         })
+  //         return reply
+  //       } else {
+  //         reply.success({
+  //           message: `${type} profile added successfully.`,
+  //           user: addSocialAccounts
+  //         })
+  //         return reply
+  //       }
+  //     } catch (err) {
+  //       console.log(err)
+  //       reply.error({
+  //         message: `Failed to add ${type} profile.`,
+  //         error: err.message
+  //       })
+  //       return reply
+  //     }
+  //   }
+  // )
 
   // Update avatar
   fastify.patch(
