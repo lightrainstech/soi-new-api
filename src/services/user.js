@@ -152,6 +152,7 @@ module.exports = async function (fastify, opts) {
         const userModel = new User(),
           { userId } = request.user,
           user = await userModel.getUserProfileDetails(userId)
+          console.log(user, userId)
         if (!user) {
           reply.code(404).error({
             message: 'User not found'
@@ -403,7 +404,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  
+
   // Verify S3 signature
   fastify.post(
     '/profile/verify-signature',

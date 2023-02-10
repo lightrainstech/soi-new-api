@@ -98,8 +98,6 @@ UserSchema.pre('save', async function (next) {
   this.affiliateCode = nanoidLong()
   next()
 })
-
-
 ;(UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
@@ -173,12 +171,8 @@ UserSchema.pre('save', async function (next) {
   },
   getUserProfileDetails: async function (userId) {
     const User = mongoose.model('User')
-    const userDetails = User.aggregate([
-      {
-        $match: {
-          _id: ObjectId(userId)
-        }
-      },
+    let userDetails = []
+    userDetails = await User.aggregate([
       {
         $lookup: {
           from: 'usertokens',
@@ -191,9 +185,22 @@ UserSchema.pre('save', async function (next) {
         $unwind: '$activeNFT'
       },
       {
-        $match: { 'activeNFT.isActive': true }
+        $match: {
+          'activeNFT.isActive': true
+        }
+      },
+      {
+        $match: {
+          _id: ObjectId(userId)
+        }
       }
     ])
+
+    if (!userDetails.length) {
+      userDetails = User.find({
+        _id: ObjectId(userId)
+      })
+    }
     return userDetails
   }
 }),

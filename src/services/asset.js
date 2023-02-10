@@ -521,6 +521,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
+        const { userId } = request.user
         const userTokenModel = new UserToken(),
           nft = await userTokenModel.getRecentlyMintedNFT(userId)
         if (!nft) {
@@ -542,7 +543,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Get recently minted NFT
+  // Get nft details
   fastify.get(
     '/:nftId',
     {
