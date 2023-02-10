@@ -109,16 +109,27 @@ const socialProfileSchema = S.object()
 exports.addSocialProfileSchema = {
   tags: ['Asset'],
   summary: 'Add social profile',
-  body: socialProfileSchema
+  body: socialProfileSchema,
+  params: S.object().prop('nftId', S.string().required())
 }
 
 exports.removeSocialProfileSchema = {
   tags: ['Asset'],
   summary: 'Remove social profile',
-  body: socialProfileSchema
+  body: socialProfileSchema,
+  params: S.object().prop('nftId', S.string().required())
 }
 
 exports.checkFollowersCountSchema = {
   tags: ['Asset'],
   summary: 'Get social profile followers count.'
+}
+
+exports.markAsActiveSchema = {
+  tags: ['Asset'],
+  summary: 'Select an NFT',
+  params: S.object().prop(
+    'nftId',
+    S.string().required()
+  )
 }
