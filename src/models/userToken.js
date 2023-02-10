@@ -61,7 +61,7 @@ const UserTokenSchema = new mongoose.Schema(
         }
       }
     },
-    isActive:{
+    isActive: {
       true: Boolean,
       default: false
     }
@@ -235,6 +235,87 @@ UserTokenSchema.methods = {
         new: true
       }
     )
+  },
+  getUserSocialDetails: async function (userId) {
+    const UserToken = mongoose.model('UserToken')
+    const profiles = await UserToken.aggregate([
+      {
+        $match: {
+          user: ObjectId(userId),
+          $or: [
+            { 'social.facebook.socialInsiderId': { $exists: true } },
+            { 'social.twitter.socialInsiderId': { $exists: true } },
+            { 'social.youtube.socialInsiderId': { $exists: true } },
+            { 'social.instagram.socialInsiderId': { $exists: true } },
+            { 'social.tiktok.socialInsiderId': { $exists: true } }
+          ]
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          social: 1
+        }
+      },
+      {
+        $group: {
+          _id: '_id',
+          facebook: {
+            $push: {
+              name: '$social.facebook.name',
+              handle: '$social.facebook.handle',
+              socialInsiderId: '$social.facebook.socialInsiderId',
+              followers: '$social.facebook.followers'
+            }
+          },
+          youtube: {
+            $push: {
+              name: '$social.youtube.name',
+              handle: '$social.youtube.handle',
+              socialInsiderId: '$social.youtube.socialInsiderId',
+              followers: '$social.youtube.followers'
+            }
+          },
+          twitter: {
+            $push: {
+              name: '$social.twitter.name',
+              handle: '$social.twitter.handle',
+              socialInsiderId: '$social.twitter.socialInsiderId',
+              followers: '$social.twitter.followers'
+            }
+          },
+          tiktok: {
+            $push: {
+              name: '$social.tiktok.name',
+              handle: '$social.tiktok.handle',
+              socialInsiderId: '$social.tiktok.socialInsiderId',
+              followers: '$social.tiktok.followers'
+            }
+          },
+          instagram: {
+            $push: {
+              name: '$social.instagram.name',
+              handle: '$social.instagram.handle',
+              socialInsiderId: '$social.instagram.socialInsiderId',
+              followers: '$social.instagram.followers'
+            }
+          }
+        }
+      }
+    ])
+    
+    const optimizedConnectedProfiles = profiles.map(profile => {
+      const cleanedProfile = {}
+      Object.entries(profile).forEach(([key, value]) => {
+        if (Array.isArray(value) && value.length > 0) {
+          cleanedProfile[key] = value.filter(
+            obj => Object.keys(obj).length !== 0
+          )
+        }
+      })
+      return cleanedProfile
+    })
+    return optimizedConnectedProfiles
   }
 }
 

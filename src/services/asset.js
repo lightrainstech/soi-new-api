@@ -401,13 +401,18 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
+          const connectedProfiles = await userTokenModel.getUserSocialDetails(
+            userId
+          )
+
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
         const cachedData = await fastify.redis.get(key)
         if (cachedData) {
           reply.success({
             isCache: true,
-            profileDetails: JSON.parse(cachedData)
+            profileDetails: JSON.parse(cachedData),
+            connectedProfiles
           })
           return reply
         }
@@ -459,9 +464,11 @@ module.exports = async function (fastify, opts) {
           'EX',
           process.env?.CACHE_EXPIRY || 10800
         )
+
         reply.success({
           isCache: false,
-          profileDetails: resArray
+          profileDetails: resArray,
+          connectedProfiles
         })
         return reply
       } catch (error) {
