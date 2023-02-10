@@ -8,6 +8,7 @@ const nanoidLong = customAlphabet(
   8
 )
 const { stripTrailingSlash } = require('../utils/soi')
+const ObjectId = mongoose.Types.ObjectId
 
 const UserSchema = new mongoose.Schema(
   {
@@ -248,6 +249,31 @@ const socialAccountMap = {
       return User.findById(userId)
     }
 
+  },
+  getUserProfileDetails: async function (userId) {
+    const User = mongoose.model('User')
+    const userDetails = User.aggregate([
+      {
+        $match: {
+          _id: ObjectId(userId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'activeNFT'
+        }
+      },
+      {
+        $unwind: '$activeNFT'
+      },
+      {
+        $match: { 'activeNFT.isActive': true }
+      }
+    ])
+    return userDetails
   },
   getTotalFollowersInDifferentPlatform: async function (userId, data) {
     const User = mongoose.model('User')
