@@ -133,3 +133,8 @@ exports.markAsActiveSchema = {
     S.string().required()
   )
 }
+
+exports.getRecentlyMintedNftSchema = {
+  tags: ['Asset'],
+  summary: 'Get recently minted nft of a user.'
+}

@@ -401,9 +401,9 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-          const connectedProfiles = await userTokenModel.getUserSocialDetails(
-            userId
-          )
+        const connectedProfiles = await userTokenModel.getUserSocialDetails(
+          userId
+        )
 
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
@@ -508,6 +508,36 @@ module.exports = async function (fastify, opts) {
         return reply.error({
           message: 'Failed to select NFT. Please try again.'
         })
+      }
+    }
+  )
+  // Get recently minted NFT
+  fastify.get(
+    '/recent',
+    {
+      schema: assetPayload.getRecentlyMintedNftSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userTokenModel = new UserToken(),
+          nft = await userTokenModel.getRecentlyMintedNFT(userId)
+        if (!nft) {
+          reply.code(404).error({
+            message: 'NFT nft found.'
+          })
+          return reply
+        }
+        return reply.success({
+          message: 'NFT listed successfully.',
+          nft
+        })
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to fetch NFT details. Please try again.'
+        })
+        return reply
       }
     }
   )

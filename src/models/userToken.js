@@ -303,7 +303,7 @@ UserTokenSchema.methods = {
         }
       }
     ])
-    
+
     const optimizedConnectedProfiles = profiles.map(profile => {
       const cleanedProfile = {}
       Object.entries(profile).forEach(([key, value]) => {
@@ -316,6 +316,19 @@ UserTokenSchema.methods = {
       return cleanedProfile
     })
     return optimizedConnectedProfiles
+  },
+  getRecentlyMintedNFT: async function (userId) {
+    const UserToken = mongoose.model('UserToken')
+    return UserToken.findOne({
+      user: ObjectId(userId),
+      'social.facebook.socialInsiderId': { $exists: false },
+      'social.twitter.socialInsiderId': { $exists: false },
+      'social.youtube.socialInsiderId': { $exists: false },
+      'social.instagram.socialInsiderId': { $exists: false },
+      'social.tiktok.socialInsiderId': { $exists: false }
+    })
+      .sort({ createdAt: -1 })
+      .limit(1)
   }
 }
 
