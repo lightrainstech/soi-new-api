@@ -138,3 +138,9 @@ exports.getRecentlyMintedNftSchema = {
   tags: ['Asset'],
   summary: 'Get recently minted nft of a user.'
 }
+
+exports.nftDetailsSchema = {
+  tags: ['Asset'],
+  summary: 'Get nft details',
+  params: S.object().prop('nftId', S.string().required())
+}

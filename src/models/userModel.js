@@ -7,7 +7,6 @@ const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
   8
 )
-const { stripTrailingSlash } = require('../utils/soi')
 const ObjectId = mongoose.Types.ObjectId
 
 const UserSchema = new mongoose.Schema(

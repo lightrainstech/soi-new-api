@@ -541,6 +541,38 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // Get recently minted NFT
+  fastify.get(
+    '/:nftId',
+    {
+      schema: assetPayload.nftDetailsSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { userId } = request.user,
+          { nftId } = request.params
+        const userTokenModel = new UserToken(),
+          nft = await userTokenModel.getUserTokenById(nftId, userId)
+        if (!nft) {
+          reply.code(404).error({
+            message: 'NFT nft found.'
+          })
+          return reply
+        }
+        return reply.success({
+          message: 'NFT listed successfully.',
+          nft
+        })
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to fetch NFT details. Please try again.'
+        })
+        return reply
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/assets'
