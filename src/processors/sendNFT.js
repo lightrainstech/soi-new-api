@@ -5,7 +5,7 @@ const { mintNFT } = require('../utils/contract')
 
 const UserToken = require('../models/userToken.js')
 module.exports = async function (args, done) {
-  const { wallet, userId, metaDataUrl, assetUrl, thumbnail } = args.data
+  const { wallet, userId, metaDataUrl, assetUrl, thumbnail, name } = args.data
   console.log('--------Inside processor---------')
   try {
     console.log(wallet, userId)
@@ -16,11 +16,12 @@ module.exports = async function (args, done) {
     let mintResult = await mintNFT(wallet, metaDataUrl),
       tokenId = parseInt(mintResult.tokenId),
       userTokenModel = new UserToken()
-      
+
     userTokenModel.user = userId
     userTokenModel.nftId = tokenId
     userTokenModel.avatar = assetUrl
     userTokenModel.thumbnail = thumbnail
+    userTokenModel.name = name
 
     await userTokenModel.save()
     console.log('saved')

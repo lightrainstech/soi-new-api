@@ -90,11 +90,11 @@ module.exports = async function (fastify, opts) {
     '/mint',
     { schema: assetPayload.mintNftSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
-      const { assetUrl, thumbnail } = request.body,
+      const { assetUrl, thumbnail, name } = request.body,
         { wallet, affCode, userId } = request.user
       try {
         // Static title and description for assets
-        const title = 'SOI',
+        const title = name ? name : 'SOI',
           description = 'Sea Of Influencers'
 
         // Add meta data
@@ -118,7 +118,8 @@ module.exports = async function (fastify, opts) {
             wallet: wallet,
             metaDataUrl: metaDataUrl,
             assetUrl: assetUrl,
-            thumbnail: thumbnail
+            thumbnail: thumbnail,
+            name: title
           },
           { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
         )

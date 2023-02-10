@@ -19,6 +19,7 @@ exports.mintNftSchema = {
         .required()
     )
     .prop('thumbnail', S.string().format(S.FORMATS.URI).required())
+    .prop('name', S.string().required())
 }
 
 exports.getUserTokenSchema = {
