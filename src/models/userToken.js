@@ -60,6 +60,10 @@ const UserTokenSchema = new mongoose.Schema(
           default: 0
         }
       }
+    },
+    isActive:{
+      true: Boolean,
+      default: false
     }
   },
   { timestamps: true }
@@ -217,12 +221,27 @@ UserTokenSchema.methods = {
     } else {
       return UserToken.findOne({ nftId: nftId })
     }
+  },
+  markAsActive: async function (nftId, userId) {
+    const UserToken = mongoose.model('UserToken')
+    await UserToken.updateMany(
+      { user: ObjectId(userId), nftId: { $ne: nftId }, isActive: true },
+      { $set: { isActive: false } }
+    )
+    return UserToken.findOneAndUpdate(
+      { nftId: nftId, user: ObjectId(userId) },
+      { $set: { isActive: true } },
+      {
+        new: true
+      }
+    )
   }
 }
 
 UserTokenSchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'user avatar thumbnail nftId social'
+    options.select =
+      options.select || 'user avatar thumbnail nftId social isActive createdAt'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -231,7 +250,7 @@ UserTokenSchema.statics = {
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
     const select =
-      options.select || 'user avatar thumbnail nftId social createdAt'
+      options.select || 'user avatar thumbnail nftId social isActive createdAt'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })

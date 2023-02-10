@@ -471,6 +471,39 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // Mark NFT as active
+  fastify.put(
+    '/:nftId/mark-as-active',
+    {
+      schema: assetPayload.markAsActiveSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const userTokenModel = new UserToken()
+        const { userId } = request.user,
+          { nftId } = request.params
+
+        const markAsActive = await userTokenModel.markAsActive(nftId, userId)
+        if (markAsActive) {
+          return reply.success({
+            message: `NFT selected successfully.`,
+            activeNft: markAsActive
+          })
+        } else {
+          return reply.error({
+            message: 'Failed to select NFT. Please try again.',
+            activeNft: {}
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to select NFT. Please try again.'
+        })
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/assets'
