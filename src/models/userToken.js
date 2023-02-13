@@ -310,9 +310,14 @@ UserTokenSchema.methods = {
     const optimizedConnectedProfiles = profiles.map(profile => {
       const cleanedProfile = {}
       Object.entries(profile).forEach(([key, value]) => {
-        if (Array.isArray(value) && value.length > 0) {
+        if (
+          Array.isArray(value) &&
+          value.length > 0
+        ) {
           cleanedProfile[key] = value.filter(
-            obj => Object.keys(obj).length !== 0
+            obj =>
+              Object.keys(obj).length !== 0 &&
+              obj['socialInsiderId'] !== undefined
           )
         }
       })
