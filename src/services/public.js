@@ -1,6 +1,7 @@
 'use strict'
 
 const User = require('../models/userModel.js')
+const UserToken = require('../models/userToken')
 const publicPayload = require('../payload/publicPayload')
 
 module.exports = async function (fastify, opts) {
@@ -10,9 +11,10 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const userModel = new User(),
+          userTokenModel = new UserToken(),
           totalInfluencerCount = await userModel.getCount('influencer'),
           followersCount =
-            await userModel.getTotalFollowersInDifferentPlatform()
+            await userTokenModel.getTotalFollowersInDifferentPlatform()
         if (totalInfluencerCount || followersCount) {
           const followerDetails = followersCount[0]
           delete followerDetails._id
