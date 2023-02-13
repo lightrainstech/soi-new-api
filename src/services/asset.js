@@ -494,7 +494,7 @@ module.exports = async function (fastify, opts) {
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
         if(!nft) {
           reply.code(404).error({
-            message: 'Assets not found.'
+            message: 'Asset not found.'
           })
           return reply
         }
