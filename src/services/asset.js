@@ -491,7 +491,23 @@ module.exports = async function (fastify, opts) {
         const userTokenModel = new UserToken()
         const { userId } = request.user,
           { nftId } = request.params
-        console.log(userId)
+        const nft = await userTokenModel.getUserTokenById(nftId, userId)
+        if(!nft) {
+          reply.code(404).error({
+            message: 'Assets not found.'
+          })
+          return reply
+        }
+        const socialKeys = Object.keys(nft.social).filter(
+          key => nft.social[key].socialInsiderId !== undefined
+        )
+
+        if (Object.keys(socialKeys).length <=2) {
+          reply.error({
+            message: 'Please connect at least two social media profile.'
+          })
+          return reply
+        }
         const markAsActive = await userTokenModel.markAsActive(nftId, userId)
         if (markAsActive) {
           return reply.success({
