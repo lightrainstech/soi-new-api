@@ -152,7 +152,6 @@ module.exports = async function (fastify, opts) {
         const userModel = new User(),
           { userId } = request.user,
           user = await userModel.getUserProfileDetails(userId)
-          console.log(user, userId)
         if (!user) {
           reply.code(404).error({
             message: 'User not found'
@@ -161,7 +160,7 @@ module.exports = async function (fastify, opts) {
         }
         reply.success({
           message: 'User details',
-          user: user[0]
+          user: user
         })
         return reply
       } catch (error) {

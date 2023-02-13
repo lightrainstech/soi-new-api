@@ -197,11 +197,11 @@ UserSchema.pre('save', async function (next) {
     ])
 
     if (!userDetails.length) {
-      userDetails = User.find({
+      userDetails = await User.find({
         _id: ObjectId(userId)
       })
     }
-    return userDetails
+    return userDetails[0]
   }
 }),
   (UserSchema.statics = {
