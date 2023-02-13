@@ -151,7 +151,7 @@ module.exports = async function (fastify, opts) {
       try {
         const userModel = new User(),
           { userId } = request.user,
-          user = await userModel.getUserById(userId)
+          user = await userModel.getUserProfileDetails(userId)
         if (!user) {
           reply.code(404).error({
             message: 'User not found'
@@ -271,98 +271,6 @@ module.exports = async function (fastify, opts) {
       }
     )
 
-  // Add social accounts
-  fastify.put(
-    '/social/profile',
-    {
-      schema: userPayload.addSocialProfileSchema,
-      onRequest: [fastify.authenticate]
-    },
-    async function (request, reply) {
-      try {
-        const userModel = new User(),
-          { socialProfile, type } = request.body,
-          { wallet, userId } = request.user
-
-        // Check user exists or not
-        const user = await userModel.getUserBywallet(wallet)
-        if (!user) {
-          reply.code(404).error({
-            message: 'User not found'
-          })
-          return reply
-        }
-
-        // Remove redis cache
-        const key = `${userId}_social_profile_data`,
-          cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          await fastify.redis.del(key)
-        }
-
-        // Check profile exists in db or not
-        const isSocialProfileExists = await userModel.checkSocialAccountExists(
-          socialProfile
-        )
-        if (isSocialProfileExists) {
-          reply.code(400).error({
-            message: `${type} profile already exists.`
-          })
-          return reply
-        }
-
-        // Add profile to social insider
-        const resData = {},
-          result = await addProfile(socialProfile, type)
-
-        if (result.error) {
-          let err = await errorMessage(type)
-          reply.code(400).error({
-            message: err ? err : result.error.message
-          })
-          return reply
-        }
-
-        resData.id = result.resp.id
-        resData.name = result.resp.name
-
-        // Get followers count
-        const profileData = await getProfileDetails(
-          resData.id,
-          getAccountType(type),
-          type
-        )
-        resData.followers = profileData[type]
-
-        // Add social account of a user to db
-        const addSocialAccounts = await userModel.updateSocialAccounts(
-          wallet,
-          socialProfile,
-          resData
-        )
-        if (!addSocialAccounts) {
-          reply.code(400).error({
-            message: `Failed to add ${type} profile.`
-          })
-          return reply
-        } else {
-          reply.success({
-            message: `${type} profile added successfully.`,
-            user: addSocialAccounts
-          })
-          return reply
-        }
-      } catch (err) {
-        console.log(err)
-        reply.error({
-          message: `Failed to add ${type} profile.`,
-          error: err.message
-        })
-        return reply
-      }
-    }
-  )
-
   // Update avatar
   fastify.patch(
     '/avatar',
@@ -453,88 +361,6 @@ module.exports = async function (fastify, opts) {
     }
   )
 
-  // Get profile details from social insider
-  fastify.get(
-    '/social/details',
-    {
-      schema: userPayload.checkFollowersCountSchema,
-      onRequest: [fastify.authenticate]
-    },
-    async function (request, reply) {
-      try {
-        const userModel = new User(),
-          { userId } = request.user,
-          user = await userModel.getUserById(userId)
-        if (!user) {
-          reply.code(404).error({
-            message: 'User not found.'
-          })
-          return reply
-        }
-
-        // get data from redis cache
-        const key = `${userId}_social_profile_data`,
-          cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          reply.success({
-            isCache: true,
-            profileDetails: JSON.parse(cachedData)
-          })
-          return reply
-        } else {
-          // Get social profile details from social insider
-          const socialKeys = Object.keys(user.social).filter(
-              key => user.social[key].socialInsiderId !== undefined
-            ),
-            profileDetailsPromises = socialKeys.map(async key => {
-              return getProfileDetails(
-                user.social[key].socialInsiderId,
-                getAccountType(key),
-                key
-              )
-            })
-          // Get followers count
-          let resArray = []
-          const profileDetails = await Promise.all(profileDetailsPromises)
-          console.log('profileDetails', profileDetails)
-          if (profileDetails) {
-            // Update followers count in db
-            const updatePromises = socialKeys.map(async key => {
-              let followerData = profileDetails.find(obj => obj[key]),
-                value = followerData ? followerData[key] : 0,
-                k = `social.${key}.followers`
-              const update = await userModel.updateFollowers(userId, k, value)
-              resArray.push({
-                [`${key}`]: update.social[key].followers
-              })
-            })
-            await Promise.all(updatePromises)
-            //Cache response in redis
-            await fastify.redis.set(
-              key,
-              JSON.stringify(resArray),
-              'EX',
-              process.env?.CACHE_EXPIRY || 10800
-            )
-            reply.success({
-              isCache: false,
-              profileDetails: resArray
-            })
-            return reply
-          } else {
-            reply.error({
-              message: 'Failed to fetch profile details. Please try again.'
-            })
-            return reply
-          }
-        }
-      } catch (error) {
-        console.log(error)
-        reply.error({ message: `Something went wrong: ${error}` })
-        return reply
-      }
-    }
-  )
   // Update user profile
   fastify.put(
     '/profile',
@@ -577,95 +403,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Remove social accounts
-  fastify.put(
-    '/social/profile/remove',
-    {
-      schema: userPayload.removeSocialProfileSchema,
-      onRequest: [fastify.authenticate]
-    },
-    async function (request, reply) {
-      try {
-        const userModel = new User()
-        let { socialProfile, type } = request.body,
-          { wallet, userId } = request.user
 
-        // Check user exists or not
-        const user = await userModel.getUserBywallet(wallet)
-        if (!user) {
-          reply.code(404).error({
-            message: 'User not found.'
-          })
-          return reply
-        }
-
-        // Check profile exists in db or not
-        const isSocialProfileExists = await userModel.checkSocialAccountExists(
-          socialProfile
-        )
-
-        if (!isSocialProfileExists) {
-          reply.code(404).error({
-            message: 'Profile not found.'
-          })
-          return reply
-        }
-
-        const socialKeys = Object.keys(isSocialProfileExists.social).filter(
-          key => isSocialProfileExists.social[key].socialInsiderId !== undefined
-        )
-
-        if (Object.keys(socialKeys).length == 2) {
-          reply.error({
-            message: 'At least two profile is required.'
-          })
-          return reply
-        }
-
-        // Remove profile from social insider
-        const result = await removeProfile(
-          isSocialProfileExists.social[type].socialInsiderId,
-          type
-        )
-        if (
-          result.resp === 'success' ||
-          (isSocialProfileExists &&
-            result.error.message === getProfileNotExistError(type))
-        ) {
-          // Remove profile from db
-          const removeProfileFromDb = await userModel.removeAccount(
-            socialProfile,
-            userId
-          )
-          // Remove redis cache
-          const key = `${userId}_social_profile_data`,
-            cachedData = await fastify.redis.get(key)
-          if (cachedData) {
-            await fastify.redis.del(key)
-          }
-          if (removeProfileFromDb) {
-            reply.success({
-              message: `${type} profile removed successfully.`,
-              user: removeProfileFromDb
-            })
-            return reply
-          }
-        } else {
-          reply.error({
-            message: `Failed to remove ${type} profile. Please try again.`
-          })
-          return reply
-        }
-      } catch (err) {
-        console.log(err)
-        reply.error({
-          message: `Failed to remove ${type} profile. Please try again.`,
-          error: err.message
-        })
-        return reply
-      }
-    }
-  )
   // Verify S3 signature
   fastify.post(
     '/profile/verify-signature',

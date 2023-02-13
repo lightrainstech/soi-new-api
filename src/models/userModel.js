@@ -7,7 +7,7 @@ const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
   8
 )
-const { stripTrailingSlash } = require('../utils/soi')
+const ObjectId = mongoose.Types.ObjectId
 
 const UserSchema = new mongoose.Schema(
   {
@@ -98,25 +98,6 @@ UserSchema.pre('save', async function (next) {
   this.affiliateCode = nanoidLong()
   next()
 })
-
-let val1,
-  val2,
-  val3,
-  val4,
-  key,
-  key1,
-  key2,
-  key3,
-  key4,
-  obj = {}
-const socialAccountMap = {
-  facebook: 'facebook',
-  instagram: 'instagram',
-  twitter: 'twitter',
-  youtube: 'youtube',
-  tiktok: 'tiktok'
-}
-
 ;(UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
@@ -157,37 +138,6 @@ const socialAccountMap = {
     }
     return await User.load(options)
   },
-  updateSocialAccounts: async function (wallet, socialAccounts, resData) {
-    const User = mongoose.model('User')
-    const firstKey = Object.keys(socialAccounts)[0]
-    if (socialAccountMap[firstKey]) {
-      val1 = stripTrailingSlash(socialAccounts[firstKey])
-      key1 = `social.${firstKey}.handle`
-      key2 = `social.${firstKey}.socialInsiderId`
-      val2 = resData.id
-      key3 = `social.${firstKey}.name`
-      val3 = resData.name
-      key4 = `social.${firstKey}.followers`
-      val4 = resData.followers
-    }
-    const result = User.findOneAndUpdate(
-      { wallet: wallet },
-      { [key1]: val1, [key2]: val2, [key3]: val3, [key4]: val4 },
-      {
-        new: true
-      }
-    )
-    return result
-  },
-  checkSocialAccountExists: async function (socialAccounts) {
-    const User = mongoose.model('User')
-    const firstKey = Object.keys(socialAccounts)[0]
-    if (socialAccountMap[firstKey]) {
-      obj = stripTrailingSlash(socialAccounts[firstKey])
-      key = `social.${firstKey}.handle`
-    }
-    return User.findOne({ [key]: obj }).select('email name userName social')
-  },
   getUserByUsername: async function (userName) {
     const User = mongoose.model('User')
     let query = { userName }
@@ -213,71 +163,39 @@ const socialAccountMap = {
     )
     return data
   },
-  removeAccount: async function (socialAccounts, userId) {
-    const User = mongoose.model('User')
-    const firstKey = Object.keys(socialAccounts)[0]
-    if (socialAccountMap[firstKey]) {
-      obj = stripTrailingSlash(socialAccounts[firstKey])
-      key = `social.${firstKey}`
-    }
-    return User.findByIdAndUpdate(
-      { _id: userId },
-      { $unset: { [key]: '' } },
-      {
-        new: true
-      }
-    )
-  },
   getCount: async function (role) {
     const User = mongoose.model('User')
     return User.count({
       role: role
     })
   },
-  updateFollowers: async function (userId, key, value) {
+  getUserProfileDetails: async function (userId) {
     const User = mongoose.model('User')
-    if(value !== 0) {
-      return User.findByIdAndUpdate(
-        { _id: userId },
-        { $set: { [key]: value } },
-        {
-          new: true
-        }
-      )
-    }else {
-      return User.findById(userId)
-    }
-
-  },
-  getTotalFollowersInDifferentPlatform: async function (userId, data) {
-    const User = mongoose.model('User')
-    return User.aggregate([
+    const userDetails = await User.aggregate([
+      { $match: { _id: ObjectId(userId) } },
       {
-        $project: {
-          social: 1,
-          totalFollowers: {
-            $sum: [
-              '$social.facebook.followers',
-              '$social.twitter.followers',
-              '$social.youtube.followers',
-              '$social.instagram.followers',
-              '$social.tiktok.followers'
-            ]
-          }
+        $lookup: {
+          from: 'usertokens',
+          let: { userId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$user', '$$userId'] },
+                    { $eq: ['$isActive', true] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'activeNFT'
         }
       },
-      {
-        $group: {
-          _id: null,
-          facebookFollowers: { $sum: '$social.facebook.followers' },
-          twitterFollowers: { $sum: '$social.twitter.followers' },
-          youtubeFollowers: { $sum: '$social.youtube.followers' },
-          instagramFollowers: { $sum: '$social.instagram.followers' },
-          tiktokFollowers: { $sum: '$social.tiktok.followers' },
-          totalFollowers: { $sum: '$totalFollowers' }
-        }
-      }
+      { $unwind: { path: '$activeNFT', preserveNullAndEmptyArrays: true } },
+      { $addFields: { activeNFT: { $ifNull: ['$activeNFT', {}] } } }
     ])
+    return userDetails[0]
   }
 }),
   (UserSchema.statics = {
