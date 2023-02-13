@@ -502,7 +502,7 @@ module.exports = async function (fastify, opts) {
           key => nft.social[key].socialInsiderId !== undefined
         )
 
-        if (Object.keys(socialKeys).length <=2) {
+        if (Object.keys(socialKeys).length < 2) {
           reply.error({
             message: 'Please connect at least two social media profile.'
           })
