@@ -491,7 +491,7 @@ module.exports = async function (fastify, opts) {
         const userTokenModel = new UserToken()
         const { userId } = request.user,
           { nftId } = request.params
-
+        console.log(userId)
         const markAsActive = await userTokenModel.markAsActive(nftId, userId)
         if (markAsActive) {
           return reply.success({

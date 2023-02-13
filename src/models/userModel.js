@@ -171,36 +171,30 @@ UserSchema.pre('save', async function (next) {
   },
   getUserProfileDetails: async function (userId) {
     const User = mongoose.model('User')
-    let userDetails = []
-    userDetails = await User.aggregate([
+    const userDetails = await User.aggregate([
+      { $match: { _id: ObjectId(userId) } },
       {
         $lookup: {
           from: 'usertokens',
-          localField: '_id',
-          foreignField: 'user',
+          let: { userId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$user', '$$userId'] },
+                    { $eq: ['$isActive', true] }
+                  ]
+                }
+              }
+            }
+          ],
           as: 'activeNFT'
         }
       },
-      {
-        $unwind: '$activeNFT'
-      },
-      {
-        $match: {
-          'activeNFT.isActive': true
-        }
-      },
-      {
-        $match: {
-          _id: ObjectId(userId)
-        }
-      }
+      { $unwind: { path: '$activeNFT', preserveNullAndEmptyArrays: true } },
+      { $addFields: { activeNFT: { $ifNull: ['$activeNFT', {}] } } }
     ])
-
-    if (!userDetails.length) {
-      userDetails = await User.find({
-        _id: ObjectId(userId)
-      })
-    }
     return userDetails[0]
   }
 }),
