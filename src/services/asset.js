@@ -406,8 +406,6 @@ module.exports = async function (fastify, opts) {
           userId
         )
 
-        //console.log(connectedProfiles)
-
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
         const cachedData = await fastify.redis.get(key)
