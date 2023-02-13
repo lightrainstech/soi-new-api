@@ -9,14 +9,6 @@ const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
 
 const { checkSumAddress } = require('../utils/contract')
-const {
-  addProfile,
-  errorMessage,
-  getProfileDetails,
-  getAccountType,
-  removeProfile,
-  getProfileNotExistError
-} = require('../utils/soi')
 
 const s3 = require('aws-sdk/clients/s3')
 const s3Client = new s3({
