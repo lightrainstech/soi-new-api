@@ -318,7 +318,7 @@ UserTokenSchema.methods = {
       })
       return cleanedProfile
     })
-    return optimizedConnectedProfiles
+    return optimizedConnectedProfiles[0]
   },
   getRecentlyMintedNFT: async function (userId) {
     const UserToken = mongoose.model('UserToken')
