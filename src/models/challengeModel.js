@@ -4,7 +4,8 @@ const mongoose = require('mongoose')
 const ChallengeSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User', required: true
+    ref: 'User',
+    required: true
   },
   title: {
     type: String
@@ -33,11 +34,11 @@ const ChallengeSchema = new mongoose.Schema({
   mentions: {
     type: [String]
   },
-  startDateAndTime: {
-    type: String
+  startDate: {
+    type: Date
   },
-  endDateAndTime: {
-    type: String
+  endDate: {
+    type: Date
   },
   externalLink: {
     type: String
