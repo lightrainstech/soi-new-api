@@ -26,3 +26,17 @@ exports.createChallengeSchema = {
     .prop('bountyRequired', S.number().minimum(0))
     .prop('bountyOffered', S.number().minimum(0))
 }
+
+exports.getChallengeSchema = {
+  tags: ['Challenge'],
+  summary: 'Get challenge details.',
+  params: S.object().prop(
+    'id',
+    S.string().pattern('^[a-fA-F0-9]{24}$').required()
+  )
+}
+
+exports.getUserChallengesSchema = {
+  tags: ['Challenge'],
+  summary: 'Get challenge created by a user.',
+}

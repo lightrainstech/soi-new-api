@@ -1,5 +1,6 @@
 'use strict'
 const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 
 const ChallengeSchema = new mongoose.Schema({
   user: {
@@ -77,5 +78,49 @@ const ChallengeSchema = new mongoose.Schema({
     type: Number
   }
 })
+
+ChallengeSchema.methods = {
+  getChallengeById: async function (id) {
+    const Challenge = mongoose.model('Challenge')
+    let query = { _id: id }
+    const options = {
+      criteria: query
+    }
+    return Challenge.load(options)
+  },
+  getChallengesByUser: async function (userId) {
+    const Challenge = mongoose.model('Challenge')
+    let query = { user: ObjectId(userId) }
+    const options = {
+      criteria: query
+    }
+    return Challenge.find(options.criteria)
+  }
+}
+
+ChallengeSchema.statics = {
+  load: function (options, cb) {
+    options.select =
+      options.select ||
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered'
+    return this.findOne(options.criteria).select(options.select).exec(cb)
+  },
+
+  list: function (options) {
+    const criteria = options.criteria || {}
+    const page = options.page - 1
+    const limit = parseInt(options.limit) || 12
+    const select =
+      options.select ||
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered'
+    return this.find(criteria)
+      .select(select)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page)
+      .lean()
+      .exec()
+  }
+}
 
 module.exports = mongoose.model('Challenge', ChallengeSchema)

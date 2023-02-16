@@ -6,7 +6,7 @@ const challengePayload = require('../payload/challengPayload')
 module.exports = async function (fastify, opts) {
   // Create challenge
   fastify.post(
-    '/challenge',
+    '/',
     {
       schema: challengePayload.createChallengeSchema,
       onRequest: [fastify.authenticate]
@@ -85,4 +85,68 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // Get challenge details
+  fastify.get(
+    '/:id',
+    {
+      schema: challengePayload.getChallengeSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const challengeModel = new Challenge(),
+          { id } = request.params,
+          challenge = await challengeModel.getChallengeById(id)
+        if (!challenge) {
+          reply.code(404).error({
+            message: 'Challenge not found.'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'Challenge details',
+          challenge
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to fetch challenge details. Pleas try again.'
+        })
+      }
+    }
+  )
+  // Get challenge details
+  fastify.get(
+    '/',
+    {
+      schema: challengePayload.getUserChallengesSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const challengeModel = new Challenge(),
+          { userId } = request.user,
+        challenges = await challengeModel.getChallengesByUser(userId)
+        if (!challenges.length) {
+          reply.code(404).error({
+            message: 'No challenges found.'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'Challenge details',
+          challenges
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: 'Failed to fetch challenges. Pleas try again.'
+        })
+      }
+    }
+  )
 }
+
+module.exports.autoPrefix = '/challenges'
