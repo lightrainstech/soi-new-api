@@ -47,7 +47,7 @@ const ChallengeSchema = new mongoose.Schema({
   location: {
     type: String
   },
-  faceBookPosts: {
+  facebookPosts: {
     type: Number
   },
   instagramPosts: {
@@ -95,6 +95,15 @@ ChallengeSchema.methods = {
       criteria: query
     }
     return Challenge.find(options.criteria)
+  },
+  updateChallengesById: async function (id, data) {
+    console.log(data)
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findByIdAndUpdate(id, {
+      $set: data,
+    },{
+      new: true
+    })
   }
 }
 
