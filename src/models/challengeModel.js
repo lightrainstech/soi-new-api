@@ -1,7 +1,7 @@
 'use strict'
 const mongoose = require('mongoose')
 
-const CollectionSchema = new mongoose.Schema({
+const ChallengeSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User', required: true
@@ -77,4 +77,4 @@ const CollectionSchema = new mongoose.Schema({
   }
 })
 
-module.exports = mongoose.model('Collection', CollectionSchema)
+module.exports = mongoose.model('Challenge', ChallengeSchema)
