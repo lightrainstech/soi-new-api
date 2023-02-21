@@ -1,6 +1,7 @@
 'use strict'
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
+const { randomHashTag } = require('../utils/hashtag')
 
 const ChallengeSchema = new mongoose.Schema({
   user: {
@@ -76,7 +77,15 @@ const ChallengeSchema = new mongoose.Schema({
   },
   bountyOffered: {
     type: Number
+  },
+  challengeHashTag: {
+    type: String
   }
+})
+
+ChallengeSchema.pre('save', async function (next) {
+  this.challengeHashTag = randomHashTag()
+  next()
 })
 
 ChallengeSchema.methods = {
@@ -111,7 +120,7 @@ ChallengeSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered challengeHashTag'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -121,7 +130,7 @@ ChallengeSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location facebookPosts instagramPosts twitterPosts youtubePosts tiktokPosts likes shares youtubeViews bountyRequired bountyOffered challengeHashTag'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })

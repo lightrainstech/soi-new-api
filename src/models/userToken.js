@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 const { stripTrailingSlash } = require('../utils/soi')
+const { randomHashTag } = require('../utils/hashtag')
 
 const UserTokenSchema = new mongoose.Schema(
   {
@@ -73,6 +74,9 @@ const UserTokenSchema = new mongoose.Schema(
     },
     creator: {
       type: String
+    },
+    tokenHashTag: {
+      type: String
     }
   },
   { timestamps: true }
@@ -95,7 +99,10 @@ const socialAccountMap = {
   youtube: 'youtube',
   tiktok: 'tiktok'
 }
-
+UserTokenSchema.pre('save', async function (next) {
+  this.tokenHashTag = randomHashTag()
+  next()
+})
 UserTokenSchema.methods = {
   getUserTokenById: async function (nftId, userId) {
     const UserToken = mongoose.model('UserToken')
@@ -349,7 +356,8 @@ UserTokenSchema.methods = {
 UserTokenSchema.statics = {
   load: function (options, cb) {
     options.select =
-      options.select || 'user avatar name thumbnail nftId social isActive createdAt owner creator'
+      options.select ||
+      'user avatar name thumbnail nftId social isActive createdAt owner creator hashTag'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -359,7 +367,7 @@ UserTokenSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'user avatar name thumbnail nftId social isActive createdAt owner creator'
+      'user avatar name thumbnail nftId social isActive createdAt owner creator hashTag'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
