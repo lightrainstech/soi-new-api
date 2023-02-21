@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose')
 const { mintNFT } = require('../utils/contract')
+const { checkSumAddress } = require('../utils/contract')
 
 const UserToken = require('../models/userToken.js')
 module.exports = async function (args, done) {
@@ -15,13 +16,16 @@ module.exports = async function (args, done) {
     })
     let mintResult = await mintNFT(wallet, metaDataUrl),
       tokenId = parseInt(mintResult.tokenId),
-      userTokenModel = new UserToken()
+      userTokenModel = new UserToken(),
+      checkSumWallet = await checkSumAddress(wallet)
 
     userTokenModel.user = userId
     userTokenModel.nftId = tokenId
     userTokenModel.avatar = assetUrl
     userTokenModel.thumbnail = thumbnail
     userTokenModel.name = name
+    userTokenModel.owner = checkSumWallet
+    userTokenModel.creator = checkSumWallet
 
     await userTokenModel.save()
     console.log('saved')
