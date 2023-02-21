@@ -2,6 +2,7 @@
 
 const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengPayload')
+const {getTeamId} = require('../utils/hashtag')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -27,15 +28,6 @@ module.exports = async function (fastify, opts) {
           startDate,
           endDate,
           externalLink,
-          facebookPosts,
-          youtubePosts,
-          instagramPosts,
-          twitterPosts,
-          tiktokPosts,
-          likes,
-          shares,
-          youtubeViews,
-          bountyRequired,
           bountyOffered
         } = request.body
 
@@ -53,15 +45,6 @@ module.exports = async function (fastify, opts) {
           startDate,
           endDate,
           externalLink,
-          facebookPosts,
-          youtubePosts,
-          instagramPosts,
-          twitterPosts,
-          tiktokPosts,
-          likes,
-          shares,
-          youtubeViews,
-          bountyRequired,
           bountyOffered
         })
         const savedChallenge = await newChallengeData.save()
@@ -127,7 +110,9 @@ module.exports = async function (fastify, opts) {
       try {
         const challengeModel = new Challenge(),
           { userId } = request.user,
-          challenges = await challengeModel.getChallengesByUser(userId)
+          challenges = await challengeModel.getChallengesByUser(userId),
+          id = getTeamId(2)
+          console.log('Team id', id)
         if (!challenges.length) {
           reply.code(404).error({
             message: 'No challenges found.'
