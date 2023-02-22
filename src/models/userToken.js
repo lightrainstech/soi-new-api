@@ -99,10 +99,7 @@ const socialAccountMap = {
   youtube: 'youtube',
   tiktok: 'tiktok'
 }
-UserTokenSchema.pre('save', async function (next) {
-  this.tokenHashTag = randomHashTag()
-  next()
-})
+
 UserTokenSchema.methods = {
   getUserTokenById: async function (nftId, userId) {
     const UserToken = mongoose.model('UserToken')

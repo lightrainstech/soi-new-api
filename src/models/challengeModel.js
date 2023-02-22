@@ -1,7 +1,6 @@
 'use strict'
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
-const { randomHashTag } = require('../utils/hashtag')
 
 const ChallengeSchema = new mongoose.Schema({
   user: {
@@ -52,14 +51,11 @@ const ChallengeSchema = new mongoose.Schema({
     type: Number
   },
   challengeHashTag: {
-    type: String
+    type: String,
+    unique: true
   }
 })
 
-ChallengeSchema.pre('save', async function (next) {
-  this.challengeHashTag = randomHashTag()
-  next()
-})
 
 ChallengeSchema.methods = {
   getChallengeById: async function (id) {

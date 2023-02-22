@@ -2,7 +2,7 @@
 
 const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengPayload')
-const {getTeamId} = require('../utils/hashtag')
+const { randomHashTag } = require('../utils/hashtag')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -31,6 +31,14 @@ module.exports = async function (fastify, opts) {
           bountyOffered
         } = request.body
 
+        // Create unique hashtag for challenge
+        let challengeHashTag
+        do {
+          challengeHashTag = randomHashTag()
+        } while (
+          await Challenge.findOne({ challengeHashTag: challengeHashTag })
+        )
+
         const newChallengeData = new Challenge({
           user: userId,
           title,
@@ -45,7 +53,8 @@ module.exports = async function (fastify, opts) {
           startDate,
           endDate,
           externalLink,
-          bountyOffered
+          bountyOffered,
+          challengeHashTag
         })
         const savedChallenge = await newChallengeData.save()
         if (savedChallenge) {
@@ -112,7 +121,7 @@ module.exports = async function (fastify, opts) {
           { userId } = request.user,
           challenges = await challengeModel.getChallengesByUser(userId),
           id = getTeamId(2)
-          console.log('Team id', id)
+        console.log('Team id', id)
         if (!challenges.length) {
           reply.code(404).error({
             message: 'No challenges found.'
@@ -156,16 +165,8 @@ module.exports = async function (fastify, opts) {
           startDate,
           endDate,
           externalLink,
-          facebookPosts,
-          youtubePosts,
-          instagramPosts,
-          twitterPosts,
-          tiktokPosts,
-          likes,
-          shares,
-          youtubeViews,
-          bountyRequired,
-          bountyOffered
+          bountyOffered,
+          challengeHashTag
         } = request.body
 
         const data = {
@@ -181,16 +182,8 @@ module.exports = async function (fastify, opts) {
           startDate: startDate,
           endDate: endDate,
           externalLink: externalLink,
-          facebookPosts: facebookPosts,
-          youtubePosts: youtubePosts,
-          instagramPosts: instagramPosts,
-          twitterPosts: twitterPosts,
-          tiktokPosts: tiktokPosts,
-          likes: likes,
-          shares: shares,
-          youtubeViews: youtubeViews,
-          bountyRequired: bountyRequired,
-          bountyOffered: bountyOffered
+          bountyOffered: bountyOffered,
+          challengeHashTag: challengeHashTag
         }
         const challenge = await challengeModel.getChallengeById(id)
         if (!challenge) {
