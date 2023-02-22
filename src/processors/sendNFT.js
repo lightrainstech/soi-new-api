@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose')
 const { mintNFT } = require('../utils/contract')
+const { checkSumAddress } = require('../utils/contract')
 
 const UserToken = require('../models/userToken.js')
 module.exports = async function (args, done) {
