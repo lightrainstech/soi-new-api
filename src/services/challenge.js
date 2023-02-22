@@ -73,7 +73,6 @@ module.exports = async function (fastify, opts) {
         return reply.error({
           message: `Failed to create challenge. Please try again.`
         })
-        return reply
       }
     }
   )
