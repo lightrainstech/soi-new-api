@@ -15,10 +15,8 @@ module.exports = async function (fastify, opts) {
           totalInfluencerCount = await userModel.getCount('influencer'),
           followersCount =
             await userTokenModel.getTotalFollowersInDifferentPlatform()
-            console.log('followersCount', followersCount)
         if (totalInfluencerCount || followersCount.length) {
           const followerDetails = followersCount[0]
-          //delete followerDetails?._id
           reply.success({
             message: 'Status',
             totalInfluencers: totalInfluencerCount ? totalInfluencerCount : 0,

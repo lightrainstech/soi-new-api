@@ -148,12 +148,7 @@ UserSchema.pre('save', async function (next) {
   },
   checkAffiliateCode: async function (affCode) {
     const User = mongoose.model('User')
-    let query = { affiliateCode: affCode }
-    const options = {
-      criteria: query
-    }
-    console.log('options', options)
-    return User.load(options)
+    return await User.findOne({ affiliateCode:affCode })
   },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
@@ -221,7 +216,7 @@ UserSchema.pre('save', async function (next) {
     }
   })
 
-UserSchema.index({ email: 1 }, { unique: true })
+UserSchema.index({ email: 1 }, { unique: true }, { affiliateCode : 1})
 
 UserSchema.plugin(uniqueValidator)
 

@@ -7,6 +7,7 @@ const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
+const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
 
@@ -170,12 +171,11 @@ module.exports = async function (fastify, opts) {
       const { affCode } = request.query
       try {
         console.log('affCode', affCode)
-        const userModel = new User(),
-          isExists = await userModel.checkAffiliateCode(affCode)
-        console.log('isExists', isExists)
+        const agencyModel = new Agency(),
+          isExists = await agencyModel.checkAffiliateCode(affCode)
         if (!isExists) {
           reply.code(400).error({
-            message: 'Invalid affiliate code.'
+            message: 'Invalid agency code.'
           })
           return reply
         }
@@ -191,6 +191,7 @@ module.exports = async function (fastify, opts) {
           data: Number(count)
         })
       } catch (error) {
+        console.log(error)
         reply.error({
           message: error
         })

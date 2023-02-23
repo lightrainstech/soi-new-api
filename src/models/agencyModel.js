@@ -47,6 +47,14 @@ agencySchema.methods = {
       criteria: query
     }
     return Agency.load(options)
+  },
+  checkAffiliateCode: async function (affCode) {
+    const Agency = mongoose.model('Agency')
+    let query = { agencyCode: affCode }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
   }
 }
 
