@@ -400,7 +400,7 @@ module.exports = async function (fastify, opts) {
   fastify.put(
     '/profile/avatar-or-banner',
     {
-      //schema: userPayload.s3SignatureVerificationSchema,
+      schema: userPayload.updateAvatarOrBanner,
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
@@ -470,7 +470,7 @@ module.exports = async function (fastify, opts) {
           // Upload thumbnail to S3
           const upload = await S3.upload(params).promise()
           let updateObj = {}
-          if (isBanner === 'true') {
+          if (isBanner) {
             updateObj['bannerImage'] = upload.Location
           } else {
             updateObj['avatar'] = upload.Location
@@ -482,7 +482,7 @@ module.exports = async function (fastify, opts) {
         })
         return reply.success({
           message:
-            isBanner === 'true'
+            isBanner
               ? 'Banner updated successfully.'
               : 'Avatar  updated successfully.'
         })

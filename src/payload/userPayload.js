@@ -43,13 +43,12 @@ exports.checkUsernameSchema = {
   )
 }
 
-exports.updateAvatar = {
+exports.updateAvatarOrBanner = {
   tags: ['User'],
   summary: 'Update avatar',
   body: S.object().prop(
-    'avatar',
+    'fileName',
     S.string()
-      .format(S.FORMATS.URI)
       .required()
   ),
   querystring: S.object().prop(
