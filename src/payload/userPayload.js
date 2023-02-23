@@ -46,11 +46,6 @@ exports.checkUsernameSchema = {
 exports.updateAvatarOrBanner = {
   tags: ['User'],
   summary: 'Update avatar',
-  body: S.object().prop(
-    'fileName',
-    S.string()
-      .required()
-  ),
   querystring: S.object().prop(
     'isBanner',
     S.boolean().default(false)

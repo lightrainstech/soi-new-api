@@ -405,7 +405,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        let { file, fileName } = request.body,
+        let { file } = request.body,
           { userId } = request.user,
           { isBanner } = request.query
         if (!Array.isArray(file) || !file[0].filename) {
@@ -443,7 +443,9 @@ module.exports = async function (fastify, opts) {
           }).promise()
         }
 
-        const filePath = `${process.cwd()}/public/assets/${Date.now()}${fileName}`
+        const filePath = `${process.cwd()}/public/assets/${Date.now()}${
+          file[0].filename
+        }`
 
         const readStream = Duplex()
         readStream.push(file[0].data)
@@ -455,7 +457,7 @@ module.exports = async function (fastify, opts) {
             reply.error({ message: 'Upload failed', error: err.message })
           }
 
-          fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
+          const fileName = file[0].filename.replace(/[^a-zA-Z0-9.]/g, '')
           const uniqFileName = `${Date.now()}-${fileName}`,
             fileDirPath = `${userId}/${uniqFileName}`
 
