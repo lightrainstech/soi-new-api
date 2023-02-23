@@ -2,8 +2,6 @@
 
 const ethUtil = require('ethereumjs-util')
 const omitEmpty = require('omit-empty')
-const fs = require('fs')
-const { pipeline, Duplex } = require('stream')
 const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
@@ -12,13 +10,6 @@ const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
 const S3 = require('../utils/S3Config')
-
-// const s3 = require('aws-sdk/clients/s3')
-// const s3Client = new s3({
-//   secretAccessKey: process.env.S3_SECRET_KEY,
-//   accessKeyId: process.env.S3_ACCESS_KEY_ID,
-//   region: process.env.S3_REGION
-// })
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -443,51 +434,41 @@ module.exports = async function (fastify, opts) {
           }).promise()
         }
 
-        const filePath = `${process.cwd()}/public/assets/${Date.now()}${
-          file[0].filename
-        }`
+        const fileName = file[0].filename.replace(/[^a-zA-Z0-9.]/g, '')
+        const uniqFileName = `${Date.now()}-${fileName}`,
+          fileDirPath = `${userId}/${uniqFileName}`
 
-        const readStream = Duplex()
-        readStream.push(file[0].data)
-        readStream.push(null)
+        // Set up S3 parameters for upload
+        const params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: fileDirPath,
+          Body: file[0].data,
+          ContentType: file[0].mimetype,
+          ACL: 'public-read'
+        }
+        // Upload thumbnail to S3
+        const upload = await S3.upload(params).promise()
+        let updateObj = {}
+        if (isBanner) {
+          updateObj['bannerImage'] = upload.Location
+        } else {
+          updateObj['avatar'] = upload.Location
+        }
 
-        pipeline(readStream, fs.createWriteStream(filePath), async err => {
-          if (err) {
-            console.log(err)
-            reply.error({ message: 'Upload failed', error: err.message })
-          }
-
-          const fileName = file[0].filename.replace(/[^a-zA-Z0-9.]/g, '')
-          const uniqFileName = `${Date.now()}-${fileName}`,
-            fileDirPath = `${userId}/${uniqFileName}`
-
-          // Set up S3 parameters for upload
-          const params = {
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: fileDirPath,
-            Body: filePath,
-            ContentType: file[0].mimetype,
-            ACL: 'public-read'
-          }
-          // Upload thumbnail to S3
-          const upload = await S3.upload(params).promise()
-          let updateObj = {}
-          if (isBanner) {
-            updateObj['bannerImage'] = upload.Location
-          } else {
-            updateObj['avatar'] = upload.Location
-          }
-
-          const update = await userModel.updateBannerOrAvatar(userId, updateObj)
-          // Remove file from disk storage
-          fs.unlinkSync(filePath)
-        })
-        return reply.success({
-          message:
-            isBanner
+        const update = await userModel.updateBannerOrAvatar(userId, updateObj)
+        if (update) {
+          return reply.success({
+            message: isBanner
               ? 'Banner updated successfully.'
-              : 'Avatar  updated successfully.'
-        })
+              : 'Avatar  updated successfully.',
+            user: update
+          })
+        } else {
+          reply.error({
+            message: `Failed to verify signature. Please try again.`
+          })
+          return reply
+        }
       } catch (error) {
         console.log(error)
         reply.error({
