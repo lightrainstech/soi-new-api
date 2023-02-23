@@ -2,7 +2,8 @@
 
 const ethUtil = require('ethereumjs-util')
 const omitEmpty = require('omit-empty')
-
+const fs = require('fs')
+const { pipeline, Duplex } = require('stream')
 const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
@@ -10,13 +11,14 @@ const Affiliate = require('../models/affiliateModel.js')
 const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
+const S3 = require('../utils/S3Config')
 
-const s3 = require('aws-sdk/clients/s3')
-const s3Client = new s3({
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  accessKeyId: process.env.S3_ACCESS_KEY_ID,
-  region: process.env.S3_REGION
-})
+// const s3 = require('aws-sdk/clients/s3')
+// const s3Client = new s3({
+//   secretAccessKey: process.env.S3_SECRET_KEY,
+//   accessKeyId: process.env.S3_ACCESS_KEY_ID,
+//   region: process.env.S3_REGION
+// })
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -394,19 +396,26 @@ module.exports = async function (fastify, opts) {
     }
   )
 
-  // Verify S3 signature
-  fastify.post(
-    '/profile/verify-signature',
+  // Update avatar or banner image
+  fastify.put(
+    '/profile/avatar-or-banner',
     {
-      schema: userPayload.s3SignatureVerificationSchema,
+      //schema: userPayload.s3SignatureVerificationSchema,
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
       try {
-        let { fileName, fileType } = request.body,
+        let { file, fileName } = request.body,
           { userId } = request.user,
-          { isBanner } = request.query,
-          userModel = new User(),
+          { isBanner } = request.query
+        if (!Array.isArray(file) || !file[0].filename) {
+          reply.error({
+            statusCode: 422,
+            message: 'Upload Failed. Please select a valid file.'
+          })
+          return reply
+        }
+        const userModel = new User(),
           user = await userModel.getUserById(userId)
         if (!user) {
           reply.code(404).error({
@@ -428,39 +437,55 @@ module.exports = async function (fastify, opts) {
 
         if (pathToDelete) {
           // Delete current image
-          await s3Client
-            .deleteObject({
-              Bucket: process.env.S3_BUCKET_NAME,
-              Key: pathToDelete
-            })
-            .promise()
+          await S3.deleteObject({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: pathToDelete
+          }).promise()
         }
 
-        fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
-        const uniqFileName = `${Date.now()}-${fileName}`,
-          fileDirPath = `${userId}/${uniqFileName}`
+        const filePath = `${process.cwd()}/public/assets/${Date.now()}${fileName}`
 
-        const s3Params = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: fileDirPath,
-          Expires: 60 * 3,
-          ContentType: fileType,
-          ACL: 'public-read'
-        }
+        const readStream = Duplex()
+        readStream.push(file[0].data)
+        readStream.push(null)
 
-        // Generate signed url
-        await s3Client.getSignedUrl('putObject', s3Params, (err, data) => {
+        pipeline(readStream, fs.createWriteStream(filePath), async err => {
           if (err) {
-            reply.error({ message: err })
+            console.log(err)
+            reply.error({ message: 'Upload failed', error: err.message })
           }
-          reply.success({
-            signedRequest: data,
-            url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${fileDirPath}`,
-            uniqFileName: uniqFileName,
-            fileDirPath: fileDirPath
-          })
+
+          fileName = fileName.replace(/[^a-zA-Z0-9.]/g, '')
+          const uniqFileName = `${Date.now()}-${fileName}`,
+            fileDirPath = `${userId}/${uniqFileName}`
+
+          // Set up S3 parameters for upload
+          const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: fileDirPath,
+            Body: filePath,
+            ContentType: file[0].mimetype,
+            ACL: 'public-read'
+          }
+          // Upload thumbnail to S3
+          const upload = await S3.upload(params).promise()
+          let updateObj = {}
+          if (isBanner === 'true') {
+            updateObj['bannerImage'] = upload.Location
+          } else {
+            updateObj['avatar'] = upload.Location
+          }
+
+          const update = await userModel.updateBannerOrAvatar(userId, updateObj)
+          // Remove file from disk storage
+          fs.unlinkSync(filePath)
         })
-        return reply
+        return reply.success({
+          message:
+            isBanner === 'true'
+              ? 'Banner updated successfully.'
+              : 'Avatar  updated successfully.'
+        })
       } catch (error) {
         console.log(error)
         reply.error({

@@ -98,7 +98,7 @@ UserSchema.pre('save', async function (next) {
   this.affiliateCode = nanoidLong()
   next()
 })
-;(UserSchema.methods = {
+;;(UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
     let query = { _id: id }
@@ -148,7 +148,7 @@ UserSchema.pre('save', async function (next) {
   },
   checkAffiliateCode: async function (affCode) {
     const User = mongoose.model('User')
-    return await User.findOne({ affiliateCode:affCode })
+    return await User.findOne({ affiliateCode: affCode })
   },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
@@ -192,6 +192,15 @@ UserSchema.pre('save', async function (next) {
       { $addFields: { activeNFT: { $ifNull: ['$activeNFT', {}] } } }
     ])
     return userDetails[0]
+  },
+  updateBannerOrAvatar: async function (userId, updateObj) {
+    const User = mongoose.model('User')
+    let data = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateObj },
+      { new: true }
+    )
+    return data
   }
 }),
   (UserSchema.statics = {
