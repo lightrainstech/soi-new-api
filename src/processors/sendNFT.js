@@ -9,7 +9,6 @@ module.exports = async function (args, done) {
   const { wallet, userId, metaDataUrl, assetUrl, thumbnail, name } = args.data
   console.log('--------Inside processor---------')
   try {
-    console.log(wallet, userId)
     const db = await mongoose.connect(process.env.MONGO_CONN, {
       useNewUrlParser: true,
       useUnifiedTopology: true

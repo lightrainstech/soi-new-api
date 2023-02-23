@@ -36,7 +36,6 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         let pinataStatus = await pinata.testAuthentication()
-        console.log('PinataStatus: ', pinataStatus)
         const { file } = request.body
         if (!Array.isArray(file) || !file[0].filename) {
           reply.error({
@@ -492,7 +491,7 @@ module.exports = async function (fastify, opts) {
         const { userId } = request.user,
           { nftId } = request.params
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
-        if(!nft) {
+        if (!nft) {
           reply.code(404).error({
             message: 'Asset not found.'
           })

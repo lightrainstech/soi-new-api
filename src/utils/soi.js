@@ -99,7 +99,6 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   jsonObject.params = params
 
   const result = await apiCall(jsonObject)
-  //console.log('res', result.data)
   let highestFollowersCount = 0
   if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
     let profileData = result.data.resp[socialInsiderId]
@@ -110,7 +109,6 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
   let resObj = {
     [platform]: highestFollowersCount
   }
-  console.log('resObj', resObj)
   return resObj
 }
 

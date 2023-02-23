@@ -86,7 +86,6 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { phone, country, name, affCode, wallet, userName } = request.body,
         email = request.body.email.toString().toLowerCase()
-      console.log('-----Args----', phone, country, name, affCode, wallet)
       try {
         const userModel = new User(),
           checkSumWallet = await checkSumAddress(wallet)
@@ -104,7 +103,6 @@ module.exports = async function (fastify, opts) {
             userModel.role = 'influencer'
           }
           const newUsr = await userModel.save()
-          console.log('newUsr', newUsr)
 
           if (affCode) {
             Affiliate.create({
@@ -170,7 +168,6 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { affCode } = request.query
       try {
-        console.log('affCode', affCode)
         const agencyModel = new Agency(),
           isExists = await agencyModel.checkAffiliateCode(affCode)
         if (!isExists) {
@@ -180,7 +177,6 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         let count = (await redis.get(`NFTC:${affCode}`)) || 0
-        console.log('###', count)
         if (Number(count) === 0) {
           return reply.error({
             message: 'Invalid agency code.'
