@@ -172,6 +172,7 @@ module.exports = async function (fastify, opts) {
         console.log('affCode', affCode)
         const userModel = new User(),
           isExists = await userModel.checkAffiliateCode(affCode)
+        console.log('isExists', isExists)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid affiliate code.'

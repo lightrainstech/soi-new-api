@@ -152,6 +152,7 @@ UserSchema.pre('save', async function (next) {
     const options = {
       criteria: query
     }
+    console.log('options', options)
     return User.load(options)
   },
   updateProfile: async function (userId, updateObj) {
