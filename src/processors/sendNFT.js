@@ -23,7 +23,7 @@ module.exports = async function (args, done) {
     let tokenHashTag
     do {
       tokenHashTag = randomHashTag()
-    } while (await userTokenModel.findOne({ tokenHashTag: tokenHashTag }))
+    } while (await UserToken.findOne({ tokenHashTag: tokenHashTag }))
 
     userTokenModel.user = userId
     userTokenModel.nftId = tokenId
