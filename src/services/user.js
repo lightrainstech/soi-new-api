@@ -9,7 +9,7 @@ const Affiliate = require('../models/affiliateModel.js')
 const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
-const { S3 } = require('../utils/S3Config')
+const { S3, uploadToS3 } = require('../utils/S3Config')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -433,26 +433,13 @@ module.exports = async function (fastify, opts) {
             Key: pathToDelete
           }).promise()
         }
-
-        const fileName = file[0].filename.replace(/[^a-zA-Z0-9.]/g, '')
-        const uniqFileName = `${Date.now()}-${fileName}`,
-          fileDirPath = `${userId}/${uniqFileName}`
-
-        // Set up S3 parameters for upload
-        const params = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: fileDirPath,
-          Body: file[0].data,
-          ContentType: file[0].mimetype,
-          ACL: 'public-read'
-        }
-        // Upload thumbnail to S3
-        const upload = await S3.upload(params).promise()
+        
+        const { link } = await uploadToS3(file, userId)
         let updateObj = {}
         if (isBanner) {
-          updateObj['bannerImage'] = upload.Location
+          updateObj['bannerImage'] = link
         } else {
-          updateObj['avatar'] = upload.Location
+          updateObj['avatar'] = link
         }
 
         const update = await userModel.updateBannerOrAvatar(userId, updateObj)
