@@ -24,7 +24,10 @@ module.exports = async function (fastify, opts) {
           return reply
         }
         const checkSumWallet = await checkSumAddress(wallet)
-        const isBrandExists = await agencyModel.getBrandByEmail(companyEmail)
+        const isBrandExists = await agencyModel.getBrandByEmailOrWallet(
+          companyEmail,
+          checkSumWallet
+        )
         if (isBrandExists) {
           return reply.code(400).error({
             message: 'Brand already exists.'
@@ -63,6 +66,36 @@ module.exports = async function (fastify, opts) {
         return reply.error({
           message: `Brand sign up failed. Please try again: ${error.message}`
         })
+      }
+    }
+  )
+  fastify.get(
+    '/',
+    {
+      schema: brandPayload.getBrandDetailSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { email, wallet } = request.user
+        const agencyModel = new Agency()
+        const brand = await agencyModel.getBrandByEmailOrWallet(email, wallet)
+        if (!brand) {
+          return reply.code(404).error({
+            message: 'Brand not found.'
+          })
+        } else {
+          return reply.success({
+            message: 'Brand details.',
+            brand
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: `Failed to fetch brand details. Please try again: ${error.message}`
+        })
+        return reply
       }
     }
   )

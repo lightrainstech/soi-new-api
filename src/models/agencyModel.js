@@ -60,9 +60,9 @@ agencySchema.methods = {
     }
     return Agency.load(options)
   },
-  getBrandByEmail: async function (email) {
+  getBrandByEmailOrWallet: async function (email, wallet) {
     const Agency = mongoose.model('Agency')
-    let query = { email: email, role: 'brand' }
+    let query = { $or: [{ email: email }, { wallet: wallet }], role: 'brand' }
     const options = {
       criteria: query
     }

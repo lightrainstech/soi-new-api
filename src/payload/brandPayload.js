@@ -9,3 +9,8 @@ exports.addNewBrandSchema = {
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
     .prop('file', S.array().required())
 }
+
+exports.getBrandDetailSchema = {
+  tags: ['Brand'],
+  summary: 'Get brand details.'
+}
