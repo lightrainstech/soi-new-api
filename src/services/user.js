@@ -9,7 +9,7 @@ const Affiliate = require('../models/affiliateModel.js')
 const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
-const S3 = require('../utils/S3Config')
+const { S3 } = require('../utils/S3Config')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
