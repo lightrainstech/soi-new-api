@@ -28,7 +28,8 @@ module.exports = async function (fastify, opts) {
           startDate,
           endDate,
           externalLink,
-          bountyOffered
+          bountyOffered,
+          location
         } = request.body
 
         // Create unique hashtag for challenge
@@ -54,7 +55,8 @@ module.exports = async function (fastify, opts) {
           endDate,
           externalLink,
           bountyOffered,
-          challengeHashTag
+          challengeHashTag,
+          location
         })
         const savedChallenge = await newChallengeData.save()
         if (savedChallenge) {

@@ -13,6 +13,7 @@ const challengeBodySchema = S.object()
   .prop('endDate', S.string().format('date-time'))
   .prop('externalLink', S.string())
   .prop('bountyOffered', S.number().minimum(0))
+  .prop('location', S.string())
 
 exports.createChallengeSchema = {
   tags: ['Challenge'],
