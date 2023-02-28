@@ -28,10 +28,14 @@ const agencySchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['agency', 'sub-agency'],
+    enum: ['agency', 'sub-agency', 'brand'],
     default: 'agency'
   },
-  agencyCode: { type: String, default: null }
+  agencyCode: { type: String, default: null },
+  logo: {
+    type: String,
+    required: true
+  }
 })
 
 agencySchema.pre('save', async function (next) {
@@ -55,12 +59,20 @@ agencySchema.methods = {
       criteria: query
     }
     return Agency.load(options)
+  },
+  getBrandByEmailOrWallet: async function (email, wallet) {
+    const Agency = mongoose.model('Agency')
+    let query = { $or: [{ email: email }, { wallet: wallet }], role: 'brand' }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
   }
 }
 
 agencySchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'email name wallet role agencyCode'
+    options.select = options.select || 'email name wallet role agencyCode logo'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   }
 }
