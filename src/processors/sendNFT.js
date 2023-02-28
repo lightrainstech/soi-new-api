@@ -18,13 +18,20 @@ module.exports = async function (args, done) {
       userTokenModel = new UserToken(),
       checkSumWallet = await checkSumAddress(wallet)
 
+    // Create unique hashtag for nft
+    let tokenHashTag
+    do {
+      tokenHashTag = randomHashTag()
+    } while (await userTokenModel.findOne({ tokenHashTag: tokenHashTag }))
+
     userTokenModel.user = userId
     userTokenModel.nftId = tokenId
     userTokenModel.avatar = assetUrl
     userTokenModel.thumbnail = thumbnail
-    userTokenModel.name = name,
-    userTokenModel.owner = checkSumWallet,
-    userTokenModel.creator = checkSumWallet,
+    userTokenModel.name = name
+    userTokenModel.owner = checkSumWallet
+    userTokenModel.creator = checkSumWallet
+    userTokenModel.tokenHashTag = tokenHashTag
 
     await userTokenModel.save()
     console.log('saved')
