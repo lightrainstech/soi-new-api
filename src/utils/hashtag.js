@@ -1,6 +1,6 @@
 'use strict'
-const fs = require('fs')
 
+const fs = require('fs')
 
 // Create random hashtag for challenges and NFTs
 const randomHashTag = () => {
@@ -28,7 +28,7 @@ const getTeamName = async index => {
   try {
     const namesData = await fs.promises.readFile(filePath, { encoding: 'utf-8' })
     const names = namesData.split('\n')
-    return names[index-1]
+    return names[index]
   } catch (err) {
     throw err
   }
