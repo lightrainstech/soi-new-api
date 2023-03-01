@@ -18,3 +18,12 @@ exports.getBrandDetailSchema = {
   tags: ['Brand'],
   summary: 'Get brand details.'
 }
+
+exports.checkAgencyCodeForBrandSchema = {
+  tags: ['Brand'],
+  summary: 'Check agency code.',
+  querystring: S.object().prop(
+    'agencyCode',
+    S.string().minLength(8).maxLength(8).required()
+  )
+}

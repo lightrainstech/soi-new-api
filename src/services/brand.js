@@ -28,7 +28,7 @@ module.exports = async function (fastify, opts) {
 
         // Check for agency
         const agency = await agencyModel.checkAffiliateCode(agencyCode)
-        if(!agency) {
+        if (!agency) {
           return reply.error({
             message: 'Invalid agency code.'
           })
@@ -110,6 +110,37 @@ module.exports = async function (fastify, opts) {
         console.log(error)
         reply.error({
           message: `Failed to fetch brand details. Please try again: ${error.message}`
+        })
+        return reply
+      }
+    }
+  )
+  // Check agencyCode
+  fastify.get(
+    '/check/',
+    { schema: brandPayload.checkAgencyCodeForBrandSchema },
+    async function (request, reply) {
+      try {
+        const agencyModel = new Agency()
+        const { agencyCode } = request.query
+
+        // Check for agency
+        const agency = await agencyModel.checkAffiliateCode(agencyCode)
+        if (!agency) {
+          return reply.error({
+            message: 'Invalid agency code.',
+            isValid: false
+          })
+        } else {
+          return reply.success({
+            message: 'Valid agency code.',
+            isValid: true
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: `Failed to check agency code. Please try again: ${error.message}`
         })
         return reply
       }
