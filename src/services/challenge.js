@@ -167,7 +167,8 @@ module.exports = async function (fastify, opts) {
           endDate,
           externalLink,
           bountyOffered,
-          challengeHashTag
+          challengeHashTag,
+          location
         } = request.body
 
         const data = {
@@ -184,7 +185,8 @@ module.exports = async function (fastify, opts) {
           endDate: endDate,
           externalLink: externalLink,
           bountyOffered: bountyOffered,
-          challengeHashTag: challengeHashTag
+          challengeHashTag: challengeHashTag,
+          location: location
         }
         const challenge = await challengeModel.getChallengeById(id)
         if (!challenge) {
