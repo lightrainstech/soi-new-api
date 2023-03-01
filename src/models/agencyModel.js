@@ -18,7 +18,7 @@ const agencySchema = new mongoose.Schema({
     unique: true,
     required: true
   },
-  parentAgencyId: {
+  parent: {
     type: Schema.ObjectId
   },
   wallet: {
@@ -34,7 +34,6 @@ const agencySchema = new mongoose.Schema({
   agencyCode: { type: String, default: null },
   logo: {
     type: String,
-    required: true
   }
 })
 
@@ -52,9 +51,9 @@ agencySchema.methods = {
     }
     return Agency.load(options)
   },
-  checkAffiliateCode: async function (affCode) {
+  checkAffiliateCode: async function (agencyCode) {
     const Agency = mongoose.model('Agency')
-    let query = { agencyCode: affCode }
+    let query = { agencyCode: agencyCode }
     const options = {
       criteria: query
     }
@@ -72,7 +71,7 @@ agencySchema.methods = {
 
 agencySchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'email name wallet role agencyCode logo'
+    options.select = options.select || 'email name wallet role parent agencyCode logo'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   }
 }

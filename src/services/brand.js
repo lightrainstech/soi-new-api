@@ -16,13 +16,21 @@ module.exports = async function (fastify, opts) {
       try {
         const agencyModel = new Agency()
         const { companyName, companyEmail, wallet, file } = request.body
+        const { agencyCode } = request.query
         if (!Array.isArray(file) || !file[0].filename) {
-          reply.error({
+          return reply.error({
             statusCode: 422,
             message: 'Please select a valid file.'
           })
-          return reply
         }
+
+        const agency = await agencyModel.checkAffiliateCode(agencyCode)
+        if(!agency) {
+          return reply.error({
+            message: 'Invalid agency code.'
+          })
+        }
+
         const checkSumWallet = await checkSumAddress(wallet)
         const isBrandExists = await agencyModel.getBrandByEmailOrWallet(
           companyEmail,
@@ -39,6 +47,7 @@ module.exports = async function (fastify, opts) {
         agencyModel.wallet = checkSumWallet
         agencyModel.role = 'brand'
         agencyModel.logo = link
+        agencyModel.parent = agency?._id
         const newBrand = await agencyModel.save()
         if (newBrand) {
           const jwt = fastify.jwt.sign(
