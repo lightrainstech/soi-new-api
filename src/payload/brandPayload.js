@@ -27,3 +27,12 @@ exports.checkAgencyCodeForBrandSchema = {
     S.string().minLength(8).maxLength(8).required()
   )
 }
+
+exports.walletConnectSchema = {
+  tags: ['User'],
+  summary: 'Wallet connect and signature verification',
+  body: S.object()
+    .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
+    .prop('signature', S.string().required())
+    .prop('message', S.string().required())
+}

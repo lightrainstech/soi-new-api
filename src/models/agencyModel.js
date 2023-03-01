@@ -7,6 +7,7 @@ const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
   8
 )
+const ObjectId = mongoose.Types.ObjectId
 
 const agencySchema = new mongoose.Schema({
   name: {
@@ -51,6 +52,14 @@ agencySchema.methods = {
     }
     return Agency.load(options)
   },
+  getAgencyById: async function (id) {
+    const Agency = mongoose.model('Agency')
+    let query = { _id: ObjectId(id) }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
+  },
   checkAffiliateCode: async function (agencyCode) {
     const Agency = mongoose.model('Agency')
     let query = { agencyCode: agencyCode }
@@ -62,6 +71,14 @@ agencySchema.methods = {
   getBrandByEmailOrWallet: async function (email, wallet) {
     const Agency = mongoose.model('Agency')
     let query = { $or: [{ email: email }, { wallet: wallet }], role: 'brand' }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
+  },
+  getBrandByWallet: async function (wallet) {
+    const Agency = mongoose.model('Agency')
+    let query = {  wallet: wallet , role: 'brand' }
     const options = {
       criteria: query
     }

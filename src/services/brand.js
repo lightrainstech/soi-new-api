@@ -1,5 +1,6 @@
 'use strict'
 
+const ethUtil = require('ethereumjs-util')
 const Agency = require('../models/agencyModel')
 const { checkSumAddress } = require('../utils/contract')
 const { uploadToS3 } = require('../utils/S3Config')
@@ -63,14 +64,22 @@ module.exports = async function (fastify, opts) {
               name: newBrand.name,
               wallet: newBrand.wallet,
               email: newBrand.email,
-              role: newBrand.role
+              role: newBrand.role,
+              agencyCode: agencyCode
             },
             { expiresIn: EXPIRESIN }
           )
+          let respUser = {
+            brandId: newBrand._id,
+            name: newBrand.name,
+            wallet: newBrand.wallet,
+            email: newBrand.email,
+            role: newBrand.role,
+            accessToken: jwt
+          }
           return reply.success({
             message: 'Brand sign up successful.',
-            brand: newBrand,
-            accessToken: jwt
+            respUser
           })
         } else {
           return reply.error({
@@ -143,6 +152,68 @@ module.exports = async function (fastify, opts) {
           message: `Failed to check agency code. Please try again: ${error.message}`
         })
         return reply
+      }
+    }
+  )
+  // Wallet signature verification
+  fastify.post(
+    '/walletConnect',
+    { schema: brandPayload.walletConnectSchema },
+    async function (request, reply) {
+      const { wallet, signature, message } = request.body
+      const agencyModel = new Agency()
+      const msgBuffer = Buffer.from(message)
+      const msgHash = ethUtil.hashPersonalMessage(msgBuffer)
+      const signatureBuffer = ethUtil.toBuffer(signature)
+      const signatureParams = ethUtil.fromRpcSig(signatureBuffer)
+      const publicKey = ethUtil.ecrecover(
+        msgHash,
+        signatureParams.v,
+        signatureParams.r,
+        signatureParams.s
+      )
+      const addressBuffer = ethUtil.publicToAddress(publicKey)
+      const address = ethUtil.bufferToHex(addressBuffer)
+      const checkSumAdd = await checkSumAddress(address)
+      const checkSumWallet = await checkSumAddress(wallet)
+      if (checkSumAdd === checkSumWallet) {
+        let brandData = await agencyModel.getBrandByWallet(checkSumWallet)
+        if (brandData) {
+          const agency = await agencyModel.getAgencyById(brandData.parent)
+          const jwt = fastify.jwt.sign(
+            {
+              brandId: brandData._id,
+              name: brandData.name,
+              wallet: brandData.wallet,
+              email: brandData.email,
+              role: brandData.role,
+              agencyCode: agency?.agencyCode
+            },
+            { expiresIn: EXPIRESIN }
+          )
+          let respUser = {
+            brandId: brandData._id,
+            name: brandData.name,
+            wallet: brandData.wallet,
+            email: brandData.email,
+            role: brandData.role,
+            accessToken: jwt
+          }
+
+          reply.success({
+            isUserExist: true,
+            respUser
+          })
+        } else {
+          reply.success({
+            isUserExist: false
+          })
+        }
+      } else {
+        reply.error({
+          message: 'Invalid signature',
+          data: { isUserExist: false }
+        })
       }
     }
   )
