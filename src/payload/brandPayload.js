@@ -29,7 +29,7 @@ exports.checkAgencyCodeForBrandSchema = {
 }
 
 exports.walletConnectSchema = {
-  tags: ['User'],
+  tags: ['Brand'],
   summary: 'Wallet connect and signature verification',
   body: S.object()
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
