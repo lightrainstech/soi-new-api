@@ -56,7 +56,6 @@ const ChallengeSchema = new mongoose.Schema({
   }
 })
 
-
 ChallengeSchema.methods = {
   getChallengeById: async function (id) {
     const Challenge = mongoose.model('Challenge')
@@ -66,22 +65,21 @@ ChallengeSchema.methods = {
     }
     return Challenge.load(options)
   },
-  getChallengesByUser: async function (userId) {
+  getAllChallenges: async function () {
     const Challenge = mongoose.model('Challenge')
-    let query = { user: ObjectId(userId) }
-    const options = {
-      criteria: query
-    }
-    return Challenge.find(options.criteria)
+    return Challenge.find({}).sort({ endDate: 1 })
   },
   updateChallengesById: async function (id, data) {
-    console.log(data)
     const Challenge = mongoose.model('Challenge')
-    return Challenge.findByIdAndUpdate(id, {
-      $set: data,
-    },{
-      new: true
-    })
+    return Challenge.findByIdAndUpdate(
+      id,
+      {
+        $set: data
+      },
+      {
+        new: true
+      }
+    )
   }
 }
 

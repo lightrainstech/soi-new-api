@@ -109,20 +109,16 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Get challenge details
+  // Get all challenges
   fastify.get(
     '/',
     {
       schema: challengePayload.getUserChallengesSchema,
-      onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
       try {
-        const challengeModel = new Challenge(),
-          { userId } = request.user,
-          challenges = await challengeModel.getChallengesByUser(userId),
-          id = getTeamId(2)
-        console.log('Team id', id)
+        const challengeModel = new Challenge()
+        const challenges = await challengeModel.getAllChallenges()
         if (!challenges.length) {
           reply.code(404).error({
             message: 'No challenges found.'
