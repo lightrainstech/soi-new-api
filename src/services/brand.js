@@ -17,6 +17,8 @@ module.exports = async function (fastify, opts) {
         const agencyModel = new Agency()
         const { companyName, companyEmail, wallet, file } = request.body
         const { agencyCode } = request.query
+
+        // File validation
         if (!Array.isArray(file) || !file[0].filename) {
           return reply.error({
             statusCode: 422,
@@ -24,6 +26,7 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Check for agency
         const agency = await agencyModel.checkAffiliateCode(agencyCode)
         if(!agency) {
           return reply.error({
@@ -41,7 +44,11 @@ module.exports = async function (fastify, opts) {
             message: 'Brand already exists.'
           })
         }
+
+        // Upload file to S3
         const { link } = await uploadToS3(file, 'brand')
+
+        // Create new brand
         agencyModel.name = companyName
         agencyModel.email = companyEmail
         agencyModel.wallet = checkSumWallet
