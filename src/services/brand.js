@@ -75,6 +75,7 @@ module.exports = async function (fastify, opts) {
             wallet: newBrand.wallet,
             email: newBrand.email,
             role: newBrand.role,
+            logo: newBrand.logo,
             accessToken: jwt
           }
           return reply.success({
@@ -197,6 +198,7 @@ module.exports = async function (fastify, opts) {
             wallet: brandData.wallet,
             email: brandData.email,
             role: brandData.role,
+            logo: brandData.logo,
             accessToken: jwt
           }
 
