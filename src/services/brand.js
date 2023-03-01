@@ -51,7 +51,7 @@ module.exports = async function (fastify, opts) {
 
         // Create new brand
         agencyModel.name = companyName
-        agencyModel.email = companyEmail
+        agencyModel.email = companyEmail.toString().toLowerCase()
         agencyModel.wallet = checkSumWallet
         agencyModel.role = 'brand'
         agencyModel.logo = link
@@ -126,7 +126,7 @@ module.exports = async function (fastify, opts) {
   )
   // Check agencyCode
   fastify.get(
-    '/check/',
+    '/check',
     { schema: brandPayload.checkAgencyCodeForBrandSchema },
     async function (request, reply) {
       try {
