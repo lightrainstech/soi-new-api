@@ -14,7 +14,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const { userId } = request.user
+        const { brandId, role } = request.user
         const {
           title,
           description,
@@ -32,6 +32,13 @@ module.exports = async function (fastify, opts) {
           location
         } = request.body
 
+        // Check role
+        if(role !== 'brand') {
+          return reply.code(401).error({
+            message: 'You are not authorized to do this operation.',
+          })
+        }
+
         // Create unique hashtag for challenge
         let challengeHashTag
         do {
@@ -41,7 +48,7 @@ module.exports = async function (fastify, opts) {
         )
 
         const newChallengeData = new Challenge({
-          user: userId,
+          user: brandId,
           title,
           description,
           facebookText,
