@@ -155,6 +155,7 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const { id } = request.params
+        const { role } = request.user
         const challengeModel = new Challenge()
         const {
           title,
@@ -173,6 +174,13 @@ module.exports = async function (fastify, opts) {
           challengeHashTag,
           location
         } = request.body
+
+        // Check role
+        if (role !== 'brand') {
+          return reply.code(401).error({
+            message: 'You are not authorized to do this operation.'
+          })
+        }
 
         const data = {
           title: title,
