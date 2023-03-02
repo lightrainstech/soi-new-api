@@ -221,4 +221,4 @@ module.exports = async function (fastify, opts) {
   )
 }
 
-module.exports.autoPrefix = '/brand'
+module.exports.autoPrefix = '/brands'
