@@ -108,7 +108,8 @@ module.exports = async function (fastify, opts) {
               userId: newUsr._id,
               name: newUsr.name,
               wallet: newUsr.wallet,
-              affCode: affCode ? affCode : ''
+              affCode: affCode ? affCode : '',
+              role: newUsr.role
             },
             { expiresIn: EXPIRESIN }
           )
@@ -117,6 +118,7 @@ module.exports = async function (fastify, opts) {
             name: newUsr.name,
             userName: newUsr.userName,
             affCode: affCode ? affCode : '',
+            role: newUsr.role,
             accessToken: jwt
           }
           reply.success({ message: 'Sign up successful', respUser })
@@ -225,7 +227,8 @@ module.exports = async function (fastify, opts) {
                 userId: userData._id,
                 name: userData.name,
                 wallet: userData.wallet,
-                affCode: affiliateData?.affiliateCode
+                affCode: affiliateData?.affiliateCode,
+                role: userData.role
               },
               { expiresIn: EXPIRESIN }
             )
@@ -233,6 +236,7 @@ module.exports = async function (fastify, opts) {
               userId: userData._id,
               name: userData.name,
               wallet: userData.wallet,
+              role: userData.role,
               accessToken: jwt
             }
 
@@ -433,7 +437,7 @@ module.exports = async function (fastify, opts) {
             Key: pathToDelete
           }).promise()
         }
-        
+
         const { link } = await uploadToS3(file, userId)
         let updateObj = {}
         if (isBanner) {
