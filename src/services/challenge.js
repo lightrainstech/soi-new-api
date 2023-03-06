@@ -2,7 +2,7 @@
 
 const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengPayload')
-const { randomHashTag } = require('../utils/hashtag')
+const { randomHashTag, getTeamName } = require('../utils/hashtag')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -33,9 +33,9 @@ module.exports = async function (fastify, opts) {
         } = request.body
 
         // Check role
-        if(role !== 'brand') {
+        if (role !== 'brand') {
           return reply.code(401).error({
-            message: 'You are not authorized to do this operation.',
+            message: 'You are not authorized to do this operation.'
           })
         }
 
@@ -120,7 +120,7 @@ module.exports = async function (fastify, opts) {
   fastify.get(
     '/',
     {
-      schema: challengePayload.getUserChallengesSchema,
+      schema: challengePayload.getUserChallengesSchema
     },
     async function (request, reply) {
       try {
@@ -225,6 +225,34 @@ module.exports = async function (fastify, opts) {
         console.log(error)
         return reply.error({
           message: `Failed to update challenge. Please try again.`
+        })
+      }
+    }
+  )
+  // Create hash tag
+  fastify.post(
+    '/:challengeId/hashtag',
+    {
+      schema: challengePayload.createhashTagSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const challengeModel = new Challenge()
+        const { challengeId } = request.params
+        const { nftId, nftHashTag } = request.body
+        const challenge = await challengeModel.getChallengeById(challengeId)
+        const team = await getTeamName(nftId)
+        const hashTag = `${challenge.challengeHashTag}${team}${nftHashTag}`
+        // Todo join challenge
+        return reply.success({
+          message: 'Challenge HashTag.',
+          hashTag
+        })
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to create challenge hash tag.Please try again.'
         })
       }
     }

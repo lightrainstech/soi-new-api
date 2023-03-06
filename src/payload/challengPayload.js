@@ -44,3 +44,15 @@ exports.updateChallengeSchema = {
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
   )
 }
+
+exports.createhashTagSchema = {
+  tags: ['Challenge'],
+  summary: 'Create hashTag',
+  body: S.object()
+    .prop('nftId', S.string().required())
+    .prop('nftHashTag', S.string().required()),
+  params: S.object().prop(
+    'challengeId',
+    S.string().pattern('^[a-fA-F0-9]{24}$').required()
+  )
+}
