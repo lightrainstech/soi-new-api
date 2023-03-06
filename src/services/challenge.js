@@ -48,7 +48,7 @@ module.exports = async function (fastify, opts) {
         )
 
         const newChallengeData = new Challenge({
-          user: brandId,
+          brand: brandId,
           title,
           description,
           facebookText,

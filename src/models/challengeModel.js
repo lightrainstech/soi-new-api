@@ -1,11 +1,11 @@
 'use strict'
 const mongoose = require('mongoose')
-const ObjectId = mongoose.Types.ObjectId
+
 
 const ChallengeSchema = new mongoose.Schema({
-  user: {
+  brand: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User',
+    ref: 'Agency',
     required: true
   },
   title: {
@@ -67,7 +67,12 @@ ChallengeSchema.methods = {
   },
   getAllChallenges: async function () {
     const Challenge = mongoose.model('Challenge')
-    return Challenge.find({}).sort({ endDate: 1 })
+    return Challenge.find({})
+      .populate({
+        path: 'brand',
+        select: '_id name logo'
+      })
+      .sort({ endDate: 1 })
   },
   updateChallengesById: async function (id, data) {
     const Challenge = mongoose.model('Challenge')
