@@ -53,6 +53,10 @@ const ChallengeSchema = new mongoose.Schema({
   challengeHashTag: {
     type: String,
     unique: true
+  },
+  participants: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -92,7 +96,7 @@ ChallengeSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location  bountyOffered challengeHashTag'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location  bountyOffered challengeHashTag participants'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -102,7 +106,7 @@ ChallengeSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location  bountyOffered challengeHashTag'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink location  bountyOffered challengeHashTag participants'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
