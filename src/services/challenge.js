@@ -218,7 +218,7 @@ module.exports = async function (fastify, opts) {
             challenge: updateChallenge
           })
         } else {
-          return reply.code(400).error({
+          return reply.error({
             message: 'Failed to update challenge please try again.',
             challenge: {}
           })
@@ -247,6 +247,19 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
+        const participation =
+          await challengeParticipationModel.getParticipationDetails(
+            challengeId,
+            userId,
+            nftId
+          )
+
+        if(participation) {
+          return reply.error({
+            message: 'Active challenge exists with the selected NFT.',
+          })
+        }
+
         const challenge = await challengeModel.getChallengeById(challengeId)
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
@@ -254,6 +267,7 @@ module.exports = async function (fastify, opts) {
         challengeParticipationModel.user = userId
         challengeParticipationModel.challenge = challengeId
         challengeParticipationModel.hashTag = hashTag
+        challengeParticipationModel.nftId = nftId
         await challengeParticipationModel.save()
 
         await challengeModel.updateChallengeParticipants(challengeId, userId)
