@@ -87,7 +87,7 @@ module.exports = async function (fastify, opts) {
   )
   // Get challenge details
   fastify.get(
-    '/:id',
+    '/:challengeId',
     {
       schema: challengePayload.getChallengeSchema,
       onRequest: [fastify.authenticate]
@@ -95,8 +95,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const challengeModel = new Challenge(),
-          { id } = request.params,
-          challenge = await challengeModel.getChallengeById(id)
+          { challengeId } = request.params,
+          challenge = await challengeModel.getChallengeDetails(challengeId)
         if (!challenge) {
           reply.code(404).error({
             message: 'Challenge not found.'

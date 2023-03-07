@@ -1,7 +1,6 @@
 'use strict'
 const mongoose = require('mongoose')
 
-
 const ChallengeSchema = new mongoose.Schema({
   brand: {
     type: mongoose.Schema.ObjectId,
@@ -89,6 +88,14 @@ ChallengeSchema.methods = {
         new: true
       }
     )
+  },
+  getChallengeDetails: async function (id) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findOne({ _id: id })
+      .populate({
+        path: 'brand',
+        select: '_id name logo'
+      })
   }
 }
 

@@ -25,7 +25,7 @@ exports.getChallengeSchema = {
   tags: ['Challenge'],
   summary: 'Get challenge details.',
   params: S.object().prop(
-    'id',
+    'challengeId',
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
   )
 }
