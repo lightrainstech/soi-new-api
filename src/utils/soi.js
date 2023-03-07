@@ -140,6 +140,23 @@ const getProfileNotExistError = platform => {
   return socialAccountMap[platform]
 }
 
+// Create campaign inside social insider
+const createCampaign = async (campaignName, hashTag) => {
+  let method = 'socialinsider_api.create_campaigns',
+    params = {
+      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
+      campaign_name: campaignName,
+      campaign_type: 'autotag',
+      query_string: hashTag
+    }
+
+  jsonObject.method = method
+  jsonObject.params = params
+
+  const result = await apiCall(jsonObject)
+  return result.data
+}
+
 module.exports = {
   getAccountType,
   addProfile,
@@ -147,5 +164,6 @@ module.exports = {
   stripTrailingSlash,
   getProfileDetails,
   removeProfile,
-  getProfileNotExistError
+  getProfileNotExistError,
+  createCampaign
 }

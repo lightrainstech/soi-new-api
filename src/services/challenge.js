@@ -4,6 +4,9 @@ const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengPayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
+const {
+  createCampaign
+} = require('../utils/soi')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -256,7 +259,7 @@ module.exports = async function (fastify, opts) {
 
         if(participation) {
           return reply.error({
-            message: 'Active challenge exists with the selected NFT.',
+            message: 'Challenge exists with the selected NFT.',
           })
         }
 
@@ -264,22 +267,29 @@ module.exports = async function (fastify, opts) {
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
-        challengeParticipationModel.user = userId
-        challengeParticipationModel.challenge = challengeId
-        challengeParticipationModel.hashTag = hashTag
-        challengeParticipationModel.nftId = nftId
-        await challengeParticipationModel.save()
+        const result = await createCampaign(challenge.title, hashTag)
+        if (result.resp === 'Success') {
+          challengeParticipationModel.user = userId
+          challengeParticipationModel.challenge = challengeId
+          challengeParticipationModel.hashTag = hashTag
+          challengeParticipationModel.nftId = nftId
+          await challengeParticipationModel.save()
 
-        await challengeModel.updateChallengeParticipants(challengeId, userId)
-
-        return reply.success({
-          message: 'Challenge HashTag.',
-          hashTag
-        })
+          await challengeModel.updateChallengeParticipants(challengeId, userId)
+          
+          return reply.success({
+            message: 'Challenge HashTag.',
+            hashTag
+          })
+        }else {
+          return reply.error({
+            message: 'Failed to join challenge. Please try again.'
+          })
+        }
       } catch (error) {
         console.log(error)
         return reply.error({
-          message: 'Failed to create challenge hash tag.Please try again.'
+          message: 'Failed to join challenge. Please try again.'
         })
       }
     }
