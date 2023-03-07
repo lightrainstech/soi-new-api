@@ -249,7 +249,7 @@ module.exports = async function (fastify, opts) {
 
         const challenge = await challengeModel.getChallengeById(challengeId)
         const team = await getTeamName(nftId)
-        const hashTag = `${challenge.challengeHashTag}${team}${nftHashTag}`
+        const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
         challengeParticipationModel.user = userId
         challengeParticipationModel.challenge = challengeId
