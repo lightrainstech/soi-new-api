@@ -3,6 +3,7 @@
 const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengPayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
+const ChallengeParticipation = require('../models/challengeParticipationModel')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -232,7 +233,7 @@ module.exports = async function (fastify, opts) {
   )
   // Join challenge and create hash tag
   fastify.post(
-    '/:challengeId/hashtag',
+    '/:challengeId/join',
     {
       schema: challengePayload.createhashTagSchema,
       onRequest: [fastify.authenticate]
@@ -240,12 +241,23 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const challengeModel = new Challenge()
+        const challengeParticipationModel = new ChallengeParticipation()
+
+        const { userId } = request.user
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
+
         const challenge = await challengeModel.getChallengeById(challengeId)
         const team = await getTeamName(nftId)
         const hashTag = `${challenge.challengeHashTag}${team}${nftHashTag}`
-        // Todo join challenge
+
+        challengeParticipationModel.user = userId
+        challengeParticipationModel.challenge = challengeId
+        challengeParticipationModel.hashTag = hashTag
+        await challengeParticipationModel.save()
+
+        await challengeModel.updateChallengeParticipants(challengeId, userId)
+
         return reply.success({
           message: 'Challenge HashTag.',
           hashTag

@@ -1,4 +1,5 @@
 'use strict'
+
 const mongoose = require('mongoose')
 
 const ChallengeSchema = new mongoose.Schema({
@@ -54,15 +55,14 @@ const ChallengeSchema = new mongoose.Schema({
     unique: true
   },
   participants: {
-    type: Number,
-    default: 0
+    type: Array
   }
 })
 
 ChallengeSchema.methods = {
-  getChallengeById: async function (id) {
+  getChallengeById: async function (challengeId) {
     const Challenge = mongoose.model('Challenge')
-    let query = { _id: id }
+    let query = { _id: challengeId }
     const options = {
       criteria: query
     }
@@ -77,10 +77,10 @@ ChallengeSchema.methods = {
       })
       .sort({ endDate: 1 })
   },
-  updateChallengesById: async function (id, data) {
+  updateChallengesById: async function (challengeId, data) {
     const Challenge = mongoose.model('Challenge')
     return Challenge.findByIdAndUpdate(
-      id,
+      challengeId,
       {
         $set: data
       },
@@ -89,13 +89,23 @@ ChallengeSchema.methods = {
       }
     )
   },
-  getChallengeDetails: async function (id) {
+  getChallengeDetails: async function (challengeId) {
     const Challenge = mongoose.model('Challenge')
-    return Challenge.findOne({ _id: id })
+    return Challenge.findOne({ _id: challengeId })
       .populate({
         path: 'brand',
         select: '_id name logo'
       })
+  },
+  updateChallengeParticipants: async function(challengeId, participant) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findByIdAndUpdate(
+      challengeId,
+      { $addToSet: { participants: participant } },
+      {
+        new: true
+      }
+    )
   }
 }
 
