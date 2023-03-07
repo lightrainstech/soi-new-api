@@ -120,7 +120,8 @@ module.exports = async function (fastify, opts) {
   fastify.get(
     '/',
     {
-      schema: challengePayload.getUserChallengesSchema
+      schema: challengePayload.getUserChallengesSchema,
+      onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
       try {
@@ -229,7 +230,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
-  // Create hash tag
+  // Join challenge and create hash tag
   fastify.post(
     '/:challengeId/hashtag',
     {
