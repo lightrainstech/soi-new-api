@@ -1,7 +1,7 @@
 'use strict'
 
 const Challenge = require('../models/challengeModel')
-const challengePayload = require('../payload/challengPayload')
+const challengePayload = require('../payload/challengePayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const {
@@ -276,7 +276,7 @@ module.exports = async function (fastify, opts) {
           await challengeParticipationModel.save()
 
           await challengeModel.updateChallengeParticipants(challengeId, userId)
-          
+
           return reply.success({
             message: 'Challenge HashTag.',
             hashTag
