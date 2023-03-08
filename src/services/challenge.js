@@ -4,9 +4,7 @@ const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengePayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
-const {
-  createCampaign
-} = require('../utils/soi')
+const { createCampaign } = require('../utils/soi')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -257,9 +255,9 @@ module.exports = async function (fastify, opts) {
             nftId
           )
 
-        if(participation) {
+        if (participation) {
           return reply.error({
-            message: 'Challenge exists with the selected NFT.',
+            message: 'Challenge exists with the selected NFT.'
           })
         }
 
@@ -282,7 +280,7 @@ module.exports = async function (fastify, opts) {
             message: 'Challenge HashTag.',
             hashTag
           })
-        }else {
+        } else {
           return reply.error({
             message: 'Failed to join challenge. Please try again.'
           })
@@ -291,6 +289,45 @@ module.exports = async function (fastify, opts) {
         console.log(error)
         return reply.error({
           message: 'Failed to join challenge. Please try again.'
+        })
+      }
+    }
+  )
+  // Get unique hashtag
+  fastify.get(
+    '/:challengeId/hashtag',
+    {
+      schema: challengePayload.getHashTagSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const challengeParticipationModel = new ChallengeParticipation()
+        const { userId } = request.user
+        const { challengeId } = request.params
+        const { nftId } = request.query
+
+        const participation =
+          await challengeParticipationModel.getParticipationDetails(
+            challengeId,
+            userId,
+            nftId
+          )
+
+        if (!participation) {
+          return reply.error({
+            message: 'You have not joined any challenge.'
+          })
+        }
+
+        return reply.success({
+          message: 'Challenge hashtag.',
+          hashtag: participation.hashTag
+        })
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to fetch hashtag. Please try again.'
         })
       }
     }
