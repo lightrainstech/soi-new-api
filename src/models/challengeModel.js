@@ -75,7 +75,7 @@ ChallengeSchema.methods = {
         path: 'brand',
         select: '_id name logo'
       })
-      .sort({ endDate: 1 })
+      .sort({ endDate: -1 })
   },
   updateChallengesById: async function (challengeId, data) {
     const Challenge = mongoose.model('Challenge')
