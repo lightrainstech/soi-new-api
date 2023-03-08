@@ -23,6 +23,9 @@ const ChallengeParticipationSchema = new mongoose.Schema({
   },
   nftId: {
     type: String
+  },
+  team: {
+    type: String
   }
 })
 

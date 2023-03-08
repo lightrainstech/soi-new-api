@@ -273,6 +273,7 @@ module.exports = async function (fastify, opts) {
           challengeParticipationModel.challenge = challengeId
           challengeParticipationModel.hashTag = hashTag
           challengeParticipationModel.nftId = nftId
+          challengeParticipationModel.team = team
           await challengeParticipationModel.save()
 
           await challengeModel.updateChallengeParticipants(challengeId, userId)
