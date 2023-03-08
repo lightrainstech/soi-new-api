@@ -1,7 +1,7 @@
 'use strict'
 
 const mongoose = require('mongoose')
-const ObjectId = mongoose.Types.ObjectId
+
 
 const ChallengeParticipationSchema = new mongoose.Schema({
   user: {
