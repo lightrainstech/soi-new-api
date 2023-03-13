@@ -40,53 +40,6 @@ const UserSchema = new mongoose.Schema(
     },
     bannerImage: {
       type: String
-    },
-    social: {
-      facebook: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      twitter: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      youtube: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      instagram: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      tiktok: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      }
     }
   },
   {
@@ -105,7 +58,7 @@ UserSchema.pre('save', async function (next) {
     const options = {
       criteria: query,
       select:
-        'email userName wallet role avatar bannerImage social name country phone'
+        'email userName wallet role avatar bannerImage name country phone'
     }
     return User.load(options)
   },
@@ -115,7 +68,7 @@ UserSchema.pre('save', async function (next) {
     const options = {
       criteria: query,
       select:
-        'email userName wallet role avatar bannerImage social name country phone'
+        'email userName wallet role avatar bannerImage name country phone'
     }
     return User.load(options)
   },
@@ -134,7 +87,7 @@ UserSchema.pre('save', async function (next) {
     const options = {
       criteria: query,
       select:
-        'email userName wallet role avatar bannerImage social name country phone'
+        'email userName wallet role avatar bannerImage social country phone'
     }
     return await User.load(options)
   },
