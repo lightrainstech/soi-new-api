@@ -144,6 +144,7 @@ module.exports = async function (fastify, opts) {
         } else {
           return reply.success({
             message: 'Valid agency code.',
+            agency,
             isValid: true
           })
         }
