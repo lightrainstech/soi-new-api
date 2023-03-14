@@ -2,6 +2,7 @@
 
 const ethUtil = require('ethereumjs-util')
 const Agency = require('../models/agencyModel')
+const User = require('../models/userModel')
 const { checkSumAddress } = require('../utils/contract')
 const { uploadToS3 } = require('../utils/S3Config')
 const brandPayload = require('../payload/brandPayload')
@@ -15,8 +16,8 @@ module.exports = async function (fastify, opts) {
     { schema: brandPayload.addNewBrandSchema },
     async function (request, reply) {
       try {
-        const agencyModel = new Agency()
-        const { companyName, companyEmail, wallet, file } = request.body
+        const userModel = new User()
+        const { name, email, wallet, file } = request.body
         const { agencyCode } = request.query
 
         // File validation
@@ -28,7 +29,7 @@ module.exports = async function (fastify, opts) {
         }
 
         // Check for agency
-        const agency = await agencyModel.checkAffiliateCode(agencyCode)
+        const agency = await userModel.checkAffiliateCode(agencyCode)
         if (!agency) {
           return reply.error({
             message: 'Invalid agency code.'
@@ -36,9 +37,16 @@ module.exports = async function (fastify, opts) {
         }
 
         const checkSumWallet = await checkSumAddress(wallet)
-        const isBrandExists = await agencyModel.getBrandByEmailOrWallet(
-          companyEmail,
-          checkSumWallet
+        const isWalletExists = await userModel.getUserBywallet(wallet)
+        if (isWalletExists) {
+          return reply.code(400).error({
+            message: 'Wallet address already in use.'
+          })
+        }
+
+        const isBrandExists = await userModel.getBrandByEmailOrWallet(
+          name,
+          email
         )
         if (isBrandExists) {
           return reply.code(400).error({
@@ -50,17 +58,18 @@ module.exports = async function (fastify, opts) {
         const { link } = await uploadToS3(file, 'brand')
 
         // Create new brand
-        agencyModel.name = companyName
-        agencyModel.email = companyEmail.toString().toLowerCase()
-        agencyModel.wallet = checkSumWallet
-        agencyModel.role = 'brand'
-        agencyModel.logo = link
-        agencyModel.parent = agency?._id
-        const newBrand = await agencyModel.save()
+        userModel.name = name
+        userModel.email = email.toString().toLowerCase()
+        userModel.wallet = checkSumWallet
+        userModel.role = 'brand'
+        userModel.avatar = link
+        userModel.parent = agency?._id
+        userModel.userName = null
+        const newBrand = await userModel.save()
         if (newBrand) {
           const jwt = fastify.jwt.sign(
             {
-              brandId: newBrand._id,
+              userId: newBrand._id,
               name: newBrand.name,
               wallet: newBrand.wallet,
               email: newBrand.email,
@@ -70,7 +79,7 @@ module.exports = async function (fastify, opts) {
             { expiresIn: EXPIRESIN }
           )
           let respUser = {
-            brandId: newBrand._id,
+            userId: newBrand._id,
             name: newBrand.name,
             wallet: newBrand.wallet,
             email: newBrand.email,
