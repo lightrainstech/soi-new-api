@@ -5,8 +5,17 @@ const ObjectId = mongoose.Types.ObjectId
 
 const AffiliateSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
-    affiliateCode: { type: String, default: '--' }
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    affiliateCode: {
+      type: String, default: '--'
+    },
+    role: {
+      type: String
+    }
   },
   { timestamps: true }
 )

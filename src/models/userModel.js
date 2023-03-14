@@ -66,10 +66,6 @@ const UserSchema = new mongoose.Schema(
     bannerImage: {
       type: String,
       default: null
-    },
-    parent: {
-      type: mongoose.Schema.ObjectId,
-      default: null
     }
   },
   {

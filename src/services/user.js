@@ -100,7 +100,8 @@ module.exports = async function (fastify, opts) {
           if (affCode) {
             Affiliate.create({
               user: newUsr._id,
-              affiliateCode: affCode
+              affiliateCode: affCode,
+              role: 'influencer'
             })
           }
           const jwt = fastify.jwt.sign(

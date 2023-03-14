@@ -6,6 +6,7 @@ const User = require('../models/userModel')
 const { checkSumAddress } = require('../utils/contract')
 const { uploadToS3 } = require('../utils/S3Config')
 const brandPayload = require('../payload/brandPayload')
+const Affiliate = require('../models/affiliateModel.js')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -63,16 +64,23 @@ module.exports = async function (fastify, opts) {
         userModel.wallet = checkSumWallet
         userModel.role = 'brand'
         userModel.avatar = link
-        userModel.parent = agency?._id
         userModel.userName = null
         const newBrand = await userModel.save()
+
+        if (affCode) {
+          Affiliate.create({
+            user: newBrand._id,
+            affiliateCode: agencyCode,
+            role: 'brand'
+          })
+        }
+
         if (newBrand) {
           const jwt = fastify.jwt.sign(
             {
               userId: newBrand._id,
               name: newBrand.name,
               wallet: newBrand.wallet,
-              email: newBrand.email,
               role: newBrand.role,
               agencyCode: agencyCode
             },
@@ -82,7 +90,6 @@ module.exports = async function (fastify, opts) {
             userId: newBrand._id,
             name: newBrand.name,
             wallet: newBrand.wallet,
-            email: newBrand.email,
             role: newBrand.role,
             logo: newBrand.logo,
             accessToken: jwt
