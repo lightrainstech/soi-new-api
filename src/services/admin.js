@@ -19,9 +19,9 @@ module.exports = async function (fastify, opts) {
     '/allocate-token',
     { schema: adminPayload.nftAlloctionSchema },
     async function (request, reply) {
-      const { affCode, nftAllocation } = request.body
+      const { agencyCode, nftAllocation } = request.body
       try {
-        redis.set(`NFTC:${affCode}`, Number(nftAllocation))
+        redis.set(`NFTC:${agencyCode}`, Number(nftAllocation))
         reply.success({ message: 'NFTs has been allocated' })
       } catch (error) {
         reply.error({ message: error })

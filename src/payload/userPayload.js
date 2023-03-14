@@ -9,14 +9,14 @@ exports.signUpSchema = {
     .prop('email', S.string().format(S.FORMATS.EMAIL).required())
     .prop('phone', S.string())
     .prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
-    .prop('affCode', S.string().maxLength(8))
+    .prop('agencyCode', S.string().maxLength(8))
     .prop('country', S.string().required())
 }
 
 exports.nftAvailableSchema = {
   tags: ['User'],
   summary: 'Get available number of NFTs',
-  params: S.object().prop('affCode', S.string().maxLength(8))
+  params: S.object().prop('agencyCode', S.string().maxLength(8))
 }
 
 exports.walletConnectSchema = {

@@ -10,8 +10,9 @@ const AffiliateSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    affiliateCode: {
-      type: String, default: '--'
+    agencyCode: {
+      type: String,
+      default: '--'
     },
     role: {
       type: String

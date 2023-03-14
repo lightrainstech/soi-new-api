@@ -77,7 +77,8 @@ module.exports = async function (fastify, opts) {
     '/signup',
     { schema: userPayload.signUpSchema },
     async function (request, reply) {
-      const { phone, country, name, affCode, wallet, userName } = request.body,
+      const { phone, country, name, agencyCode, wallet, userName } =
+          request.body,
         email = request.body.email.toString().toLowerCase()
       try {
         const userModel = new User(),
@@ -92,15 +93,15 @@ module.exports = async function (fastify, opts) {
           userModel.country = country
           userModel.wallet = checkSumWallet
 
-          if (affCode) {
+          if (agencyCode) {
             userModel.role = 'influencer'
           }
           const newUsr = await userModel.save()
 
-          if (affCode) {
+          if (agencyCode) {
             Affiliate.create({
               user: newUsr._id,
-              affiliateCode: affCode,
+              agencyCode: agencyCode,
               role: 'influencer'
             })
           }
@@ -109,7 +110,7 @@ module.exports = async function (fastify, opts) {
               userId: newUsr._id,
               name: newUsr.name,
               wallet: newUsr.wallet,
-              affCode: affCode ? affCode : '',
+              agencyCode: agencyCode ? agencyCode : '',
               role: newUsr.role
             },
             { expiresIn: EXPIRESIN }
@@ -118,7 +119,7 @@ module.exports = async function (fastify, opts) {
             userId: newUsr._id,
             name: newUsr.name,
             userName: newUsr.userName,
-            affCode: affCode ? affCode : '',
+            agencyCode: agencyCode ? agencyCode : '',
             role: newUsr.role,
             accessToken: jwt
           }
@@ -162,17 +163,17 @@ module.exports = async function (fastify, opts) {
     '/availableNft',
     { schema: userPayload.nftAvailableSchema },
     async function (request, reply) {
-      const { affCode } = request.query
+      const { agencyCode } = request.query
       try {
         const agencyModel = new Agency(),
-          isExists = await agencyModel.checkAffiliateCode(affCode)
+          isExists = await agencyModel.checkAffiliateCode(agencyCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid agency code.'
           })
           return reply
         }
-        let count = (await redis.get(`NFTC:${affCode}`)) || 0
+        let count = (await redis.get(`NFTC:${agencyCode}`)) || 0
         if (Number(count) === 0) {
           return reply.error({
             message: 'Invalid agency code.'
@@ -228,7 +229,7 @@ module.exports = async function (fastify, opts) {
                 userId: userData._id,
                 name: userData.name,
                 wallet: userData.wallet,
-                affCode: affiliateData?.affiliateCode,
+                agencyCode: affiliateData?.affiliateCode,
                 role: userData.role
               },
               { expiresIn: EXPIRESIN }
@@ -316,7 +317,7 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
-      const { userId, affCode } = request.user
+      const { userId, agencyCode } = request.user
       try {
         const userTokenModel = new UserToken(),
           userModel = new User(),
@@ -327,7 +328,7 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        let count = (await redis.get(`NFTC:${affCode}`)) || 0,
+        let count = (await redis.get(`NFTC:${agencyCode}`)) || 0,
           isMinted = await userTokenModel.getUserTokenByUserId(userId)
         if (!isMinted && Number(count) > 0) {
           reply.success({

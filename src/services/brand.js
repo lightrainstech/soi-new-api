@@ -63,7 +63,7 @@ module.exports = async function (fastify, opts) {
         if (agencyCode) {
           Affiliate.create({
             user: newBrand._id,
-            affiliateCode: agencyCode,
+            agencyCode: agencyCode,
             role: 'brand'
           })
         }
@@ -113,8 +113,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       try {
         const { email, wallet } = request.user
-        const agencyModel = new Agency()
-        const brand = await agencyModel.getBrandByEmailOrWallet(email, wallet)
+        const userModel = new User()
+        const brand = await userModel.getBrandByEmailOrWallet(email, wallet)
         if (!brand) {
           return reply.code(404).error({
             message: 'Brand not found.'
@@ -140,11 +140,11 @@ module.exports = async function (fastify, opts) {
     { schema: brandPayload.checkAgencyCodeForBrandSchema },
     async function (request, reply) {
       try {
-        const agencyModel = new Agency()
+        const userModel = new User()
         const { agencyCode } = request.query
 
         // Check for agency
-        const agency = await agencyModel.checkAffiliateCode(agencyCode)
+        const agency = await userModel.checkAffiliateCode(agencyCode)
         if (!agency) {
           return reply.error({
             message: 'Invalid agency code.',

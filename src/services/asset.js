@@ -90,7 +90,7 @@ module.exports = async function (fastify, opts) {
     { schema: assetPayload.mintNftSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       const { assetUrl, thumbnail, name } = request.body,
-        { wallet, affCode, userId } = request.user
+        { wallet, agencyCode, userId } = request.user
       try {
         // Static title and description for assets
         const title = name ? name : 'SOI',
@@ -113,7 +113,7 @@ module.exports = async function (fastify, opts) {
         const job = await fastify.bull.sendNFT.add(
           {
             userId: userId,
-            affCode: affCode,
+            agencyCode: agencyCode,
             wallet: wallet,
             metaDataUrl: metaDataUrl,
             assetUrl: assetUrl,
@@ -122,9 +122,9 @@ module.exports = async function (fastify, opts) {
           },
           { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
         )
-        let count = await redis.get(`NFTC:${affCode}`)
+        let count = await redis.get(`NFTC:${agencyCode}`)
         count = Number(count) - 1
-        await redis.set(`NFTC:${affCode}`, Number(count))
+        await redis.set(`NFTC:${agencyCode}`, Number(count))
         return reply.success({
           message: 'NFT minting initiated.',
           jobId: job.id
