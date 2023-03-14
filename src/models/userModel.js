@@ -18,28 +18,53 @@ const UserSchema = new mongoose.Schema(
     },
     userName: {
       type: String,
+      index: {
+        unique: true,
+        partialFilterExpression: { userName: { $type: 'string' } }
+      },
+      default: null
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      default: '--'
+    },
+    country: {
+      type: String,
+      default: '--'
+    },
+    wallet: {
+      type: String,
       required: true,
       unique: true
     },
-    name: { type: String, required: true },
-    phone: { type: String, default: '--' },
-    country: { type: String, default: '--' },
-    wallet: { type: String, required: true, unique: true },
-    affiliateCode: { type: String, default: null },
+    affiliateCode: {
+      type: String,
+      default: null
+    },
     isRestricted: {
       type: Boolean,
       default: false
     },
     role: {
       type: String,
-      enum: ['user', 'influencer', 'agency'],
+      enum: ['user', 'influencer', 'agency', 'sub-agency', 'brand'],
       default: 'user'
     },
     avatar: {
-      type: String
+      type: String,
+      default: null
     },
     bannerImage: {
-      type: String
+      type: String,
+      default: null
+    },
+    parent: {
+      type: Schema.ObjectId,
+      default: null
     }
   },
   {
