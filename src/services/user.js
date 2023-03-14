@@ -165,8 +165,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { agencyCode } = request.query
       try {
-        const agencyModel = new Agency(),
-          isExists = await agencyModel.checkAffiliateCode(agencyCode)
+        const userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(agencyCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid agency code.'
