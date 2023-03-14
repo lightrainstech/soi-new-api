@@ -118,7 +118,7 @@ module.exports = async function (fastify, opts) {
           let respUser = {
             userId: newUsr._id,
             name: newUsr.name,
-            userName: newUsr.userName,
+            userName: newUsr.userName ? newUsr.userName : null,
             agencyCode: agencyCode ? agencyCode : '',
             role: newUsr.role,
             accessToken: jwt
@@ -221,7 +221,7 @@ module.exports = async function (fastify, opts) {
             if (!affiliateData) {
               return reply.code(400).error({
                 message:
-                  'You must need an influencer account. Contact admin for more information.'
+                  'You must need an influencer or brand account. Contact admin for more information.'
               })
             }
             const jwt = fastify.jwt.sign(
