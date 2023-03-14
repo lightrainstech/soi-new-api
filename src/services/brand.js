@@ -57,7 +57,6 @@ module.exports = async function (fastify, opts) {
         userModel.wallet = checkSumWallet
         userModel.role = 'brand'
         userModel.avatar = link
-        userModel.userName = null
         const newBrand = await userModel.save()
 
         if (agencyCode) {
