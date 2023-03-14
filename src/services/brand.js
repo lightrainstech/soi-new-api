@@ -38,16 +38,9 @@ module.exports = async function (fastify, opts) {
         }
 
         const checkSumWallet = await checkSumAddress(wallet)
-        const isWalletExists = await userModel.getUserBywallet(wallet)
-        if (isWalletExists) {
-          return reply.code(400).error({
-            message: 'Wallet address already in use.'
-          })
-        }
-
         const isBrandExists = await userModel.getBrandByEmailOrWallet(
-          name,
-          email
+          email,
+          checkSumWallet
         )
         if (isBrandExists) {
           return reply.code(400).error({
@@ -67,7 +60,7 @@ module.exports = async function (fastify, opts) {
         userModel.userName = null
         const newBrand = await userModel.save()
 
-        if (affCode) {
+        if (agencyCode) {
           Affiliate.create({
             user: newBrand._id,
             affiliateCode: agencyCode,
