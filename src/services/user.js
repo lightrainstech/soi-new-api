@@ -6,7 +6,6 @@ const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
-const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
 const { S3, uploadToS3 } = require('../utils/S3Config')
