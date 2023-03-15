@@ -470,6 +470,35 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+
+  // Check wallet exists or not
+  fastify.get(
+    '/wallet/check',
+    { schema: userPayload.checkWalletSchema },
+    async function (request, reply) {
+      try {
+        const userModel = new User()
+        const { wallet } = request.query
+        const checkSumWallet = await checkSumAddress(wallet)
+        const user = await userModel.getUserBywallet(checkSumWallet)
+        if (user) {
+          reply.code(400).error({
+            message: 'Wallet already exists.'
+          })
+          return reply
+        } else {
+          reply.success({
+            message: 'Wallet is available.'
+          })
+          return reply
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
 }
 
-module.exports.autoPrefix = '/user'
+module.exports.autoPrefix = '/users'

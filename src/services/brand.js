@@ -38,9 +38,10 @@ module.exports = async function (fastify, opts) {
         }
 
         const checkSumWallet = await checkSumAddress(wallet)
-        const isBrandExists = await userModel.getBrandByEmailOrWallet(
+        const isBrandExists = await userModel.getUserByEmailOrWallet(
           email,
-          checkSumWallet
+          checkSumWallet,
+          'brand'
         )
         if (isBrandExists) {
           return reply.code(400).error({

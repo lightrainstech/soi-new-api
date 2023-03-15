@@ -1,5 +1,5 @@
 'use strict'
-const Agency = require('../models/agencyModel')
+const User = require('../models/userModel')
 
 const adminPayload = require('../payload/adminPayload.js')
 const agencyPayload = require('../payload/agencyPayload')
@@ -34,17 +34,21 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { name, email, wallet } = request.body
       try {
-        console.log(request.body)
-        const agencyModel = new Agency(),
-          checkSumWallet = await checkSumAddress(wallet),
-          agency = await agencyModel.getAgencyByWallet(checkSumWallet)
+        const userModel = new User()
+        const checkSumWallet = await checkSumAddress(wallet)
+        const agency = await userModel.getUserByEmailOrWallet(
+          email,
+          checkSumWallet,
+          'agency'
+        )
         if (agency) {
           return reply.error({ message: 'Agency already exists.' })
         }
-        agencyModel.name = name
-        agencyModel.email = email
-        agencyModel.wallet = checkSumWallet
-        const newAgency = await agencyModel.save()
+        userModel.name = name
+        userModel.email = email
+        userModel.wallet = checkSumWallet
+        userModel.role = 'agency'
+        const newAgency = await userModel.save()
         if (newAgency) {
           return reply.code(201).success({
             message: 'Agency added successfully.',

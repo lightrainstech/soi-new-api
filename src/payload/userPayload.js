@@ -84,3 +84,9 @@ exports.s3SignatureVerificationSchema = {
     .prop('fileName', S.string().required()),
   querystring: S.object().prop('isBanner', S.boolean().default(false))
 }
+
+exports.checkWalletSchema = {
+  tags: ['User'],
+  summary: 'Check wallet exists or not.',
+  querystring: S.object().prop('wallet', S.string().pattern('^0x[a-fA-F0-9]{40}$').required())
+}
