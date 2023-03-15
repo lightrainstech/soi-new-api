@@ -228,7 +228,7 @@ module.exports = async function (fastify, opts) {
                 userId: userData._id,
                 name: userData.name,
                 wallet: userData.wallet,
-                agencyCode: affiliateData?.affiliateCode,
+                agencyCode: affiliateData?.agencyCode,
                 role: userData.role
               },
               { expiresIn: EXPIRESIN }
