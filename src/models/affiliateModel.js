@@ -34,7 +34,7 @@ AffiliateSchema.methods = {
 
 AffiliateSchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'user affiliateCode'
+    options.select = options.select || 'user agencyCode'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -42,7 +42,7 @@ AffiliateSchema.statics = {
     const criteria = options.criteria || {}
     const page = options.page - 1
     const limit = parseInt(options.limit) || 12
-    const select = options.select || 'user affiliateCode createdAt -__v'
+    const select = options.select || 'user agencyCode createdAt -__v'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
