@@ -46,7 +46,7 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    affiliateCode: {
+    agencyCode: {
       type: String,
       default: null
     },
@@ -74,7 +74,7 @@ const UserSchema = new mongoose.Schema(
 )
 
 UserSchema.pre('save', async function (next) {
-  this.affiliateCode = nanoidLong()
+  this.agencyCode = nanoidLong()
   next()
 })
 UserSchema.methods = {
@@ -124,7 +124,7 @@ UserSchema.methods = {
   },
   checkAffiliateCode: async function (agencyCode) {
     const User = mongoose.model('User')
-    return await User.findOne({ affiliateCode: agencyCode })
+    return await User.findOne({ agencyCode: agencyCode })
   },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
@@ -209,7 +209,7 @@ UserSchema.statics = {
   }
 }
 
-UserSchema.index({ email: 1 }, { unique: true }, { affiliateCode: 1 })
+UserSchema.index({ email: 1 }, { unique: true }, { agencyCode: 1 })
 
 UserSchema.plugin(uniqueValidator)
 
