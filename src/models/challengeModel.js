@@ -5,7 +5,7 @@ const mongoose = require('mongoose')
 const ChallengeSchema = new mongoose.Schema({
   brand: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Agency',
+    ref: 'User',
     required: true
   },
   title: {
@@ -73,7 +73,7 @@ ChallengeSchema.methods = {
     return Challenge.find({})
       .populate({
         path: 'brand',
-        select: '_id name logo'
+        select: '_id name avatar'
       })
       .sort({ endDate: -1 })
   },
