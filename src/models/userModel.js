@@ -124,7 +124,7 @@ UserSchema.methods = {
   },
   checkAffiliateCode: async function (agencyCode) {
     const User = mongoose.model('User')
-    return await User.findOne({ agencyCode: agencyCode })
+    return await User.findOne({ agencyCode: agencyCode, role: 'agency' })
   },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
