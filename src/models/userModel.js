@@ -178,9 +178,9 @@ UserSchema.methods = {
     )
     return data
   },
-  getBrandByEmailOrWallet: async function (email, wallet) {
+  getUserByEmailOrWallet: async function (email, wallet, role) {
     const User = mongoose.model('User')
-    let query = { $or: [{ email: email }, { wallet: wallet }], role: 'brand' }
+    let query = { $or: [{ email: email }, { wallet: wallet }], role: role }
     const options = {
       criteria: query
     }
