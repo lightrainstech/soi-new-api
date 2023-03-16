@@ -1,8 +1,8 @@
 const S = require('fluent-json-schema')
 
 const challengeBodySchema = S.object()
-  .prop('title', S.string())
-  .prop('description', S.string())
+  .prop('title', S.string().required())
+  .prop('description', S.string().required())
   .prop('facebookText', S.string())
   .prop('instagramText', S.string())
   .prop('youtubeText', S.string())

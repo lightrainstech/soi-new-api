@@ -16,7 +16,7 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const { brandId, role } = request.user
+        const { userId, role } = request.user
         const {
           title,
           description,
@@ -34,10 +34,23 @@ module.exports = async function (fastify, opts) {
           location
         } = request.body
 
+        const challengeTitle = title.toUpperCase()
+
         // Check role
         if (role !== 'brand') {
           return reply.code(401).error({
             message: 'You are not authorized to do this operation.'
+          })
+        }
+
+        // Check challenge exists or not
+        const challengeModel = new Challenge()
+        const challenge = await challengeModel.getChallengeByTitle(
+          challengeTitle
+        )
+        if (challenge) {
+          return reply.error({
+            message: 'Challenge already exists with this title.'
           })
         }
 
@@ -49,9 +62,22 @@ module.exports = async function (fastify, opts) {
           await Challenge.findOne({ challengeHashTag: challengeHashTag })
         )
 
+        // Create campaign in socialInsider
+        const queryString = `#${challengeHashTag}`
+        const result = await createCampaign(challengeTitle, queryString)
+
+        if (result.resp !== 'Success') {
+          return reply.code(400).error({
+            message:
+              'Failed to create campaign inside socialInsider.Please try again.',
+            challenge: {}
+          })
+        }
+
+        // Create new challenge
         const newChallengeData = new Challenge({
-          brand: brandId,
-          title,
+          user: userId,
+          title: challengeTitle,
           description,
           facebookText,
           instagramText,
@@ -68,21 +94,20 @@ module.exports = async function (fastify, opts) {
           location
         })
         const savedChallenge = await newChallengeData.save()
-        if (savedChallenge) {
-          return reply.code(201).success({
-            message: 'Challenge created successfully.',
-            challenge: savedChallenge
-          })
-        } else {
+        if (!savedChallenge) {
           return reply.code(400).error({
             message: 'Failed to create challenge please try again.',
             challenge: {}
           })
         }
+        return reply.code(201).success({
+          message: 'Challenge created successfully.',
+          challenge: savedChallenge
+        })
       } catch (error) {
         console.log(error)
-        return reply.error({
-          message: `Failed to create challenge. Please try again.`
+        return reply.code(500).send({
+          message: `Failed to create challenge. Please try again. ${error.message}`
         })
       }
     }
@@ -265,26 +290,26 @@ module.exports = async function (fastify, opts) {
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
-        const result = await createCampaign(challenge.title, hashTag)
-        if (result.resp === 'Success') {
-          challengeParticipationModel.user = userId
-          challengeParticipationModel.challenge = challengeId
-          challengeParticipationModel.hashTag = hashTag
-          challengeParticipationModel.nftId = nftId
-          challengeParticipationModel.team = team
-          await challengeParticipationModel.save()
+        // const result = await createCampaign(challenge.title, hashTag)
+        // if (result.resp === 'Success') {
+        //   challengeParticipationModel.user = userId
+        //   challengeParticipationModel.challenge = challengeId
+        //   challengeParticipationModel.hashTag = hashTag
+        //   challengeParticipationModel.nftId = nftId
+        //   challengeParticipationModel.team = team
+        //   await challengeParticipationModel.save()
 
-          await challengeModel.updateChallengeParticipants(challengeId, userId)
+        //   await challengeModel.updateChallengeParticipants(challengeId, userId)
 
-          return reply.success({
-            message: 'Challenge HashTag.',
-            hashTag
-          })
-        } else {
-          return reply.error({
-            message: 'Failed to join challenge. Please try again.'
-          })
-        }
+        //   return reply.success({
+        //     message: 'Challenge HashTag.',
+        //     hashTag
+        //   })
+        // } else {
+        //   return reply.error({
+        //     message: 'Failed to join challenge. Please try again.'
+        //   })
+        // }
       } catch (error) {
         console.log(error)
         return reply.error({
