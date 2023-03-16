@@ -185,6 +185,17 @@ UserSchema.methods = {
       criteria: query
     }
     return User.load(options)
+  },
+  getAvatars: async function (role) {
+    const User = mongoose.model('User')
+    let query = { role: role, avatar: { $exists: true, $ne: null } }
+    const options = {
+      criteria: query,
+      select: 'name avatar'
+    }
+    return User.find(options.criteria)
+      .select(options.select)
+      .sort({ createdAt: -1 })
   }
 }
 UserSchema.statics = {
