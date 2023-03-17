@@ -102,11 +102,14 @@ ChallengeSchema.methods = {
       select: '_id name avatar'
     })
   },
-  updateChallengeParticipants: async function (challengeId, participant) {
+  updateChallengeParticipants: async function (challengeId, participant, hashTag) {
     const Challenge = mongoose.model('Challenge')
     return Challenge.findByIdAndUpdate(
       challengeId,
-      { $addToSet: { participants: participant } },
+      {
+        $addToSet: { participants: participant },
+        $addToSet: { participantsHashTags: hashTag }
+      },
       {
         new: true
       }

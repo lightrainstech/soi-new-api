@@ -264,6 +264,7 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
+        // Check participation exists or not
         const participation =
           await challengeParticipationModel.getParticipationDetails(
             challengeId,
@@ -273,7 +274,8 @@ module.exports = async function (fastify, opts) {
 
         if (participation) {
           return reply.error({
-            message: 'Challenge exists with the selected NFT.'
+            message:
+              'Already participating in a challenge with the selected NFT.'
           })
         }
 
@@ -281,26 +283,44 @@ module.exports = async function (fastify, opts) {
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
-        // const result = await createCampaign(challenge.title, hashTag)
-        // if (result.resp === 'Success') {
-        //   challengeParticipationModel.user = userId
-        //   challengeParticipationModel.challenge = challengeId
-        //   challengeParticipationModel.hashTag = hashTag
-        //   challengeParticipationModel.nftId = nftId
-        //   challengeParticipationModel.team = team
-        //   await challengeParticipationModel.save()
+        // Join query_string
+        let queryString
+        if (!challenge.participantsHashTags.length > 0) {
+          queryString = hashTag
+        } else {
+          const currentQueryStrings =
+            challenge.participantsHashTags.join(' AND ')
+          queryString = currentQueryStrings + ' AND ' + hashTag
+        }
 
-        //   await challengeModel.updateChallengeParticipants(challengeId, userId)
+        // Update query_string in socialInsider
+        const result = await createCampaign(
+          challenge.challengeIdentifier,
+          queryString
+        )
+        if (result.resp === 'Success') {
+          challengeParticipationModel.user = userId
+          challengeParticipationModel.challenge = challengeId
+          challengeParticipationModel.hashTag = hashTag
+          challengeParticipationModel.nftId = nftId
+          challengeParticipationModel.team = team
+          await challengeParticipationModel.save()
 
-        //   return reply.success({
-        //     message: 'Challenge HashTag.',
-        //     hashTag
-        //   })
-        // } else {
-        //   return reply.error({
-        //     message: 'Failed to join challenge. Please try again.'
-        //   })
-        // }
+          await challengeModel.updateChallengeParticipants(
+            challengeId,
+            userId,
+            hashTag
+          )
+
+          return reply.success({
+            message: 'Challenge HashTag.',
+            hashTag
+          })
+        } else {
+          return reply.error({
+            message: 'Failed to join challenge. Please try again.'
+          })
+        }
       } catch (error) {
         console.log(error)
         return reply.error({
