@@ -56,6 +56,12 @@ const ChallengeSchema = new mongoose.Schema({
   },
   participants: {
     type: Array
+  },
+  challengeIdentifier: {
+    type: String
+  },
+  participantsHashTags: {
+    type: Array
   }
 })
 

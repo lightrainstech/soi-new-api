@@ -43,17 +43,6 @@ module.exports = async function (fastify, opts) {
           })
         }
 
-        // Check challenge exists or not
-        const challengeModel = new Challenge()
-        const challenge = await challengeModel.getChallengeByTitle(
-          challengeTitle
-        )
-        if (challenge) {
-          return reply.error({
-            message: 'Challenge already exists with this title.'
-          })
-        }
-
         // Create unique hashtag for challenge
         let challengeHashTag
         do {
@@ -64,7 +53,8 @@ module.exports = async function (fastify, opts) {
 
         // Create campaign in socialInsider
         const queryString = `#${challengeHashTag}`
-        const result = await createCampaign(challengeTitle, queryString)
+        const challengeIdentifier = `SOI-Challenge-${challengeHashTag}`
+        const result = await createCampaign(challengeIdentifier, queryString)
 
         if (result.resp !== 'Success') {
           return reply.code(400).error({
@@ -91,7 +81,8 @@ module.exports = async function (fastify, opts) {
           externalLink,
           bountyOffered,
           challengeHashTag,
-          location
+          location,
+          challengeIdentifier
         })
         const savedChallenge = await newChallengeData.save()
         if (!savedChallenge) {
