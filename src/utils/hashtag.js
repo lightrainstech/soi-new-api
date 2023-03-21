@@ -28,7 +28,8 @@ const getTeamName = async index => {
   try {
     const namesData = await fs.promises.readFile(filePath, { encoding: 'utf-8' })
     const names = namesData.split('\n')
-    return names[index]
+    const team = Math.floor(index / process.env.TEAM_SIZE)
+    return names[team]
   } catch (err) {
     throw err
   }
