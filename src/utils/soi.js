@@ -157,6 +157,59 @@ const createCampaign = async (campaignName, hashTag) => {
   return result.data
 }
 
+// Get all posts based on a campaign
+const getPostDetails = async (
+  socialInsiderId,
+  profile_type,
+  startDate,
+  endDate,
+  campaignName
+) => {
+  let date = {
+      start: Date.parse(startDate),
+      end: Date.parse(endDate),
+      timezone: 'UTC'
+    },
+    method = 'socialinsider_api.get_posts',
+    params = {
+      id: socialInsiderId,
+      profile_type: profile_type,
+      date: date,
+      from: 0,
+      size: 50,
+      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
+      campaign_name: campaignName
+    }
+
+  jsonObject.method = method
+  jsonObject.params = params
+
+  const result = await apiCall(jsonObject)
+  const { total, returned, size, posts } = result.result
+  if (total === returned) {
+    return posts
+  }
+  const apiCallsNeeded = Math.ceil(total / size) - 1
+  // Create an array of Promises for each API call
+  const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
+    params.from = (i + 1) * size // Set the "from" parameter for each API call
+    jsonObject.params = params
+    return apiCall(jsonObject)
+      .then(res => res.result.posts)
+      .catch(err => {
+        console.error(`Error retrieving posts: ${err}`)
+        return []
+      })
+  })
+
+  // Await all the promises and concatenate the posts arrays
+  const allPosts = await Promise.all(promises).then(results =>
+    posts.concat(...results)
+  )
+
+  return allPosts
+}
+
 module.exports = {
   getAccountType,
   addProfile,
@@ -165,5 +218,6 @@ module.exports = {
   getProfileDetails,
   removeProfile,
   getProfileNotExistError,
-  createCampaign
+  createCampaign,
+  getPostDetails
 }
