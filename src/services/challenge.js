@@ -368,6 +368,41 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // Get challenge participants
+  fastify.get(
+    '/:challengeId/participants',
+    {
+      //schema: challengePayload.getHashTagSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { challengeId } = request.params
+        const challengeParticipationModel = new ChallengeParticipation()
+
+        const participants =
+          await challengeParticipationModel.getChallengeParticipants(
+            challengeId
+          )
+          console.log(participants)
+        if (!participants) {
+          return reply.error({
+            message: 'You have not joined any challenge.'
+          })
+        }
+
+        return reply.success({
+          message: 'Challenge hashtag.',
+          participants
+        })
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to fetch hashtag. Please try again.'
+        })
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/challenges'
