@@ -107,8 +107,10 @@ ChallengeSchema.methods = {
     return Challenge.findByIdAndUpdate(
       challengeId,
       {
-        $addToSet: { participants: participant },
-        $addToSet: { participantsHashTags: hashTag }
+        $addToSet: {
+          participants: participant,
+          participantsHashTags: hashTag
+        }
       },
       {
         new: true
@@ -129,7 +131,7 @@ ChallengeSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -139,7 +141,7 @@ ChallengeSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
