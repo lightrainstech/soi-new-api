@@ -163,11 +163,12 @@ const getPostDetails = async (
   profile_type,
   startDate,
   endDate,
-  campaignName
+  campaignName,
+  platform
 ) => {
   let date = {
-      start: Date.parse(startDate),
-      end: Date.parse(endDate),
+      start: 1676955196000,
+      end: 1679374396000,
       timezone: 'UTC'
     },
     method = 'socialinsider_api.get_posts',
@@ -178,36 +179,67 @@ const getPostDetails = async (
       from: 0,
       size: 50,
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
-      campaign_name: campaignName
+      campaign_name: 'Metasense'
     }
 
   jsonObject.method = method
   jsonObject.params = params
 
   const result = await apiCall(jsonObject)
-  const { total, returned, size, posts } = result.result
-  if (total === returned) {
-    return posts
-  }
-  const apiCallsNeeded = Math.ceil(total / size) - 1
-  // Create an array of Promises for each API call
-  const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
-    params.from = (i + 1) * size // Set the "from" parameter for each API call
-    jsonObject.params = params
-    return apiCall(jsonObject)
-      .then(res => res.result.posts)
-      .catch(err => {
-        console.error(`Error retrieving posts: ${err}`)
-        return []
+  let totalLikes = 0,
+    totalShares = 0
+  let totalLikeAndShare = (posts, platform) => {
+    if (posts.length > 0) {
+      posts.forEach(post => {
+        if (platform === 'facebook') {
+          console.log(post?.activity_by_action_type)
+          totalLikes = totalLikes + post?.activity_by_action_type?.like
+          totalShares = totalShares + post.shares
+        } else if (platform === 'instagram') {
+          totalLikes = totalLikes + post.likes
+          totalShares = totalShares + post?.shares ? post?.shares : 0
+        } else if (platform === 'twitter') {
+          totalLikes = totalLikes + post?.likes
+          totalShares = totalShares + post?.shares
+        } else {
+          totalLikes = totalLikes + post?.likes
+          totalShares = totalShares + post?.shares
+        }
       })
-  })
+      resObj = {
+        [platform]: {
+          totalLikes: totalLikes,
+          totalShares: totalShares
+        }
+      }
+      return resObj
+    }
+  }
+  const { total, returned, size, posts } = result.data.resp
+  if (total === returned) {
+    const resObject = await totalLikeAndShare(posts, platform)
+    return resObject
+  } else {
+    const apiCallsNeeded = Math.ceil(total / size) - 1
+    // Create an array of Promises for each API call
+    const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
+      params.from = (i + 1) * size // Set the "from" parameter for each API call
+      jsonObject.params = params
+      return apiCall(jsonObject)
+        .then(res => res.result.posts)
+        .catch(err => {
+          console.error(`Error retrieving posts: ${err}`)
+          return []
+        })
+    })
 
-  // Await all the promises and concatenate the posts arrays
-  const allPosts = await Promise.all(promises).then(results =>
-    posts.concat(...results)
-  )
-
-  return allPosts
+    // Await all the promises and concatenate the posts arrays
+    const allPosts = await Promise.all(promises).then(results =>
+      posts.concat(...results)
+    )
+    const resObject = totalLikeAndShare(allPosts, platform)
+    return resObject
+  }
 }
 
 module.exports = {

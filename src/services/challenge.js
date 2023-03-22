@@ -4,7 +4,11 @@ const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengePayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
-const { createCampaign } = require('../utils/soi')
+const {
+  createCampaign,
+  getPostDetails,
+  getAccountType
+} = require('../utils/soi')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -384,12 +388,48 @@ module.exports = async function (fastify, opts) {
           await challengeParticipationModel.getChallengeParticipants(
             challengeId
           )
-          console.log(participants)
         if (!participants) {
           return reply.error({
             message: 'You have not joined any challenge.'
           })
         }
+
+        // Fetch data from social insider
+        const updatePromises = participants.map(async participant => {
+          const socialKeys = Object.keys(participant.nft.social).filter(
+              key => participant.nft.social[key].socialInsiderId !== undefined
+            ),
+            postDetailsPromises = socialKeys.map(async key => {
+              return getPostDetails(
+                participant.nft.social[key].socialInsiderId,
+                getAccountType(key),
+                participant.challenge.startDate,
+                participant.challenge.endDate,
+                participant.challenge.challengeIdentifier,
+                key
+              )
+            })
+          const postDetails = await Promise.all(postDetailsPromises)
+          if (postDetails) {
+            const updatePostDataPromises = socialKeys.map(async key => {
+              let postData = postDetails.find(obj => obj[key]),
+                totalLikes = postData ? postData[key].totalLikes : 0,
+                key1 = `social.${key}.likes`,
+                totalShares = postData ? postData[key].totalShares : 0,
+                key2 = `social.${key}.shares`
+              const update = await challengeParticipationModel.updatePostData(
+                challengeId,
+                key1,
+                totalLikes,
+                key2,
+                totalShares
+              )
+            })
+            await Promise.all(updatePostDataPromises)
+          }
+        })
+
+        await Promise.all(updatePromises)
 
         return reply.success({
           message: 'Challenge hashtag.',

@@ -91,7 +91,7 @@ ChallengeParticipationSchema.methods = {
       isActive: true
     })
   },
-  getChallengeParticipants: async function (challengeId) {
+  getChallengeParticipantsByTeam: async function (challengeId) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     const result = ChallengeParticipation.aggregate([
       {
@@ -153,6 +153,71 @@ ChallengeParticipationSchema.methods = {
       }
     ])
     return result
+  },
+  getChallengeParticipants: async function (challengeId) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const result = ChallengeParticipation.aggregate([
+      {
+        $match: {
+          challenge: ObjectId(challengeId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: 'nftId',
+          foreignField: 'nftId',
+          as: 'nft'
+        }
+      },
+      {
+        $unwind: {
+          path: '$nft',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'challenges',
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challenge'
+        }
+      },
+      {
+        $unwind: {
+          path: '$challenge',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          isActive: 1,
+          user: 1,
+          challenge: 1,
+          hashTag: 1,
+          nftId: 1,
+          team: 1,
+          'nft.social': 1
+        }
+      },
+      {
+        $limit: 1
+      }
+    ])
+    return result
+  },
+  updatePostData: async function (challengeId, key1, value1, key2, value2) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+      return ChallengeParticipation.findOneAndUpdate(
+        { challenge: challengeId },
+        { $set: { [key1]: value1, [key2]: value2 } },
+        {
+          new: true
+        }
+      )
+
   }
 }
 
