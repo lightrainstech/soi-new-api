@@ -11,7 +11,7 @@ module.exports = async function (fastify, opts) {
   fastify.post(
     '/',
     {
-      //schema: challengePayload.createChallengeSchema,
+      schema: challengePayload.createChallengeSchema,
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
