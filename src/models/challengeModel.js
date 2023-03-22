@@ -131,7 +131,7 @@ ChallengeSchema.methods = {
   },
   getAllChallengesByBrand: async function (userId) {
     const Challenge = mongoose.model('Challenge')
-    return Challenge.findOne({
+    return Challenge.find({
       user: userId
     })
       .populate({
