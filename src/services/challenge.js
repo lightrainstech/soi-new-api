@@ -4,18 +4,14 @@ const Challenge = require('../models/challengeModel')
 const challengePayload = require('../payload/challengePayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
-const {
-  createCampaign,
-  getPostDetails,
-  getAccountType
-} = require('../utils/soi')
+const { createCampaign } = require('../utils/soi')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
   fastify.post(
     '/',
     {
-      schema: challengePayload.createChallengeSchema,
+      //schema: challengePayload.createChallengeSchema,
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
@@ -89,6 +85,20 @@ module.exports = async function (fastify, opts) {
           challengeIdentifier
         })
         const savedChallenge = await newChallengeData.save()
+        // Schedule a job
+        const delayDate = new Date(endDate).getTime() - Date.now()
+        const job = await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate,
+            attempts: 2,
+            backoff: 10000
+          }
+        )
         if (!savedChallenge) {
           return reply.code(400).error({
             message: 'Failed to create challenge please try again.',
