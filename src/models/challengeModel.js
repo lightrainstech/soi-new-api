@@ -102,7 +102,11 @@ ChallengeSchema.methods = {
       select: '_id name avatar'
     })
   },
-  updateChallengeParticipants: async function (challengeId, participant, hashTag) {
+  updateChallengeParticipants: async function (
+    challengeId,
+    participant,
+    hashTag
+  ) {
     const Challenge = mongoose.model('Challenge')
     return Challenge.findByIdAndUpdate(
       challengeId,
@@ -124,6 +128,17 @@ ChallengeSchema.methods = {
       criteria: query
     }
     return Challenge.load(options)
+  },
+  getAllChallengesByBrand: async function (userId) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findOne({
+      user: userId
+    })
+      .populate({
+        path: 'user',
+        select: '_id name avatar'
+      })
+      .sort({ endDate: -1 })
   }
 }
 

@@ -36,3 +36,8 @@ exports.walletConnectSchema = {
     .prop('signature', S.string().required())
     .prop('message', S.string().required())
 }
+
+exports.getBrandChallengesSchema = {
+  tags: ['Brand'],
+  summary: 'Get challenge created by a brand.'
+}

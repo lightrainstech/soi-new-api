@@ -7,6 +7,7 @@ const { checkSumAddress } = require('../utils/contract')
 const { uploadToS3 } = require('../utils/S3Config')
 const brandPayload = require('../payload/brandPayload')
 const Affiliate = require('../models/affiliateModel.js')
+const Challenge = require('../models/challengeModel')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -225,6 +226,37 @@ module.exports = async function (fastify, opts) {
         reply.error({
           message: 'Invalid signature',
           data: { isUserExist: false }
+        })
+      }
+    }
+  )
+  // Get all challenges by brand
+  fastify.get(
+    '/challenges',
+    {
+      schema: brandPayload.getBrandChallengesSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { userId } = request.user
+        const challengeModel = new Challenge()
+        const challenges = await challengeModel.getAllChallengesByBrand(userId)
+        if (!challenges.length) {
+          reply.code(404).error({
+            message: 'No challenges found.'
+          })
+          return reply
+        }
+        reply.success({
+          message: 'Challenges listed successfully.',
+          challenges
+        })
+        return reply
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to fetch challenges. Pleas try again.'
         })
       }
     }
