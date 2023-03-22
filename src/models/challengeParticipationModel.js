@@ -93,7 +93,7 @@ ChallengeParticipationSchema.methods = {
   },
   getChallengeParticipantsByTeam: async function (challengeId) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
-    const result = ChallengeParticipation.aggregate([
+    const result = await ChallengeParticipation.aggregate([
       {
         $match: {
           challenge: ObjectId(challengeId)
@@ -114,30 +114,32 @@ ChallengeParticipationSchema.methods = {
         }
       },
       {
-        $group: {
-          _id: '$team',
+        $addFields: {
           totalLikes: {
-            $sum: {
-              $add: [
-                '$social.facebook.likes',
-                '$social.instagram.likes',
-                '$social.youtube.likes',
-                '$social.tiktok.likes',
-                '$social.twitter.likes'
-              ]
-            }
+            $add: [
+              { $ifNull: ['$social.facebook.likes', 0] },
+              { $ifNull: ['$social.instagram.likes', 0] },
+              { $ifNull: ['$social.youtube.likes', 0] },
+              { $ifNull: ['$social.tiktok.likes', 0] },
+              { $ifNull: ['$social.twitter.likes', 0] }
+            ]
           },
           totalShares: {
-            $sum: {
-              $add: [
-                '$social.facebook.shares',
-                '$social.instagram.shares',
-                '$social.youtube.shares',
-                '$social.tiktok.shares',
-                '$social.twitter.shares'
-              ]
-            }
-          },
+            $add: [
+              { $ifNull: ['$social.facebook.shares', 0] },
+              { $ifNull: ['$social.instagram.shares', 0] },
+              { $ifNull: ['$social.youtube.shares', 0] },
+              { $ifNull: ['$social.tiktok.shares', 0] },
+              { $ifNull: ['$social.twitter.shares', 0] }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$team',
+          totalLikes: { $sum: '$totalLikes' },
+          totalShares: { $sum: '$totalShares' },
           members: {
             $push: {
               user: '$user',
@@ -150,6 +152,12 @@ ChallengeParticipationSchema.methods = {
             }
           }
         }
+      },
+      {
+        $sort: {
+          totalLikes: -1,
+          totalShares: -1
+        }
       }
     ])
     return result
@@ -159,7 +167,7 @@ ChallengeParticipationSchema.methods = {
     const result = ChallengeParticipation.aggregate([
       {
         $match: {
-          challenge: ObjectId(challengeId)
+          challenge: ObjectId(challengeId),
         }
       },
       {
@@ -201,23 +209,26 @@ ChallengeParticipationSchema.methods = {
           team: 1,
           'nft.social': 1
         }
-      },
-      {
-        $limit: 1
       }
     ])
     return result
   },
-  updatePostData: async function (challengeId, key1, value1, key2, value2) {
+  updatePostData: async function (
+    challengeId,
+    userId,
+    key1,
+    value1,
+    key2,
+    value2
+  ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
-      return ChallengeParticipation.findOneAndUpdate(
-        { challenge: challengeId },
-        { $set: { [key1]: value1, [key2]: value2 } },
-        {
-          new: true
-        }
-      )
-
+    return ChallengeParticipation.findOneAndUpdate(
+      { challenge: challengeId, user: userId },
+      { $set: { [key1]: value1, [key2]: value2 } },
+      {
+        new: true
+      }
+    )
   }
 }
 

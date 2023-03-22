@@ -67,3 +67,12 @@ exports.getHashTagSchema = {
   querystring: S.object()
     .prop('nftId', S.string().required())
 }
+
+exports.getChallengeParticipantsDetailSchema = {
+  tags: ['Challenge'],
+  summary: 'Get challenge participation details',
+  params: S.object().prop(
+    'challengeId',
+    S.string().pattern('^[a-fA-F0-9]{24}$').required()
+  ),
+}

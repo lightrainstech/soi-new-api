@@ -192,7 +192,6 @@ const getPostDetails = async (
     if (posts.length > 0) {
       posts.forEach(post => {
         if (platform === 'facebook') {
-          console.log(post?.activity_by_action_type)
           totalLikes = totalLikes + post?.activity_by_action_type?.like
           totalShares = totalShares + post.shares
         } else if (platform === 'instagram') {
@@ -215,31 +214,40 @@ const getPostDetails = async (
       return resObj
     }
   }
-  const { total, returned, size, posts } = result.data.resp
-  if (total === returned) {
-    const resObject = await totalLikeAndShare(posts, platform)
-    return resObject
-  } else {
-    const apiCallsNeeded = Math.ceil(total / size) - 1
-    // Create an array of Promises for each API call
-    const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
-      params.from = (i + 1) * size // Set the "from" parameter for each API call
-      jsonObject.params = params
-      return apiCall(jsonObject)
-        .then(res => res.result.posts)
-        .catch(err => {
-          console.error(`Error retrieving posts: ${err}`)
-          return []
-        })
-    })
+  if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
+    const { total, returned, size, posts } = result.data.resp
+    if (total === returned) {
+      const resObject = await totalLikeAndShare(posts, platform)
+      return resObject
+    } else {
+      const apiCallsNeeded = Math.ceil(total / size) - 1
+      // Create an array of Promises for each API call
+      const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
+        params.from = (i + 1) * size // Set the "from" parameter for each API call
+        jsonObject.params = params
+        return apiCall(jsonObject)
+          .then(res => res.result.posts)
+          .catch(err => {
+            console.error(`Error retrieving posts: ${err}`)
+            return []
+          })
+      })
 
-    // Await all the promises and concatenate the posts arrays
-    const allPosts = await Promise.all(promises).then(results =>
-      posts.concat(...results)
-    )
-    const resObject = totalLikeAndShare(allPosts, platform)
-    return resObject
+      // Await all the promises and concatenate the posts arrays
+      const allPosts = await Promise.all(promises).then(results =>
+        posts.concat(...results)
+      )
+      const resObject = totalLikeAndShare(allPosts, platform)
+      return resObject
+    }
   }
+  resObj = {
+    [platform]: {
+      totalLikes: totalLikes,
+      totalShares: totalShares
+    }
+  }
+  return resObj
 }
 
 module.exports = {
