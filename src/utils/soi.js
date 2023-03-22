@@ -167,8 +167,8 @@ const getPostDetails = async (
   platform
 ) => {
   let date = {
-      start: 1676955196000,
-      end: 1679374396000,
+      start: Date.parse(startDate),
+      end: Date.parse(endDate),
       timezone: 'UTC'
     },
     method = 'socialinsider_api.get_posts',
@@ -179,7 +179,7 @@ const getPostDetails = async (
       from: 0,
       size: 50,
       projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
-      campaign_name: 'Metasense'
+      campaign_name: campaignName
     }
 
   jsonObject.method = method
