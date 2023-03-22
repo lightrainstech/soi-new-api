@@ -47,6 +47,7 @@ module.exports = async function (fastify, opts) {
         userModel.name = name
         userModel.email = email
         userModel.wallet = checkSumWallet
+        userModel.userName = email
         userModel.role = 'agency'
         const newAgency = await userModel.save()
         if (newAgency) {
