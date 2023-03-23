@@ -1,7 +1,7 @@
 {
   "name": "soi-api",
   "description": "api",
-  "version": "0.5.37",
+  "version": "0.5.38",
   "main": "./src/server.js",
   "license": "MIT",
   "dependencies": {
