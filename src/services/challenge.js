@@ -418,7 +418,7 @@ module.exports = async function (fastify, opts) {
 
         if (!participants) {
           return reply.error({
-            message: 'You have not joined any challenge.'
+            message: 'No participants found in this challenge.'
           })
         }
 
