@@ -224,7 +224,7 @@ ChallengeParticipationSchema.methods = {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
       { challenge: challengeId, user: userId },
-      { $set: { [key1]: value1, [key2]: value2 } },
+      { $set: { [key1]: value1, [key2]: value2, isActive: false } },
       {
         new: true
       }
