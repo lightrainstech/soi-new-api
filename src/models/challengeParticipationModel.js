@@ -3,6 +3,29 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
+const socialStatusSchema = {
+  likes: {
+    type: Number,
+    default: 0
+  },
+  shares: {
+    type: Number,
+    default: 0
+  },
+  comments: {
+    type: Number,
+    default: 0
+  },
+  engagement: {
+    type: Number,
+    default: 0
+  },
+  post_engagement_rate: {
+    type: Number,
+    default: 0
+  }
+}
+
 const ChallengeParticipationSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
@@ -28,56 +51,11 @@ const ChallengeParticipationSchema = new mongoose.Schema({
     type: String
   },
   social: {
-    facebook: {
-      likes: {
-        type: Number,
-        default: 0
-      },
-      shares: {
-        type: Number,
-        default: 0
-      }
-    },
-    instagram: {
-      likes: {
-        type: Number,
-        default: 0
-      },
-      shares: {
-        type: Number,
-        default: 0
-      }
-    },
-    youtube: {
-      likes: {
-        type: Number,
-        default: 0
-      },
-      shares: {
-        type: Number,
-        default: 0
-      }
-    },
-    tiktok: {
-      likes: {
-        type: Number,
-        default: 0
-      },
-      shares: {
-        type: Number,
-        default: 0
-      }
-    },
-    twitter: {
-      likes: {
-        type: Number,
-        default: 0
-      },
-      shares: {
-        type: Number,
-        default: 0
-      }
-    }
+    facebook: socialStatusSchema,
+    instagram: socialStatusSchema,
+    youtube: socialStatusSchema,
+    tiktok: socialStatusSchema,
+    twitter: socialStatusSchema
   }
 })
 
