@@ -423,7 +423,7 @@ module.exports = async function (fastify, opts) {
         }
 
         return reply.success({
-          message: 'Participation details.',
+          message: 'Participants details listed successfully.',
           participants
         })
       } catch (error) {
