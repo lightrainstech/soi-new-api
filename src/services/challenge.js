@@ -294,6 +294,24 @@ module.exports = async function (fastify, opts) {
         }
 
         const challenge = await challengeModel.getChallengeById(challengeId)
+
+        const currentTime = new Date()
+        // Check the challenge has started or not
+        const startDate = new Date(challenge.startDate)
+        if (currentTime.getTime() < startDate.getTime()) {
+          return reply.error({
+            message: 'Challenge has not started yet.'
+          })
+        }
+        // Check the challenge has ended or not
+        const endDate = new Date(challenge.endDate)
+        if (currentTime.getTime() > endDate.getTime()) {
+          return reply.error({
+            message:
+              'Challenge has ended.'
+          })
+        }
+
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
