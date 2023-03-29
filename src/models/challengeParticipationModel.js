@@ -27,6 +27,10 @@ const socialStatusSchema = {
   impressions: {
     type: Number,
     default: 0
+  },
+  totalPost: {
+    type: Number,
+    default: 0
   }
 }
 
@@ -222,8 +226,10 @@ ChallengeParticipationSchema.methods = {
     value4,
     key5,
     value5,
-    key5,
-    value5
+    key6,
+    value6,
+    key7,
+    value7
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
@@ -236,6 +242,7 @@ ChallengeParticipationSchema.methods = {
           [key4]: value4,
           [key5]: value5,
           [key6]: value6,
+          [key7]: value7,
           isActive: false
         }
       },
