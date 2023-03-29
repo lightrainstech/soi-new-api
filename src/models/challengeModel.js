@@ -138,6 +138,22 @@ ChallengeSchema.methods = {
         select: '_id name avatar'
       })
       .sort({ endDate: -1 })
+  },
+  getTotalChallengesCount: async function (userId) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalChallenges: { $sum: 1 },
+          challengesByBrand: {
+            $sum: {
+              $cond: [{ $eq: ['$user', userId] }, 1, 0]
+            }
+          }
+        }
+      }
+    ])
   }
 }
 
