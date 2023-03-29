@@ -46,7 +46,9 @@ module.exports = async function (args, done) {
               totalPostEngagementRate = postData
                 ? postData[key].totalPostEngagementRate
                 : 0,
-              key5 = `social.${key}.post_engagement_rate`
+              key5 = `social.${key}.post_engagement_rate`,
+              totalImpressions = postData ? postData[key].totalImpressions : 0,
+              key6 = `social.${key}.impressions`
 
             await challengeParticipationModel.updatePostData(
               challengeId,
@@ -60,7 +62,9 @@ module.exports = async function (args, done) {
               key4,
               totalEngagement,
               key5,
-              totalPostEngagementRate
+              totalPostEngagementRate,
+              key6,
+              totalImpressions
             )
           })
           await Promise.all(updatePostDataPromises)

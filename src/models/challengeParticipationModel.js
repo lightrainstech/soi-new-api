@@ -23,6 +23,10 @@ const socialStatusSchema = {
   post_engagement_rate: {
     type: Number,
     default: 0
+  },
+  impressions: {
+    type: Number,
+    default: 0
   }
 }
 
@@ -217,6 +221,8 @@ ChallengeParticipationSchema.methods = {
     key4,
     value4,
     key5,
+    value5,
+    key5,
     value5
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
@@ -229,6 +235,7 @@ ChallengeParticipationSchema.methods = {
           [key3]: value3,
           [key4]: value4,
           [key5]: value5,
+          [key6]: value6,
           isActive: false
         }
       },
