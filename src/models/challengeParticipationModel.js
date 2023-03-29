@@ -145,7 +145,7 @@ ChallengeParticipationSchema.methods = {
     const result = ChallengeParticipation.aggregate([
       {
         $match: {
-          challenge: ObjectId(challengeId),
+          challenge: ObjectId(challengeId)
         }
       },
       {
@@ -197,12 +197,27 @@ ChallengeParticipationSchema.methods = {
     key1,
     value1,
     key2,
-    value2
+    value2,
+    key3,
+    value3,
+    key4,
+    value4,
+    key5,
+    value5
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
       { challenge: challengeId, user: userId },
-      { $set: { [key1]: value1, [key2]: value2, isActive: false } },
+      {
+        $set: {
+          [key1]: value1,
+          [key2]: value2,
+          [key3]: value3,
+          [key4]: value4,
+          [key5]: value5,
+          isActive: false
+        }
+      },
       {
         new: true
       }
