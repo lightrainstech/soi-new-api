@@ -60,14 +60,28 @@ const ChallengeParticipationSchema = new mongoose.Schema({
 })
 
 ChallengeParticipationSchema.methods = {
-  getParticipationDetails: async function (challengeId, userId, nftId) {
+  getParticipationDetails: async function (userId, nftId) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
-    return ChallengeParticipation.findOne({
-      challenge: challengeId,
-      user: userId,
-      nftId: nftId,
-      isActive: true
-    })
+    return ChallengeParticipation.aggregate([
+      {
+        $lookup: {
+          from: 'challenges',
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challengeDetails'
+        }
+      },
+      {
+        $match: {
+          user: ObjectId(userId),
+          nftId: nftId,
+          isActive: true,
+          'challengeDetails.endDate': {
+            $gte: new Date()
+          }
+        }
+      }
+    ])
   },
   getChallengeParticipantsByTeam: async function (challengeId) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')

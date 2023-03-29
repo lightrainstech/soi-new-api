@@ -278,21 +278,6 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
-        // Check participation exists or not
-        const participation =
-          await challengeParticipationModel.getParticipationDetails(
-            challengeId,
-            userId,
-            nftId
-          )
-
-        if (participation) {
-          return reply.error({
-            message:
-              'Already participating in a challenge with the selected NFT.'
-          })
-        }
-
         const challenge = await challengeModel.getChallengeById(challengeId)
 
         const currentTime = new Date()
@@ -308,6 +293,20 @@ module.exports = async function (fastify, opts) {
         if (currentTime.getTime() > endDate.getTime()) {
           return reply.error({
             message: 'Cannot join challenge. The challenge has ended.'
+          })
+        }
+
+        // Check participation exists or not
+        const participation =
+          await challengeParticipationModel.getParticipationDetails(
+            userId,
+            nftId
+          )
+
+        if (participation.length) {
+          return reply.error({
+            message:
+              'Already participating in a challenge with the selected NFT.'
           })
         }
 
