@@ -269,10 +269,11 @@ module.exports = async function (fastify, opts) {
       schema: brandPayload.getBrandDashboardSchema,
       onRequest: [fastify.authenticate]
     },
-    async function (request, reply) {
+    function (request, reply) {
       try {
         const { role, userId } = request.user
         const challengeModel = new Challenge()
+        const userModel = new User()
 
         // Check role
         if (role !== 'brand') {
@@ -281,21 +282,36 @@ module.exports = async function (fastify, opts) {
           })
         }
 
-        // Get total challenges in platform and total challenges by brand
-        const { totalChallenges, totalChallengesByBrand } =
-          await challengeModel.getTotalChallengesCount(userId)
+        // promise array
+        const promises = [
+          challengeModel.getTotalChallengesCount(userId),
+          userModel.getCount('influencer')
+        ]
 
-        return reply.success({
-          message: 'Dashboard status.',
-          challenges: {
-            totalChallenges,
-            totalChallengesByBrand
-          }
-        })
+        Promise.all(promises)
+          .then(function (results) {
+            reply.success({
+              challenges: {
+                totalChallenges: results[0].totalChallenges,
+                totalChallengesByBrand: results[0].totalChallengesByBrand
+              },
+              influencerUptake: {
+                totalInfluencer: results[1],
+                totalInfluencerParticipation:
+                  results[0].totalInfluencerParticipation
+              }
+            })
+          })
+          .catch(function (err) {
+            console.log(err)
+            return reply.error({
+              message: 'Failed to fetch dashboard details. Please try again.'
+            })
+          })
       } catch (error) {
         console.log(error)
         return reply.error({
-          message: 'Failed to fetch dashboard. Pleas try again.'
+          message: 'Failed to fetch dashboard details. Please try again.'
         })
       }
     }

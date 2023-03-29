@@ -142,7 +142,7 @@ ChallengeSchema.methods = {
   },
   getTotalChallengesCount: async function (userId) {
     const Challenge = mongoose.model('Challenge')
-    const result =  await Challenge.aggregate([
+    const result = await Challenge.aggregate([
       {
         $group: {
           _id: null,
@@ -151,13 +151,17 @@ ChallengeSchema.methods = {
             $sum: {
               $cond: [{ $eq: ['$user', ObjectId(userId)] }, 1, 0]
             }
+          },
+          totalInfluencerParticipation: {
+            $sum: { $size: '$participants' }
           }
         }
       }
     ])
     return {
       totalChallenges: result[0].totalChallenges,
-      totalChallengesByBrand: result[0].totalChallengesByBrand
+      totalChallengesByBrand: result[0].totalChallengesByBrand,
+      totalInfluencerParticipation: result[0].totalInfluencerParticipation
     }
   }
 }
