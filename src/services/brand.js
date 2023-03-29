@@ -262,6 +262,25 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // API to fetch brand dashboard status
+  fastify.get(
+    '/dashboard',
+    {
+      schema: brandPayload.getBrandDashboardSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      try {
+        const { userId, role } = request.user
+        // Todo
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to fetch dashboard. Pleas try again.'
+        })
+      }
+    }
+  )
 }
 
 module.exports.autoPrefix = '/brands'
