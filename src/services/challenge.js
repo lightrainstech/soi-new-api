@@ -300,15 +300,14 @@ module.exports = async function (fastify, opts) {
         const startDate = new Date(challenge.startDate)
         if (currentTime.getTime() < startDate.getTime()) {
           return reply.error({
-            message: 'Challenge has not started yet.'
+            message: 'Cannot join challenge. The challenge has not started yet.'
           })
         }
         // Check the challenge has ended or not
         const endDate = new Date(challenge.endDate)
         if (currentTime.getTime() > endDate.getTime()) {
           return reply.error({
-            message:
-              'Challenge has ended.'
+            message: 'Cannot join challenge. The challenge has ended.'
           })
         }
 
