@@ -271,8 +271,27 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        const { userId, role } = request.user
-        // Todo
+        const { role, userId } = request.user
+        const challengeModel = new Challenge()
+
+        // Check role
+        if (role !== 'brand') {
+          return reply.code(401).error({
+            message: 'You are not authorized to do this operation.'
+          })
+        }
+
+        // Get total challenges in platform and total challenges by brand
+        const { totalChallenges, totalChallengesByBrand } =
+          await challengeModel.getTotalChallengesCount(userId)
+
+        return reply.success({
+          message: 'Dashboard status.',
+          challenges: {
+            totalChallenges,
+            totalChallengesByBrand
+          }
+        })
       } catch (error) {
         console.log(error)
         return reply.error({
