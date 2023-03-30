@@ -304,14 +304,14 @@ module.exports = async function (fastify, opts) {
             const totalBounty = results[2].totalBounty
 
             const avgEngagement =
-              Math.round(totalEngagements / totalChallenges) || 0
+              Math.ceil(totalEngagements / totalChallenges) || 0
 
             const engagementRate =
-              Math.round(totalEngagements / totalPosts) || 0
+              Math.ceil(totalEngagements / totalPosts) || 0
 
-            const CPV = Math.round(totalBounty / totalReach) || 0
+            const CPV = Math.ceil(totalBounty / totalReach) || 0
 
-            const CPC = Math.round(totalBounty / totalEngagements) || 0
+            const CPC = Math.ceil(totalBounty / totalEngagements) || 0
 
             return reply.success({
               challenges: {

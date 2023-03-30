@@ -201,8 +201,8 @@ const getPostDetails = async (
         post?.activity_by_action_type?.comment || post?.comments || 0
       totalEngagement += post?.engagement || 0
       totalPostEngagementRate += post?.post_engagement_rate || 0
-      totalImpressions += post?.impressions_total || 0
-      totalPosts = posts.length
+      totalImpressions += post?.impressions_total || post?.impressions || 0
+      totalPosts = totalPosts + 1
     })
 
     return {
@@ -230,10 +230,22 @@ const getPostDetails = async (
         params.from = (i + 1) * size // Set the "from" parameter for each API call
         jsonObject.params = params
         return apiCall(jsonObject)
-          .then(res => res.result.posts)
+          .then(res => res.data.resp.posts)
           .catch(err => {
+            console.log(err)
             console.error(`Error retrieving posts: ${err}`)
-            return []
+            resObj = {
+              [platform]: {
+                totalLikes,
+                totalShares,
+                totalComments,
+                totalEngagement,
+                totalPostEngagementRate,
+                totalImpressions,
+                totalPosts
+              }
+            }
+            return resObj
           })
       })
 
@@ -241,7 +253,8 @@ const getPostDetails = async (
       const allPosts = await Promise.all(promises).then(results =>
         posts.concat(...results)
       )
-      const resObject = totalLikeAndShare(allPosts, platform)
+      //console.log(allPosts, allPosts.length)
+      const resObject = totalMetrics(allPosts, platform)
       return resObject
     }
   }
