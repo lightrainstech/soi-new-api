@@ -300,18 +300,19 @@ module.exports = async function (fastify, opts) {
               results[0].totalInfluencerParticipation
             const totalReach = results[2].totalImpressions
             const totalEngagements = results[2].totalEngagements
-            const totalPosts = results[2].totalPosts
             const totalBounty = results[2].totalBounty
+            const totalPostEngagementRate = results[2].totalPostEngagementRate
 
             const avgEngagement =
-              Math.ceil(totalEngagements / totalChallenges) || 0
+              parseFloat((totalEngagements / totalChallenges).toFixed(2)) || 0
 
             const engagementRate =
-              Math.ceil(totalEngagements / totalPosts) || 0
+              parseFloat((totalPostEngagementRate / 100).toFixed(2)) || 0
 
-            const CPV = Math.ceil(totalBounty / totalReach) || 0
+            const CPV = parseFloat((totalBounty / totalReach).toFixed(2)) || 0
 
-            const CPC = Math.ceil(totalBounty / totalEngagements) || 0
+            const CPC =
+              parseFloat((totalBounty / totalEngagements).toFixed(2)) || 0
 
             return reply.success({
               challenges: {

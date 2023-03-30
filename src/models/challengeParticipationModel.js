@@ -299,6 +299,15 @@ ChallengeParticipationSchema.methods = {
               { $ifNull: ['$social.tiktok.totalPosts', 0] },
               { $ifNull: ['$social.twitter.totalPosts', 0] }
             ]
+          },
+          totalPostEngagementRate: {
+            $add: [
+              { $ifNull: ['$social.facebook.post_engagement_rate', 0] },
+              { $ifNull: ['$social.instagram.post_engagement_rate', 0] },
+              { $ifNull: ['$social.youtube.post_engagement_rate', 0] },
+              { $ifNull: ['$social.tiktok.post_engagement_rate', 0] },
+              { $ifNull: ['$social.twitter.post_engagement_rate', 0] }
+            ]
           }
         }
       },
@@ -310,7 +319,8 @@ ChallengeParticipationSchema.methods = {
           totalPosts: { $sum: '$totalPosts' },
           totalBounty: {
             $sum: '$bountyReceived'
-          }
+          },
+          totalPostEngagementRate: { $sum: '$totalPostEngagementRate' }
         }
       }
     ])
@@ -318,7 +328,8 @@ ChallengeParticipationSchema.methods = {
       totalImpressions: result[0]?.totalImpressions ?? 0,
       totalEngagements: result[0]?.totalEngagements ?? 0,
       totalPosts: result[0]?.totalPosts ?? 0,
-      totalBounty: result[0]?.totalBounty ?? 0
+      totalBounty: result[0]?.totalBounty ?? 0,
+      totalPostEngagementRate: result[0]?.totalPostEngagementRate ?? 0
     }
   }
 }
