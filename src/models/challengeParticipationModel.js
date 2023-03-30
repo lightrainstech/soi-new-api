@@ -315,10 +315,10 @@ ChallengeParticipationSchema.methods = {
       }
     ])
     return {
-      totalImpressions: result.length ? result[0].totalImpressions : 0,
-      totalEngagements: result.length ? result[0].totalEngagements : 0,
-      totalPosts: result.length ? result[0].totalPosts : 0,
-      totalBounty: result.length ? result[0].totalBounty : 0
+      totalImpressions: result[0]?.totalImpressions ?? 0,
+      totalEngagements: result[0]?.totalEngagements ?? 0,
+      totalPosts: result[0]?.totalPosts ?? 0,
+      totalBounty: result[0]?.totalBounty ?? 0
     }
   }
 }
