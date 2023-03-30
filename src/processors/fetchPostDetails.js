@@ -50,7 +50,7 @@ module.exports = async function (args, done) {
               totalImpressions = postData ? postData[key].totalImpressions : 0,
               key6 = `social.${key}.impressions`,
               totalPosts = postData ? postData[key].totalPosts : 0,
-              key7 = `social.${key}.impressions`
+              key7 = `social.${key}.totalPosts`
 
             await challengeParticipationModel.updatePostData(
               challengeId,

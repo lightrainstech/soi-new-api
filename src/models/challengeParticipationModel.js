@@ -28,7 +28,7 @@ const socialStatusSchema = {
     type: Number,
     default: 0
   },
-  totalPost: {
+  totalPosts: {
     type: Number,
     default: 0
   }
@@ -250,6 +250,68 @@ ChallengeParticipationSchema.methods = {
         new: true
       }
     )
+  },
+  calculatePostMetrics: async function (brandId) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const result = await ChallengeParticipation.aggregate([
+      {
+        $lookup: {
+          from: 'challenges',
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challengeDetails'
+        }
+      },
+      {
+        $match: {
+          'challengeDetails.user': ObjectId(brandId)
+        }
+      },
+      {
+        $addFields: {
+          totalImpressions: {
+            $add: [
+              { $ifNull: ['$social.facebook.impressions', 0] },
+              { $ifNull: ['$social.instagram.impressions', 0] },
+              { $ifNull: ['$social.youtube.impressions', 0] },
+              { $ifNull: ['$social.tiktok.impressions', 0] },
+              { $ifNull: ['$social.twitter.impressions', 0] }
+            ]
+          },
+          totalEngagements: {
+            $add: [
+              { $ifNull: ['$social.facebook.engagement', 0] },
+              { $ifNull: ['$social.instagram.engagement', 0] },
+              { $ifNull: ['$social.youtube.engagement', 0] },
+              { $ifNull: ['$social.tiktok.engagement', 0] },
+              { $ifNull: ['$social.twitter.engagement', 0] }
+            ]
+          },
+          totalPosts: {
+            $add: [
+              { $ifNull: ['$social.facebook.totalPosts', 0] },
+              { $ifNull: ['$social.instagram.totalPosts', 0] },
+              { $ifNull: ['$social.youtube.totalPosts', 0] },
+              { $ifNull: ['$social.tiktok.totalPosts', 0] },
+              { $ifNull: ['$social.twitter.totalPosts', 0] }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: 'null',
+          totalImpressions: { $sum: '$totalImpressions' },
+          totalEngagements: { $sum: '$totalEngagements' },
+          totalPosts: { $sum: '$totalPosts' }
+        }
+      }
+    ])
+    return {
+      totalImpressions: result[0].totalImpressions,
+      totalEngagements: result[0].totalEngagements,
+      totalPosts: result[0].totalPosts
+    }
   }
 }
 

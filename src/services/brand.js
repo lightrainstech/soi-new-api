@@ -8,6 +8,7 @@ const { uploadToS3 } = require('../utils/S3Config')
 const brandPayload = require('../payload/brandPayload')
 const Affiliate = require('../models/affiliateModel.js')
 const Challenge = require('../models/challengeModel')
+const ChallengeParticipation = require('../models/challengeParticipationModel')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -274,6 +275,7 @@ module.exports = async function (fastify, opts) {
         const { role, userId } = request.user
         const challengeModel = new Challenge()
         const userModel = new User()
+        const challengeParticipationModel = new ChallengeParticipation()
 
         // Check role
         if (role !== 'brand') {
@@ -285,21 +287,42 @@ module.exports = async function (fastify, opts) {
         // promise array
         const promises = [
           challengeModel.getTotalChallengesCount(userId),
-          userModel.getCount('influencer')
+          userModel.getCount('influencer'),
+          challengeParticipationModel.calculatePostMetrics(
+            '641ae9085ef6de32bf54c835'
+          )
         ]
 
         Promise.all(promises)
           .then(function (results) {
-            reply.success({
+            const totalChallenges = results[0].totalChallenges
+            const totalChallengesByBrand = results[0].totalChallengesByBrand
+            const totalInfluencer = results[1]
+            const totalInfluencerParticipation =
+              results[0].totalInfluencerParticipation
+            const totalReach = results[2].totalImpressions
+            const totalEngagements = results[2].totalEngagements
+            const totalPosts = results[2].totalPosts
+
+            const avgEngagement =
+              Math.round(totalEngagements / totalChallenges) || 0
+
+            const engagementRate =
+              Math.round(totalEngagements / totalPosts) || 0
+
+            return reply.success({
               challenges: {
-                totalChallenges: results[0].totalChallenges,
-                totalChallengesByBrand: results[0].totalChallengesByBrand
+                totalChallenges,
+                totalChallengesByBrand
               },
               influencerUptake: {
-                totalInfluencer: results[1],
-                totalInfluencerParticipation:
-                  results[0].totalInfluencerParticipation
-              }
+                totalInfluencer,
+                totalInfluencerParticipation
+              },
+              totalReach,
+              totalEngagements,
+              avgEngagement,
+              engagementRate
             })
           })
           .catch(function (err) {
