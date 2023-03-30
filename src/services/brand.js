@@ -288,9 +288,7 @@ module.exports = async function (fastify, opts) {
         const promises = [
           challengeModel.getTotalChallengesCount(userId),
           userModel.getCount('influencer'),
-          challengeParticipationModel.calculatePostMetrics(
-            '641ae9085ef6de32bf54c835'
-          )
+          challengeParticipationModel.calculatePostMetrics(userId)
         ]
 
         Promise.all(promises)
