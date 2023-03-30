@@ -303,12 +303,17 @@ module.exports = async function (fastify, opts) {
             const totalReach = results[2].totalImpressions
             const totalEngagements = results[2].totalEngagements
             const totalPosts = results[2].totalPosts
+            const totalBounty = results[2].totalBounty
 
             const avgEngagement =
               Math.round(totalEngagements / totalChallenges) || 0
 
             const engagementRate =
               Math.round(totalEngagements / totalPosts) || 0
+
+            const CPV = Math.round(totalBounty / totalReach) || 0
+
+            const CPC = Math.round(totalBounty / totalEngagements) || 0
 
             return reply.success({
               challenges: {
@@ -322,7 +327,9 @@ module.exports = async function (fastify, opts) {
               totalReach,
               totalEngagements,
               avgEngagement,
-              engagementRate
+              engagementRate,
+              CPV,
+              CPC
             })
           })
           .catch(function (err) {

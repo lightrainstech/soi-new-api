@@ -64,6 +64,10 @@ const ChallengeParticipationSchema = new mongoose.Schema({
     youtube: socialStatusSchema,
     tiktok: socialStatusSchema,
     twitter: socialStatusSchema
+  },
+  bountyReceived: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -303,14 +307,18 @@ ChallengeParticipationSchema.methods = {
           _id: 'null',
           totalImpressions: { $sum: '$totalImpressions' },
           totalEngagements: { $sum: '$totalEngagements' },
-          totalPosts: { $sum: '$totalPosts' }
+          totalPosts: { $sum: '$totalPosts' },
+          totalBounty: {
+            $sum: '$bountyReceived'
+          }
         }
       }
     ])
     return {
       totalImpressions: result[0].totalImpressions,
       totalEngagements: result[0].totalEngagements,
-      totalPosts: result[0].totalPosts
+      totalPosts: result[0].totalPosts,
+      totalBounty: result[0].totalBounty
     }
   }
 }
