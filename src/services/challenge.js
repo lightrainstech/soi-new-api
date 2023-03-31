@@ -319,8 +319,8 @@ module.exports = async function (fastify, opts) {
           queryString = hashTag
         } else {
           const currentQueryStrings =
-            challenge.participantsHashTags.join(' AND ')
-          queryString = currentQueryStrings + ' AND ' + hashTag
+            challenge.participantsHashTags.join(' OR ')
+          queryString = currentQueryStrings + ' OR ' + hashTag
         }
 
         // Update query_string in socialInsider
