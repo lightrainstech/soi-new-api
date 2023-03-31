@@ -193,6 +193,7 @@ const getPostDetails = async (
   let totalPostEngagementRate = 0
   let totalImpressions = 0
   let totalPosts = 0
+  let totalVideoViews = 0
   const totalMetrics = (posts, platform) => {
     posts?.forEach(post => {
       // Total likes
@@ -220,6 +221,9 @@ const getPostDetails = async (
 
       // Total posts
       totalPosts = totalPosts + 1
+
+      // Total video views
+      totalVideoViews += post?.video_views || 0
     })
 
     return {
@@ -230,7 +234,8 @@ const getPostDetails = async (
         totalEngagement,
         totalPostEngagementRate,
         totalImpressions,
-        totalPosts
+        totalPosts,
+        totalVideoViews
       }
     }
   }
@@ -260,7 +265,8 @@ const getPostDetails = async (
                 totalEngagement,
                 totalPostEngagementRate,
                 totalImpressions,
-                totalPosts
+                totalPosts,
+                totalVideoViews
               }
             }
             return resObj
@@ -284,7 +290,8 @@ const getPostDetails = async (
       totalEngagement,
       totalPostEngagementRate,
       totalImpressions,
-      totalPosts
+      totalPosts,
+      totalVideoViews
     }
   }
   return resObj
