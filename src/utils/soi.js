@@ -195,17 +195,30 @@ const getPostDetails = async (
   let totalPosts = 0
   const totalMetrics = (posts, platform) => {
     posts?.forEach(post => {
+      // Total likes
       totalLikes += post?.activity_by_action_type?.like || post?.likes || 0
+
+      // Total shares
       totalShares += post?.shares || 0
+
+      // Total comments
       totalComments +=
         post?.activity_by_action_type?.comment || post?.comments || 0
+
+      // Total engagement
       totalEngagement += post?.engagement || 0
+
+      // Total post engagement rate
       totalPostEngagementRate += post?.post_engagement_rate || 0
+
+      // Total impressions
       if(platform === 'tiktok' || platform === 'youtube') {
         totalImpressions += post?.video_views || 0
       }else {
         totalImpressions += post?.impressions_total || post?.impressions || 0
       }
+
+      // Total posts
       totalPosts = totalPosts + 1
     })
 
@@ -223,7 +236,8 @@ const getPostDetails = async (
   }
 
   if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
-    const { total, returned, size, posts } = result.data.resp
+    const { returned, size, posts } = result.data.resp
+    const total = result.data.resp.total || result.data.resp.total.value
     if (total === returned) {
       const resObject = await totalMetrics(posts, platform)
       return resObject
