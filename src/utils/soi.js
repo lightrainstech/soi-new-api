@@ -201,7 +201,7 @@ const getPostDetails = async (
         post?.activity_by_action_type?.comment || post?.comments || 0
       totalEngagement += post?.engagement || 0
       totalPostEngagementRate += post?.post_engagement_rate || 0
-      if(platform === 'tiktok') {
+      if(platform === 'tiktok' || platform === 'youtube') {
         totalImpressions += post?.video_views || 0
       }else {
         totalImpressions += post?.impressions_total || post?.impressions || 0
