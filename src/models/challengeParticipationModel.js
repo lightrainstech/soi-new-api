@@ -331,6 +331,42 @@ ChallengeParticipationSchema.methods = {
       totalBounty: result[0]?.totalBounty ?? 0,
       totalPostEngagementRate: result[0]?.totalPostEngagementRate ?? 0
     }
+  },
+  getTeamLeaderBoard: async function (challengeId, limit) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'challenges',
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challengeDetails'
+        }
+      },
+      {
+        $match: {
+          'challengeDetails.user': ObjectId(challengeId)
+        }
+      },
+      {
+        $group: {
+          _id: '$team',
+          totalBounty: { $sum: '$bountyReceived' }
+        }
+      },
+      {
+        $sort: {
+          totalBounty: -1
+        }
+      }
+    ]
+    if (limit > 0) {
+      pipeline.push({
+        $limit: 5
+      })
+    }
+    const result = await ChallengeParticipation.aggregate(pipeline)
+    return result
   }
 }
 

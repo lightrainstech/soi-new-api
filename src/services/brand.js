@@ -288,7 +288,8 @@ module.exports = async function (fastify, opts) {
         const promises = [
           challengeModel.getTotalChallengesCount(userId),
           userModel.getCount('influencer'),
-          challengeParticipationModel.calculatePostMetrics(userId)
+          challengeParticipationModel.calculatePostMetrics(userId),
+          challengeParticipationModel.getTeamLeaderBoard(userId, 5)
         ]
 
         Promise.all(promises)
@@ -302,6 +303,7 @@ module.exports = async function (fastify, opts) {
             const totalEngagements = results[2].totalEngagements
             const totalBounty = results[2].totalBounty
             const totalPostEngagementRate = results[2].totalPostEngagementRate
+            const topFiveTeams = results[3]
 
             const avgEngagement =
               parseFloat((totalEngagements / totalChallenges).toFixed(2)) || 0
@@ -328,7 +330,8 @@ module.exports = async function (fastify, opts) {
               avgEngagement,
               engagementRate,
               CPV,
-              CPC
+              CPC,
+              topFiveTeams
             })
           })
           .catch(function (err) {
