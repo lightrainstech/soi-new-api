@@ -47,7 +47,7 @@ module.exports = async function (fastify, opts) {
         const filePath = `${process.cwd()}/public/assets/${Date.now()}${
           file[0].filename
         }`
-        await fs.promises.writeFile(filePath, file[0].data)
+        fs.promises.writeFile(filePath, file[0].data)
 
         // Add file to IPFS
         const { IpfsHash } = await pinata.pinFileToIPFS(
