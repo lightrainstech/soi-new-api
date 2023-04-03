@@ -278,22 +278,38 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
+        const challenge = await challengeModel.getChallengeById(challengeId)
+
+        const currentTime = new Date()
+        // Check the challenge has started or not
+        const startDate = new Date(challenge.startDate)
+        if (currentTime.getTime() < startDate.getTime()) {
+          return reply.error({
+            message: 'Cannot join challenge. The challenge has not started yet.'
+          })
+        }
+        // Check the challenge has ended or not
+        const endDate = new Date(challenge.endDate)
+        if (currentTime.getTime() > endDate.getTime()) {
+          return reply.error({
+            message: 'Cannot join challenge. The challenge has ended.'
+          })
+        }
+
         // Check participation exists or not
         const participation =
           await challengeParticipationModel.getParticipationDetails(
-            challengeId,
             userId,
             nftId
           )
 
-        if (participation) {
+        if (participation.length) {
           return reply.error({
             message:
               'Already participating in a challenge with the selected NFT.'
           })
         }
 
-        const challenge = await challengeModel.getChallengeById(challengeId)
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
 
@@ -400,12 +416,12 @@ module.exports = async function (fastify, opts) {
 
         if (!participants) {
           return reply.error({
-            message: 'You have not joined any challenge.'
+            message: 'No participants found in this challenge.'
           })
         }
 
         return reply.success({
-          message: 'Participation details.',
+          message: 'Participants details listed successfully.',
           participants
         })
       } catch (error) {

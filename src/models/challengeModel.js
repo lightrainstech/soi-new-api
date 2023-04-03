@@ -1,6 +1,7 @@
 'use strict'
 
 const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 
 const ChallengeSchema = new mongoose.Schema({
   user: {
@@ -138,6 +139,30 @@ ChallengeSchema.methods = {
         select: '_id name avatar'
       })
       .sort({ endDate: -1 })
+  },
+  getTotalChallengesCount: async function (userId) {
+    const Challenge = mongoose.model('Challenge')
+    const result = await Challenge.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalChallenges: { $sum: 1 },
+          totalChallengesByBrand: {
+            $sum: {
+              $cond: [{ $eq: ['$user', ObjectId(userId)] }, 1, 0]
+            }
+          },
+          totalInfluencerParticipation: {
+            $sum: { $size: '$participants' }
+          }
+        }
+      }
+    ])
+    return {
+      totalChallenges: result[0].totalChallenges,
+      totalChallengesByBrand: result[0].totalChallengesByBrand,
+      totalInfluencerParticipation: result[0].totalInfluencerParticipation
+    }
   }
 }
 

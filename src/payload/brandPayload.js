@@ -41,3 +41,8 @@ exports.getBrandChallengesSchema = {
   tags: ['Brand'],
   summary: 'Get challenge created by a brand.'
 }
+
+exports.getBrandDashboardSchema = {
+  tags: ['Brand'],
+  summary: 'Get brand dashboard details.'
+}
