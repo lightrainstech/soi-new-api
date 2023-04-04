@@ -123,13 +123,13 @@ ChallengeParticipationSchema.methods = {
       },
       {
         $addFields: {
-          totalLikes: {
+          totalPosts: {
             $add: [
-              { $ifNull: ['$social.facebook.likes', 0] },
-              { $ifNull: ['$social.instagram.likes', 0] },
-              { $ifNull: ['$social.youtube.likes', 0] },
-              { $ifNull: ['$social.tiktok.likes', 0] },
-              { $ifNull: ['$social.twitter.likes', 0] }
+              { $ifNull: ['$social.facebook.totalPosts', 0] },
+              { $ifNull: ['$social.instagram.totalPosts', 0] },
+              { $ifNull: ['$social.youtube.totalPosts', 0] },
+              { $ifNull: ['$social.tiktok.totalPosts', 0] },
+              { $ifNull: ['$social.twitter.totalPosts', 0] }
             ]
           },
           totalShares: {
@@ -146,7 +146,7 @@ ChallengeParticipationSchema.methods = {
       {
         $group: {
           _id: '$team',
-          totalLikes: { $sum: '$totalLikes' },
+          totalPosts: { $sum: '$totalPosts' },
           totalShares: { $sum: '$totalShares' },
           members: {
             $push: {
@@ -163,7 +163,7 @@ ChallengeParticipationSchema.methods = {
       },
       {
         $sort: {
-          totalLikes: -1,
+          totalPosts: -1,
           totalShares: -1
         }
       }
