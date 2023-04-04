@@ -369,7 +369,7 @@ ChallengeParticipationSchema.methods = {
     ]
     if (limit > 0) {
       pipeline.push({
-        $limit: 5
+        $limit: limit
       })
     }
     const result = await ChallengeParticipation.aggregate(pipeline)
