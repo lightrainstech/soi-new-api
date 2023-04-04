@@ -144,10 +144,24 @@ ChallengeParticipationSchema.methods = {
         }
       },
       {
+        $addFields: {
+          totalFacebookPosts: { $ifNull: ['$social.facebook.totalPosts', 0] },
+          totalInstagramPosts: { $ifNull: ['$social.instagram.totalPosts', 0] },
+          totalYouTubePosts: { $ifNull: ['$social.youtube.totalPosts', 0] },
+          totalTikTokPosts: { $ifNull: ['$social.tiktok.totalPosts', 0] },
+          totalTwitterPosts: { $ifNull: ['$social.twitter.totalPosts', 0] }
+        }
+      },
+      {
         $group: {
           _id: '$team',
           totalPosts: { $sum: '$totalPosts' },
           totalShares: { $sum: '$totalShares' },
+          totalFacebookPosts: { $sum: '$totalFacebookPosts' },
+          totalInstagramPosts: { $sum: '$totalInstagramPosts' },
+          totalYouTubePosts: { $sum: '$totalYouTubePosts' },
+          totalTikTokPosts: { $sum: '$totalTikTokPosts' },
+          totalTwitterPosts: { $sum: '$totalTwitterPosts' },
           members: {
             $push: {
               user: '$user',
@@ -155,8 +169,6 @@ ChallengeParticipationSchema.methods = {
               hashTag: '$hashTag',
               isActive: '$isActive',
               nftId: '$nftId',
-              social: '$social',
-              nft: '$nft'
             }
           }
         }
