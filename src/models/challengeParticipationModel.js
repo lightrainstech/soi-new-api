@@ -149,7 +149,12 @@ ChallengeParticipationSchema.methods = {
           totalInstagramPosts: { $ifNull: ['$social.instagram.totalPosts', 0] },
           totalYouTubePosts: { $ifNull: ['$social.youtube.totalPosts', 0] },
           totalTikTokPosts: { $ifNull: ['$social.tiktok.totalPosts', 0] },
-          totalTwitterPosts: { $ifNull: ['$social.twitter.totalPosts', 0] }
+          totalTwitterPosts: { $ifNull: ['$social.twitter.totalPosts', 0] },
+          totalFacebookShares: { $ifNull: ['$social.facebook.shares', 0] },
+          totalInstagramShares: { $ifNull: ['$social.instagram.shares', 0] },
+          totalYouTubeShares: { $ifNull: ['$social.youtube.shares', 0] },
+          totalTikTokShares: { $ifNull: ['$social.tiktok.shares', 0] },
+          totalTwitterShares: { $ifNull: ['$social.twitter.shares', 0] }
         }
       },
       {
@@ -162,21 +167,36 @@ ChallengeParticipationSchema.methods = {
           totalYouTubePosts: { $sum: '$totalYouTubePosts' },
           totalTikTokPosts: { $sum: '$totalTikTokPosts' },
           totalTwitterPosts: { $sum: '$totalTwitterPosts' },
+          totalFacebookShares: { $sum: '$totalFacebookShares' },
+          totalInstagramShares: { $sum: '$totalInstagramShares' },
+          totalYouTubeShares: { $sum: '$totalYouTubeShares' },
+          totalTikTokShares: { $sum: '$totalTikTokShares' },
+          totalTwitterShares: { $sum: '$totalTwitterShares' },
+          totalBounty: { $sum: '$bountyReceived' },
           members: {
             $push: {
               user: '$user',
               challenge: '$challenge',
               hashTag: '$hashTag',
               isActive: '$isActive',
-              nftId: '$nftId',
+              nftId: '$nftId'
             }
           }
         }
       },
       {
         $sort: {
-          totalPosts: -1,
+          totalPosts: -1
+        }
+      },
+      {
+        $sort: {
           totalShares: -1
+        }
+      },
+      {
+        $sort: {
+          totalBounty: -1
         }
       }
     ])
