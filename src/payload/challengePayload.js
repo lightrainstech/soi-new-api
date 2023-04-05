@@ -14,7 +14,7 @@ const challengeBodySchema = S.object()
   .prop('endDate', S.string().format('date-time'))
   .prop('externalLink', S.string())
   .prop('bountyOffered', S.number().minimum(0))
-  .prop('location', S.string())
+  .prop('locations', S.array().default([]))
 
 exports.createChallengeSchema = {
   tags: ['Challenge'],
@@ -65,8 +65,7 @@ exports.getHashTagSchema = {
     'challengeId',
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
   ),
-  querystring: S.object()
-    .prop('nftId', S.string().required())
+  querystring: S.object().prop('nftId', S.string().required())
 }
 
 exports.getChallengeParticipantsDetailSchema = {
@@ -75,5 +74,5 @@ exports.getChallengeParticipantsDetailSchema = {
   params: S.object().prop(
     'challengeId',
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
-  ),
+  )
 }

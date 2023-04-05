@@ -31,7 +31,7 @@ module.exports = async function (fastify, opts) {
           endDate,
           externalLink,
           bountyOffered,
-          location
+          locations
         } = request.body
 
         const challengeTitle = title.toUpperCase()
@@ -81,7 +81,7 @@ module.exports = async function (fastify, opts) {
           externalLink,
           bountyOffered,
           challengeHashTag,
-          location,
+          locations,
           challengeIdentifier
         })
         const savedChallenge = await newChallengeData.save()

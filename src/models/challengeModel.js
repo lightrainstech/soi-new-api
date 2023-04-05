@@ -55,13 +55,19 @@ const ChallengeSchema = new mongoose.Schema({
     unique: true
   },
   participants: {
-    type: Array
+    type: Array,
+    default: []
   },
   challengeIdentifier: {
     type: String
   },
   participantsHashTags: {
-    type: Array
+    type: Array,
+    default: []
+  },
+  locations: {
+    type: Array,
+    default: []
   }
 })
 
@@ -170,7 +176,7 @@ ChallengeSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier locations'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -180,7 +186,7 @@ ChallengeSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier locations'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })
