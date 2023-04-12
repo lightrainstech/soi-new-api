@@ -1,6 +1,7 @@
 'use strict'
 
 const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 
 const ChallengeSchema = new mongoose.Schema({
   user: {
@@ -54,13 +55,15 @@ const ChallengeSchema = new mongoose.Schema({
     unique: true
   },
   participants: {
-    type: Array
+    type: Array,
+    default: []
   },
   challengeIdentifier: {
     type: String
   },
-  participantsHashTags: {
-    type: Array
+  locations: {
+    type: Array,
+    default: []
   }
 })
 
@@ -111,8 +114,10 @@ ChallengeSchema.methods = {
       challengeId,
       {
         $addToSet: {
-          participants: participant,
-          participantsHashTags: hashTag
+          participants: {
+            id: participant,
+            hashTag: hashTag
+          }
         }
       },
       {
@@ -138,6 +143,30 @@ ChallengeSchema.methods = {
         select: '_id name avatar'
       })
       .sort({ endDate: -1 })
+  },
+  getTotalChallengesCount: async function (userId) {
+    const Challenge = mongoose.model('Challenge')
+    const result = await Challenge.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalChallenges: { $sum: 1 },
+          totalChallengesByBrand: {
+            $sum: {
+              $cond: [{ $eq: ['$user', ObjectId(userId)] }, 1, 0]
+            }
+          },
+          totalInfluencerParticipation: {
+            $sum: { $size: '$participants' }
+          }
+        }
+      }
+    ])
+    return {
+      totalChallenges: result[0].totalChallenges,
+      totalChallengesByBrand: result[0].totalChallengesByBrand,
+      totalInfluencerParticipation: result[0].totalInfluencerParticipation
+    }
   }
 }
 
@@ -145,7 +174,7 @@ ChallengeSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user  challengeIdentifier locations'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -155,7 +184,7 @@ ChallengeSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user participantsHashTags challengeIdentifier'
+      'title description facebookText instagramText tiktokText youtubeText twitterText hashtags mentions  startDate endDate externalLink   bountyOffered challengeHashTag participants user  challengeIdentifier locations'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })

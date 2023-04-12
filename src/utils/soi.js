@@ -186,38 +186,65 @@ const getPostDetails = async (
   jsonObject.params = params
 
   const result = await apiCall(jsonObject)
-  let totalLikes = 0,
-    totalShares = 0
-  let totalLikeAndShare = (posts, platform) => {
-    if (posts.length > 0) {
-      posts.forEach(post => {
-        if (platform === 'facebook') {
-          totalLikes = totalLikes + post?.activity_by_action_type?.like
-          totalShares = totalShares + post.shares
-        } else if (platform === 'instagram') {
-          totalLikes = totalLikes + post.likes
-          totalShares = totalShares + post?.shares ? post?.shares : 0
-        } else if (platform === 'twitter') {
-          totalLikes = totalLikes + post?.likes
-          totalShares = totalShares + post?.shares
-        } else {
-          totalLikes = totalLikes + post?.likes
-          totalShares = totalShares + post?.shares
-        }
-      })
-      resObj = {
-        [platform]: {
-          totalLikes: totalLikes,
-          totalShares: totalShares
-        }
+  let totalLikes = 0
+  let totalShares = 0
+  let totalComments = 0
+  let totalEngagement = 0
+  let totalPostEngagementRate = 0
+  let totalImpressions = 0
+  let totalPosts = 0
+  let totalVideoViews = 0
+  const totalMetrics = (posts, platform) => {
+    posts?.forEach(post => {
+      // Total likes
+      totalLikes += post?.activity_by_action_type?.like || post?.likes || 0
+
+      // Total shares
+      totalShares += post?.shares || 0
+
+      // Total comments
+      totalComments +=
+        post?.activity_by_action_type?.comment || post?.comments || 0
+
+      // Total engagement
+      totalEngagement += post?.engagement || 0
+
+      // Total post engagement rate
+      totalPostEngagementRate += post?.post_engagement_rate || 0
+
+      // Total impressions
+      if(platform === 'tiktok' || platform === 'youtube') {
+        totalImpressions += post?.video_views || 0
+      }else {
+        totalImpressions += post?.impressions_total || post?.impressions || 0
       }
-      return resObj
+
+      // Total posts
+      totalPosts = totalPosts + 1
+
+      // Total video views
+      totalVideoViews += post?.video_views || 0
+    })
+
+    return {
+      [platform]: {
+        totalLikes,
+        totalShares,
+        totalComments,
+        totalEngagement,
+        totalPostEngagementRate,
+        totalImpressions,
+        totalPosts,
+        totalVideoViews
+      }
     }
   }
+
   if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
-    const { total, returned, size, posts } = result.data.resp
+    const { returned, size, posts } = result.data.resp
+    const total = result.data.resp.total || result.data.resp.total.value
     if (total === returned) {
-      const resObject = await totalLikeAndShare(posts, platform)
+      const resObject = await totalMetrics(posts, platform)
       return resObject
     } else {
       const apiCallsNeeded = Math.ceil(total / size) - 1
@@ -226,10 +253,23 @@ const getPostDetails = async (
         params.from = (i + 1) * size // Set the "from" parameter for each API call
         jsonObject.params = params
         return apiCall(jsonObject)
-          .then(res => res.result.posts)
+          .then(res => res.data.resp.posts)
           .catch(err => {
+            console.log(err)
             console.error(`Error retrieving posts: ${err}`)
-            return []
+            resObj = {
+              [platform]: {
+                totalLikes,
+                totalShares,
+                totalComments,
+                totalEngagement,
+                totalPostEngagementRate,
+                totalImpressions,
+                totalPosts,
+                totalVideoViews
+              }
+            }
+            return resObj
           })
       })
 
@@ -237,14 +277,21 @@ const getPostDetails = async (
       const allPosts = await Promise.all(promises).then(results =>
         posts.concat(...results)
       )
-      const resObject = totalLikeAndShare(allPosts, platform)
+      //console.log(allPosts, allPosts.length)
+      const resObject = totalMetrics(allPosts, platform)
       return resObject
     }
   }
   resObj = {
     [platform]: {
-      totalLikes: totalLikes,
-      totalShares: totalShares
+      totalLikes,
+      totalShares,
+      totalComments,
+      totalEngagement,
+      totalPostEngagementRate,
+      totalImpressions,
+      totalPosts,
+      totalVideoViews
     }
   }
   return resObj

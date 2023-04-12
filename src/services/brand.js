@@ -8,6 +8,7 @@ const { uploadToS3 } = require('../utils/S3Config')
 const brandPayload = require('../payload/brandPayload')
 const Affiliate = require('../models/affiliateModel.js')
 const Challenge = require('../models/challengeModel')
+const ChallengeParticipation = require('../models/challengeParticipationModel')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -258,6 +259,91 @@ module.exports = async function (fastify, opts) {
         console.log(error)
         return reply.error({
           message: 'Failed to fetch challenges. Pleas try again.'
+        })
+      }
+    }
+  )
+  // API to fetch brand dashboard status
+  fastify.get(
+    '/dashboard',
+    {
+      schema: brandPayload.getBrandDashboardSchema,
+      onRequest: [fastify.authenticate]
+    },
+    function (request, reply) {
+      try {
+        const { role, userId } = request.user
+        const challengeModel = new Challenge()
+        const userModel = new User()
+        const challengeParticipationModel = new ChallengeParticipation()
+
+        // Check role
+        if (role !== 'brand') {
+          return reply.code(401).error({
+            message: 'You are not authorized to do this operation.'
+          })
+        }
+
+        // promise array
+        const promises = [
+          challengeModel.getTotalChallengesCount(userId),
+          userModel.getCount('influencer'),
+          challengeParticipationModel.calculatePostMetrics(userId),
+          challengeParticipationModel.getTeamLeaderBoard(userId, 5)
+        ]
+
+        Promise.all(promises)
+          .then(function (results) {
+            const totalChallenges = results[0].totalChallenges
+            const totalChallengesByBrand = results[0].totalChallengesByBrand
+            const totalInfluencer = results[1]
+            const totalInfluencerParticipation =
+              results[0].totalInfluencerParticipation
+            const totalReach = results[2].totalImpressions
+            const totalEngagements = results[2].totalEngagements
+            const totalBounty = results[2].totalBounty
+            const totalPostEngagementRate = results[2].totalPostEngagementRate
+            const topFiveTeams = results[3]
+
+            const avgEngagement =
+              parseFloat((totalEngagements / totalChallenges).toFixed(2)) || 0
+
+            const engagementRate =
+              parseFloat((totalPostEngagementRate / 100).toFixed(2)) || 0
+
+            const CPV = parseFloat((totalBounty / totalReach).toFixed(2)) || 0
+
+            const CPC =
+              parseFloat((totalBounty / totalEngagements).toFixed(2)) || 0
+
+            return reply.success({
+              challenges: {
+                totalChallenges,
+                totalChallengesByBrand
+              },
+              influencerUptake: {
+                totalInfluencer,
+                totalInfluencerParticipation
+              },
+              totalReach,
+              totalEngagements,
+              avgEngagement,
+              engagementRate,
+              CPV,
+              CPC,
+              topFiveTeams
+            })
+          })
+          .catch(function (err) {
+            console.log(err)
+            return reply.error({
+              message: 'Failed to fetch dashboard details. Please try again.'
+            })
+          })
+      } catch (error) {
+        console.log(error)
+        return reply.error({
+          message: 'Failed to fetch dashboard details. Please try again.'
         })
       }
     }
