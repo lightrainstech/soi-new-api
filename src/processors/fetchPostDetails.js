@@ -34,25 +34,25 @@ module.exports = async function (args, done) {
         const postDetails = await Promise.all(postDetailsPromises)
         if (postDetails) {
           const updatePostDataPromises = socialKeys.map(async key => {
-            let postData = postDetails.find(obj => obj[key]),
-              totalLikes = postData ? postData[key].totalLikes : 0,
-              key1 = `social.${key}.likes`,
-              totalShares = postData ? postData[key].totalShares : 0,
-              key2 = `social.${key}.shares`,
-              totalComments = postData ? postData[key].totalComments : 0,
-              key3 = `social.${key}.comments`,
-              totalEngagement = postData ? postData[key].totalEngagement : 0,
-              key4 = `social.${key}.engagement`,
-              totalPostEngagementRate = postData
-                ? postData[key].totalPostEngagementRate
-                : 0,
-              key5 = `social.${key}.post_engagement_rate`,
-              totalImpressions = postData ? postData[key].totalImpressions : 0,
-              key6 = `social.${key}.impressions`,
-              totalPosts = postData ? postData[key].totalPosts : 0,
-              key7 = `social.${key}.totalPosts`,
-              totalVideoViews = postData ? postData[key].totalVideoViews : 0,
-              key8 = `social.${key}.video_views`
+            let postData = postDetails.find(obj => obj[key])
+            let totalLikes = postData ? postData[key].totalLikes : 0
+            let key1 = `social.${key}.likes`
+            let totalShares = postData ? postData[key].totalShares : 0
+            let key2 = `social.${key}.shares`
+            let totalComments = postData ? postData[key].totalComments : 0
+            let key3 = `social.${key}.comments`
+            let totalEngagement = postData ? postData[key].totalEngagement : 0
+            let key4 = `social.${key}.engagement`
+            let totalPostEngagementRate = postData
+              ? postData[key].totalPostEngagementRate
+              : 0
+            let key5 = `social.${key}.post_engagement_rate`
+            let totalImpressions = postData ? postData[key].totalImpressions : 0
+            let key6 = `social.${key}.impressions`
+            let totalPosts = postData ? postData[key].totalPosts : 0
+            let key7 = `social.${key}.totalPosts`
+            let totalVideoViews = postData ? postData[key].totalVideoViews : 0
+            let key8 = `social.${key}.video_views`
 
             await challengeParticipationModel.updatePostData(
               challengeId,

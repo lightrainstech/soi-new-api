@@ -35,6 +35,26 @@ const socialStatusSchema = {
   video_views: {
     type: Number,
     default: 0
+  },
+  totalPostsPrice: {
+    type: Number,
+    default: 0
+  },
+  totalSharesPrice: {
+    type: Number,
+    default: 0
+  },
+  totalLikesPrice: {
+    type: Number,
+    default: 0
+  },
+  totalCommentsPrice: {
+    type: Number,
+    default: 0
+  },
+  totalViewsPrice: {
+    type: Number,
+    default: 0
   }
 }
 
