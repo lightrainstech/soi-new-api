@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const { getPostDetails, getAccountType } = require('../utils/soi')
+const { pricePerPostMetrics } = require('../utils/bountyCalculator')
 
 module.exports = async function (args, done) {
   const { challengeId } = args.data
@@ -54,6 +55,41 @@ module.exports = async function (args, done) {
             let totalVideoViews = postData ? postData[key].totalVideoViews : 0
             let key8 = `social.${key}.video_views`
 
+            let totalPostsPrice = pricePerPostMetrics(key, 'post', totalPosts)
+            let key9 = `social.${key}.totalPostsPrice`
+
+            let totalLikesPrice = pricePerPostMetrics(key, 'like', totalLikes)
+            let key10 = `social.${key}.totalLikesPrice`
+
+            let totalSharesPrice = 0
+            if (key !== 'youtube') {
+              totalSharesPrice = pricePerPostMetrics(key, 'share', totalShares)
+            }
+            let key11 = `social.${key}.totalSharesPrice`
+
+            let totalCommentsPrice = pricePerPostMetrics(
+              key,
+              'comment',
+              totalComments
+            )
+            let key12 = `social.${key}.totalCommentsPrice`
+
+            const metricsMap = {
+              youtube: 'view',
+              tiktok: 'play'
+            }
+
+            let totalViewsPrice = 0
+            if (key in metricsMap) {
+              const metric = metricsMap[key]
+              totalViewsPrice = pricePerPostMetrics(
+                key,
+                metric,
+                totalVideoViews
+              )
+            }
+            let key13 = `social.${key}.totalViewsPrice`
+
             await challengeParticipationModel.updatePostData(
               challengeId,
               participant.user,
@@ -72,13 +108,24 @@ module.exports = async function (args, done) {
               key7,
               totalPosts,
               key8,
-              totalVideoViews
+              totalVideoViews,
+              key9,
+              totalPostsPrice,
+              key10,
+              totalLikesPrice,
+              key11,
+              totalSharesPrice,
+              key12,
+              totalCommentsPrice,
+              key13,
+              totalViewsPrice
             )
           })
           await Promise.all(updatePostDataPromises)
         }
       })
       await Promise.all(updatePromises)
+      // Todo create a job for bounty calculations
     }
     console.log('saved')
     console.log('---------done-------')

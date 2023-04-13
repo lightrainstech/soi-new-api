@@ -291,7 +291,17 @@ ChallengeParticipationSchema.methods = {
     key7,
     value7,
     key8,
-    value8
+    value8,
+    key9,
+    value9,
+    key10,
+    value10,
+    key11,
+    value11,
+    key12,
+    value12,
+    key13,
+    value13
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
@@ -306,6 +316,11 @@ ChallengeParticipationSchema.methods = {
           [key6]: value6,
           [key7]: value7,
           [key8]: value8,
+          [key9]: value9,
+          [key10]: value10,
+          [key11]: value11,
+          [key12]: value12,
+          [key13]: value13,
           isActive: false
         }
       },
