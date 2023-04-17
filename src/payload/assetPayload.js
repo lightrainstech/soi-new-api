@@ -51,7 +51,7 @@ const socialProfileSchema = S.object()
         S.object().prop(
           'facebook',
           S.string()
-            .pattern('^(https?://)?(www.facebook.com)/(?!.*(profile|page)).+$')
+            .pattern('^(https?://)?(www.)?facebook.com/[a-zA-Z0-9.]{5,}(/)?$')
             .required()
         )
       )
