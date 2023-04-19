@@ -441,6 +441,137 @@ ChallengeParticipationSchema.methods = {
     }
     const result = await ChallengeParticipation.aggregate(pipeline)
     return result
+  },
+  getTotalMetricsPrice: async function (challengeId) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const pipeline = [
+      { $match: { challenge: mongoose.Types.ObjectId(challengeId) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          totalBounty: {
+            $sum: [
+              '$social.facebook.totalPostsPrice',
+              '$social.instagram.totalPostsPrice',
+              '$social.youtube.totalPostsPrice',
+              '$social.tiktok.totalPostsPrice',
+              '$social.twitter.totalPostsPrice',
+              '$social.facebook.totalSharesPrice',
+              '$social.instagram.totalSharesPrice',
+              '$social.youtube.totalSharesPrice',
+              '$social.tiktok.totalSharesPrice',
+              '$social.twitter.totalSharesPrice',
+              '$social.facebook.totalLikesPrice',
+              '$social.instagram.totalLikesPrice',
+              '$social.youtube.totalLikesPrice',
+              '$social.tiktok.totalLikesPrice',
+              '$social.twitter.totalLikesPrice',
+              '$social.facebook.totalCommentsPrice',
+              '$social.instagram.totalCommentsPrice',
+              '$social.youtube.totalCommentsPrice',
+              '$social.tiktok.totalCommentsPrice',
+              '$social.twitter.totalCommentsPrice',
+              '$social.facebook.totalViewsPrice',
+              '$social.instagram.totalViewsPrice',
+              '$social.youtube.totalViewsPrice',
+              '$social.tiktok.totalViewsPrice',
+              '$social.twitter.totalViewsPrice'
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          user: { $first: '$user._id' },
+          totalBounty: { $sum: '$totalBounty' },
+          totalBountyAllUsers: { $sum: '$totalBounty' }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalBountyAllUsers: { $sum: '$totalBountyAllUsers' },
+          userTotals: {
+            $push: { _id: '$_id', userId: '$user', totalBounty: '$totalBounty' }
+          }
+        }
+      }
+    ]
+    const result = await ChallengeParticipation.aggregate(pipeline).option({
+      lean: true
+    })
+    return result[0]
+  },
+  updateBountyReceived: async function (_id, bountyReceived) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    return ChallengeParticipation.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          bountyReceived: bountyReceived
+        }
+      },
+      {
+        new: true
+      }
+    )
+  },
+  getUserBountyReceived: async function (challengeId) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const pipeline = [
+      { $match: { challenge: mongoose.Types.ObjectId(challengeId) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          user: { $first: '$user._id' },
+          bountyReceived: { $first: '$bountyReceived' }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          userTotals: {
+            $push: {
+              _id: '$_id',
+              userId: '$user',
+              userTotal: '$bountyReceived'
+            }
+          }
+        }
+      }
+    ]
+    const result = await ChallengeParticipation.aggregate(pipeline).option({
+      lean: true
+    })
+    return result[0]
   }
 }
 
