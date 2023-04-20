@@ -33,6 +33,7 @@ module.exports = async function (args, done) {
     userTokenModel.owner = checkSumWallet
     userTokenModel.creator = checkSumWallet
     userTokenModel.tokenHashTag = tokenHashTag
+    userTokenModel.isActive = true
 
     await userTokenModel.save()
     console.log('saved')
