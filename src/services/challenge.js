@@ -5,6 +5,7 @@ const challengePayload = require('../payload/challengePayload')
 const { randomHashTag, getTeamName } = require('../utils/hashtag')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const { createCampaign } = require('../utils/soi')
+const UserToken = require('../models/userToken')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -278,6 +279,21 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
+        // Check at least two social media profile exists or not
+        const nft = await userTokenModel.getUserTokenById(nftId, userId)
+        const socialKeys = Object.keys(nft.social).filter(
+          key => nft.social[key].socialInsiderId !== undefined
+        )
+
+        if (Object.keys(socialKeys).length < 2) {
+          return reply.error({
+            message:
+              Object.keys(socialKeys).length === 0
+                ? `You have not connected any social media profile .Please connect at least two social media profile.`
+                : `You have connected only one social media profile. Please connect at least two social media profile.`
+          })
+        }
+
         const challenge = await challengeModel.getChallengeById(challengeId)
 
         const currentTime = new Date()
@@ -297,18 +313,18 @@ module.exports = async function (fastify, opts) {
         }
 
         // Check participation exists or not
-        const participation =
-          await challengeParticipationModel.getParticipationDetails(
-            userId,
-            nftId
-          )
+        // const participation =
+        //   await challengeParticipationModel.getParticipationDetails(
+        //     userId,
+        //     nftId
+        //   )
 
-        if (participation.length) {
-          return reply.error({
-            message:
-              'Already participating in a challenge with the selected NFT.'
-          })
-        }
+        // if (participation.length) {
+        //   return reply.error({
+        //     message:
+        //       'Already participating in a challenge with the selected NFT.'
+        //   })
+        // }
 
         const team = await getTeamName(nftId)
         const hashTag = `#${challenge.challengeHashTag}${team}${nftHashTag}`
