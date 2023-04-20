@@ -66,7 +66,7 @@ const UserTokenSchema = new mongoose.Schema(
       }
     },
     isActive: {
-      true: Boolean,
+      type: Boolean,
       default: false
     },
     owner:{
