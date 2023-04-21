@@ -29,6 +29,45 @@ AffiliateSchema.methods = {
       criteria: query
     }
     return Affiliate.load(options)
+  },
+  getAgencyAndParentAgency: async function (userId) {
+    const Affiliate = mongoose.model('Affiliate')
+    const result = await Affiliate.aggregate([
+      {
+        $match: {
+          user: ObjectId(userId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'agencyCode',
+          foreignField: 'agencyCode',
+          as: 'agency'
+        }
+      },
+      {
+        $unwind: {
+          path: '$agency',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      // {
+      //   $lookup: {
+      //     from: 'affiliates',
+      //     localField: 'agency._id',
+      //     foreignField: 'user',
+      //     as: 'parentAgency'
+      //   }
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$parentAgency',
+      //     preserveNullAndEmptyArrays: true
+      //   }
+      // },
+    ])
+    return result[0]
   }
 }
 

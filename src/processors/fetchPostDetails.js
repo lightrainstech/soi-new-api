@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const { getPostDetails, getAccountType } = require('../utils/soi')
+const { pricePerPostMetrics } = require('../utils/bountyCalculator')
 
 module.exports = async function (args, done) {
   const { challengeId } = args.data
@@ -34,25 +35,67 @@ module.exports = async function (args, done) {
         const postDetails = await Promise.all(postDetailsPromises)
         if (postDetails) {
           const updatePostDataPromises = socialKeys.map(async key => {
-            let postData = postDetails.find(obj => obj[key]),
-              totalLikes = postData ? postData[key].totalLikes : 0,
-              key1 = `social.${key}.likes`,
-              totalShares = postData ? postData[key].totalShares : 0,
-              key2 = `social.${key}.shares`,
-              totalComments = postData ? postData[key].totalComments : 0,
-              key3 = `social.${key}.comments`,
-              totalEngagement = postData ? postData[key].totalEngagement : 0,
-              key4 = `social.${key}.engagement`,
-              totalPostEngagementRate = postData
-                ? postData[key].totalPostEngagementRate
-                : 0,
-              key5 = `social.${key}.post_engagement_rate`,
-              totalImpressions = postData ? postData[key].totalImpressions : 0,
-              key6 = `social.${key}.impressions`,
-              totalPosts = postData ? postData[key].totalPosts : 0,
-              key7 = `social.${key}.totalPosts`,
-              totalVideoViews = postData ? postData[key].totalVideoViews : 0,
-              key8 = `social.${key}.video_views`
+            let postData = postDetails.find(obj => obj[key])
+            let totalLikes = postData ? postData[key].totalLikes : 0
+            let key1 = `social.${key}.likes`
+            let totalShares = postData ? postData[key].totalShares : 0
+            let key2 = `social.${key}.shares`
+            let totalComments = postData ? postData[key].totalComments : 0
+            let key3 = `social.${key}.comments`
+            let totalEngagement = postData ? postData[key].totalEngagement : 0
+            let key4 = `social.${key}.engagement`
+            let totalPostEngagementRate = postData
+              ? postData[key].totalPostEngagementRate
+              : 0
+            let key5 = `social.${key}.post_engagement_rate`
+            let totalImpressions = postData ? postData[key].totalImpressions : 0
+            let key6 = `social.${key}.impressions`
+            let totalPosts = postData ? postData[key].totalPosts : 0
+            let key7 = `social.${key}.totalPosts`
+            let totalVideoViews = postData ? postData[key].totalVideoViews : 0
+            let key8 = `social.${key}.video_views`
+
+            let totalPostsPrice = pricePerPostMetrics(key, 'post', totalPosts)
+            let key9 = `social.${key}.totalPostsPrice`
+
+            let totalLikesPrice = pricePerPostMetrics(key, 'like', totalLikes)
+            let key10 = `social.${key}.totalLikesPrice`
+
+            let totalSharesPrice = 0
+            if (key !== 'youtube') {
+              totalSharesPrice = pricePerPostMetrics(key, 'share', totalShares)
+            }
+            let key11 = `social.${key}.totalSharesPrice`
+
+            let totalCommentsPrice = pricePerPostMetrics(
+              key,
+              'comment',
+              totalComments
+            )
+            let key12 = `social.${key}.totalCommentsPrice`
+
+            const metricsMap = {
+              youtube: 'view',
+              tiktok: 'play'
+            }
+
+            let totalViewsPrice = 0
+            if (key in metricsMap) {
+              const metric = metricsMap[key]
+              totalViewsPrice = pricePerPostMetrics(
+                key,
+                metric,
+                totalVideoViews
+              )
+            }
+            let key13 = `social.${key}.totalViewsPrice`
+
+            let bountyReceived =
+              totalLikesPrice +
+              totalCommentsPrice +
+              totalPostsPrice +
+              totalSharesPrice +
+              totalViewsPrice
 
             await challengeParticipationModel.updatePostData(
               challengeId,
@@ -72,13 +115,25 @@ module.exports = async function (args, done) {
               key7,
               totalPosts,
               key8,
-              totalVideoViews
+              totalVideoViews,
+              key9,
+              totalPostsPrice,
+              key10,
+              totalLikesPrice,
+              key11,
+              totalSharesPrice,
+              key12,
+              totalCommentsPrice,
+              key13,
+              totalViewsPrice,
+              bountyReceived
             )
           })
           await Promise.all(updatePostDataPromises)
         }
       })
       await Promise.all(updatePromises)
+      // Todo create a job for bounty calculations
     }
     console.log('saved')
     console.log('---------done-------')
