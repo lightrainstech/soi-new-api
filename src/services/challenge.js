@@ -274,6 +274,7 @@ module.exports = async function (fastify, opts) {
       try {
         const challengeModel = new Challenge()
         const challengeParticipationModel = new ChallengeParticipation()
+        const userTokenModel = new UserToken()
 
         const { userId } = request.user
         const { challengeId } = request.params
