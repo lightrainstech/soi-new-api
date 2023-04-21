@@ -212,10 +212,9 @@ module.exports = async function (fastify, opts) {
         // Check NFT exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
         if (!nft) {
-          reply.code(404).error({
+          return reply.code(404).error({
             message: 'Asset not found.'
           })
-          return reply
         }
 
         // Remove redis cache
@@ -229,10 +228,9 @@ module.exports = async function (fastify, opts) {
         const isSocialProfileExists =
           await userTokenModel.checkSocialAccountExists(socialProfile)
         if (isSocialProfileExists) {
-          reply.code(400).error({
+          return reply.code(400).error({
             message: `${type} profile already exists.`
           })
-          return reply
         }
 
         // Add profile to social insider
@@ -241,10 +239,9 @@ module.exports = async function (fastify, opts) {
 
         if (result.error) {
           let err = await errorMessage(type)
-          reply.code(400).error({
+          return reply.code(400).error({
             message: err ? err : result.error.message
           })
-          return reply
         }
 
         resData.id = result.resp.id
@@ -265,24 +262,25 @@ module.exports = async function (fastify, opts) {
           resData
         )
         if (!addSocialAccounts) {
-          reply.code(400).error({
+          return reply.code(400).error({
             message: `Failed to add ${type} profile.`
           })
-          return reply
         } else {
-          reply.success({
+          if (!addSocialAccounts.isActive) {
+            console.log('Inside if')
+            await userTokenModel.markAsActive(nftId, userId)
+          }
+          return reply.success({
             message: `${type} profile added successfully.`,
             nft: addSocialAccounts
           })
-          return reply
         }
       } catch (err) {
         console.log(err)
-        reply.error({
+        return reply.error({
           message: `Failed to add ${type} profile.`,
           error: err.message
         })
-        return reply
       }
     }
   )
@@ -492,16 +490,16 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        const socialKeys = Object.keys(nft.social).filter(
-          key => nft.social[key].socialInsiderId !== undefined
-        )
+        // const socialKeys = Object.keys(nft.social).filter(
+        //   key => nft.social[key].socialInsiderId !== undefined
+        // )
 
-        if (Object.keys(socialKeys).length < 2) {
-          reply.error({
-            message: 'Please connect at least two social media profile.'
-          })
-          return reply
-        }
+        // if (Object.keys(socialKeys).length < 2) {
+        //   reply.error({
+        //     message: 'Please connect at least two social media profile.'
+        //   })
+        //   return reply
+        // }
         const markAsActive = await userTokenModel.markAsActive(nftId, userId)
         if (markAsActive) {
           return reply.success({

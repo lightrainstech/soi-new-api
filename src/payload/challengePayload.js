@@ -66,3 +66,12 @@ exports.getChallengeParticipantsDetailSchema = {
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
   )
 }
+
+exports.getBountyDetails = {
+  tags: ['Challenge'],
+  summary: 'Get bounty distribution details.',
+  params: S.object().prop(
+    'challengeId',
+    S.string().pattern('^[a-fA-F0-9]{24}$').required()
+  )
+}

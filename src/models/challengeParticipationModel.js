@@ -35,6 +35,26 @@ const socialStatusSchema = {
   video_views: {
     type: Number,
     default: 0
+  },
+  totalPostsPrice: {
+    type: Number,
+    default: 0
+  },
+  totalSharesPrice: {
+    type: Number,
+    default: 0
+  },
+  totalLikesPrice: {
+    type: Number,
+    default: 0
+  },
+  totalCommentsPrice: {
+    type: Number,
+    default: 0
+  },
+  totalViewsPrice: {
+    type: Number,
+    default: 0
   }
 }
 
@@ -271,7 +291,18 @@ ChallengeParticipationSchema.methods = {
     key7,
     value7,
     key8,
-    value8
+    value8,
+    key9,
+    value9,
+    key10,
+    value10,
+    key11,
+    value11,
+    key12,
+    value12,
+    key13,
+    value13,
+    bountyReceived
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
@@ -286,7 +317,16 @@ ChallengeParticipationSchema.methods = {
           [key6]: value6,
           [key7]: value7,
           [key8]: value8,
+          [key9]: value9,
+          [key10]: value10,
+          [key11]: value11,
+          [key12]: value12,
+          [key13]: value13,
           isActive: false
+
+        },
+        $inc: {
+          bountyReceived: bountyReceived
         }
       },
       {
@@ -406,6 +446,66 @@ ChallengeParticipationSchema.methods = {
     }
     const result = await ChallengeParticipation.aggregate(pipeline)
     return result
+  },
+  updateBountyReceived: async function (_id, bountyReceived) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    return ChallengeParticipation.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          bountyReceived: bountyReceived
+        }
+      },
+      {
+        new: true
+      }
+    )
+  },
+  getUserBountyReceived: async function (challengeId) {
+    const ChallengeParticipation = mongoose.model('ChallengeParticipation')
+    const pipeline = [
+      { $match: { challenge: mongoose.Types.ObjectId(challengeId) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          user: { $first: '$user._id' },
+          bountyReceived: { $first: '$bountyReceived' },
+          postMetrics: { $first: '$social' }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalBountyAllUsers: { $sum: '$bountyReceived' },
+          userTotals: {
+            $push: {
+              _id: '$_id',
+              userId: '$user',
+              userTotal: '$bountyReceived',
+              postMetrics: "$postMetrics"
+            }
+          }
+        }
+      }
+    ]
+    const result = await ChallengeParticipation.aggregate(pipeline).option({
+      lean: true
+    })
+    return result[0]
   }
 }
 
