@@ -280,18 +280,15 @@ module.exports = async function (fastify, opts) {
         const { challengeId } = request.params
         const { nftId, nftHashTag } = request.body
 
-        // Check at least two social media profile exists or not
+        // Check at least one social media profile exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
         const socialKeys = Object.keys(nft.social).filter(
           key => nft.social[key].socialInsiderId !== undefined
         )
 
-        if (Object.keys(socialKeys).length < 2) {
+        if (Object.keys(socialKeys).length < 1) {
           return reply.error({
-            message:
-              Object.keys(socialKeys).length === 0
-                ? `You have not connected any social media profile .Please connect at least two social media profile.`
-                : `You have connected only one social media profile. Please connect at least two social media profile.`
+            message: `You have not connected any social media profile .Please connect at least one social media profile.`
           })
         }
 
