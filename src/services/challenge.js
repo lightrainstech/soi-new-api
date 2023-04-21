@@ -13,6 +13,7 @@ const {
   pricePerPostMetrics,
   distributeBounty
 } = require('../utils/bountyCalculator')
+const UserToken = require('../models/userToken')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
