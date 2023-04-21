@@ -90,6 +90,13 @@ module.exports = async function (args, done) {
             }
             let key13 = `social.${key}.totalViewsPrice`
 
+            let bountyReceived =
+              totalLikesPrice +
+              totalCommentsPrice +
+              totalPostsPrice +
+              totalSharesPrice +
+              totalViewsPrice
+
             await challengeParticipationModel.updatePostData(
               challengeId,
               participant.user,
@@ -118,7 +125,8 @@ module.exports = async function (args, done) {
               key12,
               totalCommentsPrice,
               key13,
-              totalViewsPrice
+              totalViewsPrice,
+              bountyReceived
             )
           })
           await Promise.all(updatePostDataPromises)
