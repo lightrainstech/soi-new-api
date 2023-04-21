@@ -593,13 +593,13 @@ module.exports = async function (fastify, opts) {
           challengeId
         )
         return reply.success({
-          message: 'Done.',
+          message: 'Bounty distribution.',
           bountyData
         })
       } catch (error) {
         console.log(error)
         return reply.error({
-          message: 'Failed to fetch participation details. Please try again.'
+          message: 'Failed to fetch bounty distribution details. Please try again.'
         })
       }
     }
