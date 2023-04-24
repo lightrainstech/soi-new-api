@@ -95,17 +95,22 @@ module.exports = async function (fastify, opts) {
         })
         const savedChallenge = await newChallengeData.save()
         // Schedule a job
-        const delayDate = new Date(endDate).getTime() - Date.now()
+        const delayDate = new Date(startDate).getTime() - Date.now()
         const job = await fastify.bull.fetchPostDetails.add(
           {
             challengeId: savedChallenge._id
           },
           {
-            removeOnComplete: true,
             removeOnFail: false,
             delay: delayDate,
             attempts: 2,
-            backoff: 10000
+            backoff: 10000,
+            repeat: {
+              cron: '0 8,20 * * *',
+              startDate: new Date(startDate),
+              endDate: new Date(endDate)
+            },
+            removeOnComplete: true
           }
         )
         if (!savedChallenge) {
