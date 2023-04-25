@@ -8,13 +8,18 @@ const jsonObject = {
 
 // Function to call social insider api
 const apiCall = async obj => {
-  const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
-    }
-  })
-  return result
+  try {
+    const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
+      }
+    })
+    return result
+  } catch (error) {
+    console.error('API call failed with error: ', error.message)
+    throw error
+  }
 }
 
 // Function to return account type
@@ -41,18 +46,23 @@ const getAccountType = socialPlatform => {
 
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
-  let method = 'socialinsider_api.add_profile',
-    params = {
-      profile_url: `${socialProfile[socialPlatform]}`,
-      profile_type: getAccountType(socialPlatform),
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
-    }
+  try {
+    let method = 'socialinsider_api.add_profile',
+      params = {
+        profile_url: `${socialProfile[socialPlatform]}`,
+        profile_type: getAccountType(socialPlatform),
+        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+      }
 
-  jsonObject.method = method
-  jsonObject.params = params
+    jsonObject.method = method
+    jsonObject.params = params
 
-  const result = await apiCall(jsonObject)
-  return result.data
+    const result = await apiCall(jsonObject)
+    return result.data
+  } catch (error) {
+    console.error('Adding profile failed with error: ', error.message)
+    throw error
+  }
 }
 
 // Custom error messages
@@ -80,52 +90,65 @@ const stripTrailingSlash = str => {
 
 // Get social insider profile details
 const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
-  let currentTimestamp = Date.now(),
-    oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
-    oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
-    date = {
-      start: oneMonthAgoTimestamp,
-      end: currentTimestamp,
-      timezone: 'UTC'
-    },
-    method = 'socialinsider_api.get_profile_data',
-    params = {
-      id: socialInsiderId,
-      profile_type: profile_type,
-      date: date
+  try {
+    let currentTimestamp = Date.now(),
+      oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
+      oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
+      date = {
+        start: oneMonthAgoTimestamp,
+        end: currentTimestamp,
+        timezone: 'UTC'
+      },
+      method = 'socialinsider_api.get_profile_data',
+      params = {
+        id: socialInsiderId,
+        profile_type: profile_type,
+        date: date
+      }
+
+    jsonObject.method = method
+    jsonObject.params = params
+
+    const result = await apiCall(jsonObject)
+    let highestFollowersCount = 0
+    if (
+      result.data.error == null &&
+      Object.keys(result.data.resp).length !== 0
+    ) {
+      let profileData = result.data.resp[socialInsiderId]
+      highestFollowersCount = Math.max(
+        ...Object.values(profileData).map(d => d.followers || 0)
+      )
     }
-
-  jsonObject.method = method
-  jsonObject.params = params
-
-  const result = await apiCall(jsonObject)
-  let highestFollowersCount = 0
-  if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
-    let profileData = result.data.resp[socialInsiderId]
-    highestFollowersCount = Math.max(
-      ...Object.values(profileData).map(d => d.followers || 0)
-    )
+    let resObj = {
+      [platform]: highestFollowersCount
+    }
+    return resObj
+  } catch (error) {
+    console.error('Error in fetching profile details:', error.message)
+    throw error
   }
-  let resObj = {
-    [platform]: highestFollowersCount
-  }
-  return resObj
 }
 
 // Remove profile from social insider
 const removeProfile = async (socialInsiderId, socialPlatform) => {
-  let method = 'socialinsider_api.delete_profile',
-    params = {
-      id: socialInsiderId,
-      profile_type: getAccountType(socialPlatform),
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
-    }
+  try {
+    let method = 'socialinsider_api.delete_profile',
+      params = {
+        id: socialInsiderId,
+        profile_type: getAccountType(socialPlatform),
+        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+      }
 
-  jsonObject.method = method
-  jsonObject.params = params
+    jsonObject.method = method
+    jsonObject.params = params
 
-  const result = await apiCall(jsonObject)
-  return result.data
+    const result = await apiCall(jsonObject)
+    return result.data
+  } catch (error) {
+    console.error('Error in removing profile details:', error.message)
+    throw error
+  }
 }
 
 // Function to return error when a profile not exists in SI
@@ -142,19 +165,24 @@ const getProfileNotExistError = platform => {
 
 // Create campaign inside social insider
 const createCampaign = async (campaignName, hashTag) => {
-  let method = 'socialinsider_api.create_campaigns',
-    params = {
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
-      campaign_name: campaignName,
-      campaign_type: 'autotag',
-      query_string: hashTag
-    }
+  try {
+    let method = 'socialinsider_api.create_campaigns',
+      params = {
+        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
+        campaign_name: campaignName,
+        campaign_type: 'autotag',
+        query_string: hashTag
+      }
 
-  jsonObject.method = method
-  jsonObject.params = params
+    jsonObject.method = method
+    jsonObject.params = params
 
-  const result = await apiCall(jsonObject)
-  return result.data
+    const result = await apiCall(jsonObject)
+    return result.data
+  } catch (error) {
+    console.error('Error in creating campaign:', error.message)
+    throw error
+  }
 }
 
 // Get all posts based on a campaign
@@ -213,9 +241,9 @@ const getPostDetails = async (
       totalPostEngagementRate += post?.post_engagement_rate || 0
 
       // Total impressions
-      if(platform === 'tiktok' || platform === 'youtube') {
+      if (platform === 'tiktok' || platform === 'youtube') {
         totalImpressions += post?.video_views || 0
-      }else {
+      } else {
         totalImpressions += post?.impressions_total || post?.impressions || 0
       }
 

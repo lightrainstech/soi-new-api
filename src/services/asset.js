@@ -267,7 +267,6 @@ module.exports = async function (fastify, opts) {
           })
         } else {
           if (!addSocialAccounts.isActive) {
-            console.log('Inside if')
             await userTokenModel.markAsActive(nftId, userId)
           }
           return reply.success({
