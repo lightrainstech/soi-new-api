@@ -509,13 +509,6 @@ module.exports = async function (fastify, opts) {
         //         }
         //         let key13 = `social.${key}.totalViewsPrice`
 
-        //         let bountyReceived =
-        //           totalLikesPrice +
-        //           totalCommentsPrice +
-        //           totalPostsPrice +
-        //           totalSharesPrice +
-        //           totalViewsPrice
-
         //         await challengeParticipationModel.updatePostData(
         //           challengeId,
         //           participant.user,
@@ -545,27 +538,15 @@ module.exports = async function (fastify, opts) {
         //           totalCommentsPrice,
         //           key13,
         //           totalViewsPrice,
-        //           bountyReceived
         //         )
         //       })
         //       await Promise.all(updatePostDataPromises)
         //     }
         //   })
         //   await Promise.all(updatePromises)
-        //   // Todo create a job for bounty calculations
         // }
-
-        // const participants =
-        //   await challengeParticipationModel.getUserBountyReceived(challengeId)
-        // const data = await distributeBounty(
-        //   2000,
-        //   participants.userTotals,
-        //   participants.totalBountyAllUsers,
-        //   challengeId
-        // )
         // return reply.success({
         //   message: 'Done.',
-        //   data
         // })
       } catch (error) {
         console.log(error)

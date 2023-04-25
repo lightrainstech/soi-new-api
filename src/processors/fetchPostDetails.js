@@ -126,14 +126,12 @@ module.exports = async function (args, done) {
               totalCommentsPrice,
               key13,
               totalViewsPrice,
-              bountyReceived
             )
           })
           await Promise.all(updatePostDataPromises)
         }
       })
       await Promise.all(updatePromises)
-      // Todo create a job for bounty calculations
     }
     console.log('saved')
     console.log('---------done-------')
