@@ -95,17 +95,22 @@ module.exports = async function (fastify, opts) {
         })
         const savedChallenge = await newChallengeData.save()
         // Schedule a job
-        const delayDate = new Date(endDate).getTime() - Date.now()
+        const delayDate = new Date(startDate).getTime() - Date.now()
         const job = await fastify.bull.fetchPostDetails.add(
           {
             challengeId: savedChallenge._id
           },
           {
-            removeOnComplete: true,
             removeOnFail: false,
             delay: delayDate,
             attempts: 2,
-            backoff: 10000
+            backoff: 10000,
+            repeat: {
+              cron: '0 8,20 * * *', // Every day 8am and 8pm between the given start and end date
+              startDate: new Date(startDate),
+              endDate: new Date(endDate)
+            },
+            removeOnComplete: true
           }
         )
         if (!savedChallenge) {
@@ -504,13 +509,6 @@ module.exports = async function (fastify, opts) {
         //         }
         //         let key13 = `social.${key}.totalViewsPrice`
 
-        //         let bountyReceived =
-        //           totalLikesPrice +
-        //           totalCommentsPrice +
-        //           totalPostsPrice +
-        //           totalSharesPrice +
-        //           totalViewsPrice
-
         //         await challengeParticipationModel.updatePostData(
         //           challengeId,
         //           participant.user,
@@ -540,27 +538,15 @@ module.exports = async function (fastify, opts) {
         //           totalCommentsPrice,
         //           key13,
         //           totalViewsPrice,
-        //           bountyReceived
         //         )
         //       })
         //       await Promise.all(updatePostDataPromises)
         //     }
         //   })
         //   await Promise.all(updatePromises)
-        //   // Todo create a job for bounty calculations
         // }
-
-        // const participants =
-        //   await challengeParticipationModel.getUserBountyReceived(challengeId)
-        // const data = await distributeBounty(
-        //   2000,
-        //   participants.userTotals,
-        //   participants.totalBountyAllUsers,
-        //   challengeId
-        // )
         // return reply.success({
         //   message: 'Done.',
-        //   data
         // })
       } catch (error) {
         console.log(error)

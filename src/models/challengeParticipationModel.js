@@ -302,33 +302,67 @@ ChallengeParticipationSchema.methods = {
     value12,
     key13,
     value13,
-    bountyReceived
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
       { challenge: challengeId, user: userId },
-      {
-        $set: {
-          [key1]: value1,
-          [key2]: value2,
-          [key3]: value3,
-          [key4]: value4,
-          [key5]: value5,
-          [key6]: value6,
-          [key7]: value7,
-          [key8]: value8,
-          [key9]: value9,
-          [key10]: value10,
-          [key11]: value11,
-          [key12]: value12,
-          [key13]: value13,
-          isActive: false
-
+      [
+        {
+          $set: {
+            [key1]: value1,
+            [key2]: value2,
+            [key3]: value3,
+            [key4]: value4,
+            [key5]: value5,
+            [key6]: value6,
+            [key7]: value7,
+            [key8]: value8,
+            [key9]: value9,
+            [key10]: value10,
+            [key11]: value11,
+            [key12]: value12,
+            [key13]: value13,
+            isActive: false
+          }
         },
-        $inc: {
-          bountyReceived: bountyReceived
+        {
+          $set: {
+            bountyReceived: {
+              $sum: [
+                '$social.facebook.totalPostsPrice',
+                '$social.facebook.totalSharesPrice',
+                '$social.facebook.totalLikesPrice',
+                '$social.facebook.totalViewsPrice',
+                '$social.facebook.totalCommentsPrice',
+
+                '$social.instagram.totalPostsPrice',
+                '$social.instagram.totalSharesPrice',
+                '$social.instagram.totalLikesPrice',
+                '$social.instagram.totalCommentsPrice',
+                '$social.instagram.totalViewsPrice',
+
+                '$social.youtube.totalPostsPrice',
+                '$social.youtube.totalSharesPrice',
+                '$social.youtube.totalLikesPrice',
+                '$social.youtube.totalCommentsPrice',
+                '$social.youtube.totalViewsPrice',
+
+                '$social.tiktok.totalPostsPrice',
+                '$social.tiktok.totalSharesPrice',
+                '$social.tiktok.totalLikesPrice',
+                '$social.tiktok.totalCommentsPrice',
+                '$social.tiktok.totalViewsPrice',
+
+                '$social.twitter.totalPostsPrice',
+                '$social.twitter.totalSharesPrice',
+                '$social.twitter.totalLikesPrice',
+                '$social.twitter.totalCommentsPrice',
+                '$social.twitter.totalViewsPrice'
+              ]
+            }
+          }
         }
-      },
+      ],
       {
         new: true
       }
