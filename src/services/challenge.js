@@ -96,7 +96,9 @@ module.exports = async function (fastify, opts) {
         const savedChallenge = await newChallengeData.save()
         // Schedule a job
         const delayDate = new Date(startDate).getTime() - Date.now()
-        const job = await fastify.bull.fetchPostDetails.add(
+        const delayDate2 = new Date(endDate).getTime() - Date.now()
+        // Create a repeating job
+        await fastify.bull.fetchPostDetails.add(
           {
             challengeId: savedChallenge._id
           },
@@ -111,6 +113,19 @@ module.exports = async function (fastify, opts) {
               endDate: new Date(endDate)
             },
             removeOnComplete: true
+          }
+        )
+        // Create job that run when end time is reached
+        await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate2,
+            attempts: 2,
+            backoff: 10000
           }
         )
         if (!savedChallenge) {

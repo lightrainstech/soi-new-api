@@ -90,13 +90,6 @@ module.exports = async function (args, done) {
             }
             let key13 = `social.${key}.totalViewsPrice`
 
-            let bountyReceived =
-              totalLikesPrice +
-              totalCommentsPrice +
-              totalPostsPrice +
-              totalSharesPrice +
-              totalViewsPrice
-
             await challengeParticipationModel.updatePostData(
               challengeId,
               participant.user,
