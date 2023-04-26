@@ -108,7 +108,7 @@ module.exports = async function (fastify, opts) {
             attempts: 2,
             backoff: 10000,
             repeat: {
-              cron: '0 8,20 * * *', // Every day 8am and 8pm between the given start and end date
+              cron: '0 */3 * * *', // Run every 3h
               startDate: new Date(startDate),
               endDate: new Date(endDate)
             },
