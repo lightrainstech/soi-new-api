@@ -208,12 +208,11 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { socialProfile, type } = request.body
+      const { userId } = request.user
+      const { nftId } = request.params
       try {
-        const userTokenModel = new UserToken(),
-          { socialProfile, type } = request.body,
-          { userId } = request.user,
-          { nftId } = request.params
-
+        const userTokenModel = new UserToken()
         // Check NFT exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
         if (!nft) {
@@ -252,8 +251,8 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
-        resData.id = result.resp.id
-        resData.name = result.resp.name
+        resData.id = result?.resp?.id
+        resData.name = result?.resp?.name
 
         // Get followers count
         const profileData = await getProfileDetails(
@@ -299,11 +298,11 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { socialProfile, type } = request.body
+      const { userId } = request.user
+      const { nftId } = request.params
       try {
-        const userTokenModel = new UserToken(),
-          { socialProfile, type } = request.body,
-          { userId } = request.user,
-          { nftId } = request.params
+        const userTokenModel = new UserToken()
 
         // Check NFT exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
