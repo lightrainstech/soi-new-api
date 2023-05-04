@@ -118,7 +118,7 @@ module.exports = async function (args, done) {
               key12,
               totalCommentsPrice,
               key13,
-              totalViewsPrice,
+              totalViewsPrice
             )
           })
           await Promise.all(updatePostDataPromises)
