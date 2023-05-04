@@ -367,6 +367,7 @@ const getPostDetails = async (
       }
       return resObj
     } catch (error) {
+       console.error('Error in fetching post details:', error.message)
       retries++
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
