@@ -203,12 +203,11 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { socialProfile, type } = request.body
+      const { userId } = request.user
+      const { nftId } = request.params
       try {
-        const userTokenModel = new UserToken(),
-          { socialProfile, type } = request.body,
-          { userId } = request.user,
-          { nftId } = request.params
-
+        const userTokenModel = new UserToken()
         // Check NFT exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
         if (!nft) {
@@ -225,13 +224,13 @@ module.exports = async function (fastify, opts) {
         }
 
         // Check profile exists in db or not
-        const isSocialProfileExists =
-          await userTokenModel.checkSocialAccountExists(socialProfile)
-        if (isSocialProfileExists) {
-          return reply.code(400).error({
-            message: `${type} profile already exists.`
-          })
-        }
+        // const isSocialProfileExists =
+        //   await userTokenModel.checkSocialAccountExists(socialProfile)
+        // if (isSocialProfileExists) {
+        //   return reply.code(400).error({
+        //     message: `${type} profile already exists.`
+        //   })
+        // }
 
         // Add profile to social insider
         const resData = {},
@@ -291,11 +290,11 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { socialProfile, type } = request.body
+      const { userId } = request.user
+      const { nftId } = request.params
       try {
-        const userTokenModel = new UserToken(),
-          { socialProfile, type } = request.body,
-          { userId } = request.user,
-          { nftId } = request.params
+        const userTokenModel = new UserToken()
 
         // Check NFT exists or not
         const nft = await userTokenModel.getUserTokenById(nftId, userId)
@@ -489,16 +488,16 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        // const socialKeys = Object.keys(nft.social).filter(
-        //   key => nft.social[key].socialInsiderId !== undefined
-        // )
+        const socialKeys = Object.keys(nft.social).filter(
+          key => nft.social[key].socialInsiderId !== undefined
+        )
 
-        // if (Object.keys(socialKeys).length < 2) {
-        //   reply.error({
-        //     message: 'Please connect at least two social media profile.'
-        //   })
-        //   return reply
-        // }
+        if (Object.keys(socialKeys).length < 2) {
+          reply.error({
+            message: 'Please connect at least two social media profile.'
+          })
+          return reply
+        }
         const markAsActive = await userTokenModel.markAsActive(nftId, userId)
         if (markAsActive) {
           return reply.success({

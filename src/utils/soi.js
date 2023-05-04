@@ -44,25 +44,37 @@ const getAccountType = socialPlatform => {
   return socialAccountMap[socialPlatform].type
 }
 
+// Constants for retry
+const MAX_RETRIES = 5
+const RETRY_DELAY = 1000
+
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
-  try {
-    let method = 'socialinsider_api.add_profile',
-      params = {
-        profile_url: `${socialProfile[socialPlatform]}`,
-        profile_type: getAccountType(socialPlatform),
-        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let method = 'socialinsider_api.add_profile',
+        params = {
+          profile_url: `${socialProfile[socialPlatform]}`,
+          profile_type: getAccountType(socialPlatform),
+          projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      return result.data
+    } catch (error) {
+      console.error('Adding profile failed with error: ', error.message)
+      retries++
+      console.log(retries)
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
-
-    jsonObject.method = method
-    jsonObject.params = params
-
-    const result = await apiCall(jsonObject)
-    return result.data
-  } catch (error) {
-    console.error('Adding profile failed with error: ', error.message)
-    throw error
+    }
   }
+  throw new Error('Failed to add profile after max retries.')
 }
 
 // Custom error messages
@@ -90,65 +102,80 @@ const stripTrailingSlash = str => {
 
 // Get social insider profile details
 const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
-  try {
-    let currentTimestamp = Date.now(),
-      oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
-      oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
-      date = {
-        start: oneMonthAgoTimestamp,
-        end: currentTimestamp,
-        timezone: 'UTC'
-      },
-      method = 'socialinsider_api.get_profile_data',
-      params = {
-        id: socialInsiderId,
-        profile_type: profile_type,
-        date: date
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let currentTimestamp = Date.now(),
+        oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
+        oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
+        date = {
+          start: oneMonthAgoTimestamp,
+          end: currentTimestamp,
+          timezone: 'UTC'
+        },
+        method = 'socialinsider_api.get_profile_data',
+        params = {
+          id: socialInsiderId,
+          profile_type: profile_type,
+          date: date
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      let highestFollowersCount = 0
+      if (
+        result.data.error == null &&
+        Object.keys(result.data.resp).length !== 0
+      ) {
+        let profileData = result.data.resp[socialInsiderId]
+        highestFollowersCount = Math.max(
+          ...Object.values(profileData).map(d => d.followers || 0)
+        )
       }
-
-    jsonObject.method = method
-    jsonObject.params = params
-
-    const result = await apiCall(jsonObject)
-    let highestFollowersCount = 0
-    if (
-      result.data.error == null &&
-      Object.keys(result.data.resp).length !== 0
-    ) {
-      let profileData = result.data.resp[socialInsiderId]
-      highestFollowersCount = Math.max(
-        ...Object.values(profileData).map(d => d.followers || 0)
-      )
+      let resObj = {
+        [platform]: highestFollowersCount
+      }
+      return resObj
+    } catch (error) {
+      console.error('Error in fetching profile details:', error.message)
+      retries++
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      }
     }
-    let resObj = {
-      [platform]: highestFollowersCount
-    }
-    return resObj
-  } catch (error) {
-    console.error('Error in fetching profile details:', error.message)
-    throw error
   }
+  throw new Error('Failed to fetch profile details after max retries.')
 }
 
 // Remove profile from social insider
 const removeProfile = async (socialInsiderId, socialPlatform) => {
-  try {
-    let method = 'socialinsider_api.delete_profile',
-      params = {
-        id: socialInsiderId,
-        profile_type: getAccountType(socialPlatform),
-        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let method = 'socialinsider_api.delete_profil',
+        params = {
+          id: socialInsiderId,
+          profile_type: getAccountType(socialPlatform),
+          projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      return result.data
+    } catch (error) {
+      console.error('Error in removing profile details:', error.message)
+      retries++
+      console.log(retries)
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
-
-    jsonObject.method = method
-    jsonObject.params = params
-
-    const result = await apiCall(jsonObject)
-    return result.data
-  } catch (error) {
-    console.error('Error in removing profile details:', error.message)
-    throw error
+    }
   }
+  throw new Error('Failed to remove profile details after max retries.')
 }
 
 // Function to return error when a profile not exists in SI
@@ -165,24 +192,31 @@ const getProfileNotExistError = platform => {
 
 // Create campaign inside social insider
 const createCampaign = async (campaignName, hashTag) => {
-  try {
-    let method = 'socialinsider_api.create_campaigns',
-      params = {
-        projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
-        campaign_name: campaignName,
-        campaign_type: 'autotag',
-        query_string: hashTag
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let method = 'socialinsider_api.create_campaigns',
+        params = {
+          projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
+          campaign_name: campaignName,
+          campaign_type: 'autotag',
+          query_string: hashTag
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      return result.data
+    } catch (error) {
+      console.error('Error in creating campaigns:', error.message)
+      retries++
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
-
-    jsonObject.method = method
-    jsonObject.params = params
-
-    const result = await apiCall(jsonObject)
-    return result.data
-  } catch (error) {
-    console.error('Error in creating campaign:', error.message)
-    throw error
+    }
   }
+  throw new Error('Failed to create campaigns after max retries.')
 }
 
 // Get all posts based on a campaign
@@ -199,130 +233,158 @@ const getPostDetails = async (
       end: Date.parse(endDate),
       timezone: 'UTC'
     },
-    method = 'socialinsider_api.get_posts',
-    params = {
-      id: socialInsiderId,
-      profile_type: profile_type,
-      date: date,
-      from: 0,
-      size: 50,
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
-      campaign_name: campaignName
-    }
+    method = 'socialinsider_api.get_posts'
+  const params = {
+    id: socialInsiderId,
+    profile_type,
+    date,
+    from: 0,
+    size: 50,
+    projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME,
+    campaign_name: campaignName
+  }
 
   jsonObject.method = method
   jsonObject.params = params
 
-  const result = await apiCall(jsonObject)
-  let totalLikes = 0
-  let totalShares = 0
-  let totalComments = 0
-  let totalEngagement = 0
-  let totalPostEngagementRate = 0
-  let totalImpressions = 0
-  let totalPosts = 0
-  let totalVideoViews = 0
-  const totalMetrics = (posts, platform) => {
-    posts?.forEach(post => {
-      // Total likes
-      totalLikes += post?.activity_by_action_type?.like || post?.likes || 0
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      const result = await apiCall(jsonObject)
+      let totalLikes = 0
+      let totalShares = 0
+      let totalComments = 0
+      let totalEngagement = 0
+      let totalPostEngagementRate = 0
+      let totalImpressions = 0
+      let totalPosts = 0
+      let totalVideoViews = 0
+      const totalMetrics = (posts, platform) => {
+        posts?.forEach(post => {
+          // Total likes
+          totalLikes += post?.activity_by_action_type?.like || post?.likes || 0
 
-      // Total shares
-      totalShares += post?.shares || 0
+          // Total shares
+          totalShares += post?.shares || 0
 
-      // Total comments
-      totalComments +=
-        post?.activity_by_action_type?.comment || post?.comments || 0
+          // Total comments
+          totalComments +=
+            post?.activity_by_action_type?.comment || post?.comments || 0
 
-      // Total engagement
-      totalEngagement += post?.engagement || 0
+          // Total engagement
+          totalEngagement += post?.engagement || 0
 
-      // Total post engagement rate
-      totalPostEngagementRate += post?.post_engagement_rate || 0
+          // Total post engagement rate
+          totalPostEngagementRate += post?.post_engagement_rate || 0
 
-      // Total impressions
-      if (platform === 'tiktok' || platform === 'youtube') {
-        totalImpressions += post?.video_views || 0
-      } else {
-        totalImpressions += post?.impressions_total || post?.impressions || 0
+          // Total impressions
+          if (platform === 'tiktok' || platform === 'youtube') {
+            totalImpressions += post?.video_views || 0
+          } else {
+            totalImpressions +=
+              parseInt(post?.impressions_total) ||
+              parseInt(post?.impressions) ||
+              0
+          }
+
+          // Total posts
+          totalPosts = totalPosts + 1
+
+          // Total video views
+          totalVideoViews += post?.video_views || 0
+        })
+
+        return {
+          [platform]: {
+            totalLikes,
+            totalShares,
+            totalComments,
+            totalEngagement,
+            totalPostEngagementRate,
+            totalImpressions,
+            totalPosts,
+            totalVideoViews
+          }
+        }
       }
 
-      // Total posts
-      totalPosts = totalPosts + 1
-
-      // Total video views
-      totalVideoViews += post?.video_views || 0
-    })
-
-    return {
-      [platform]: {
-        totalLikes,
-        totalShares,
-        totalComments,
-        totalEngagement,
-        totalPostEngagementRate,
-        totalImpressions,
-        totalPosts,
-        totalVideoViews
-      }
-    }
-  }
-
-  if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
-    const { returned, size, posts } = result.data.resp
-    const total = result.data.resp.total || result.data.resp.total.value
-    if (total === returned) {
-      const resObject = await totalMetrics(posts, platform)
-      return resObject
-    } else {
-      const apiCallsNeeded = Math.ceil(total / size) - 1
-      // Create an array of Promises for each API call
-      const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
-        params.from = (i + 1) * size // Set the "from" parameter for each API call
-        jsonObject.params = params
-        return apiCall(jsonObject)
-          .then(res => res.data.resp.posts)
-          .catch(err => {
-            console.log(err)
-            console.error(`Error retrieving posts: ${err}`)
-            resObj = {
-              [platform]: {
-                totalLikes,
-                totalShares,
-                totalComments,
-                totalEngagement,
-                totalPostEngagementRate,
-                totalImpressions,
-                totalPosts,
-                totalVideoViews
-              }
-            }
-            return resObj
+      if (
+        result.data.error == null &&
+        Object.keys(result.data.resp).length !== 0
+      ) {
+        const { returned, size, posts } = result.data.resp
+        const total = result.data.resp.total || result.data.resp.total.value
+        if (total === returned) {
+          const resObject = await totalMetrics(posts, platform)
+          return resObject
+        } else {
+          const apiCallsNeeded = Math.ceil(total / size) - 1
+          // Create an array of Promises for each API call
+          const promises = Array.from({ length: apiCallsNeeded }, (_, i) => {
+            params.from = (i + 1) * size // Set the "from" parameter for each API call
+            jsonObject.params = params
+            return apiCall(jsonObject)
+              .then(res => res.data.resp.posts)
+              .catch(err => {
+                console.log(err)
+                console.error(`Error retrieving posts: ${err}`)
+                resObj = {
+                  [platform]: {
+                    totalLikes,
+                    totalShares,
+                    totalComments,
+                    totalEngagement,
+                    totalPostEngagementRate,
+                    totalImpressions,
+                    totalPosts,
+                    totalVideoViews
+                  }
+                }
+                return resObj
+              })
           })
-      })
 
-      // Await all the promises and concatenate the posts arrays
-      const allPosts = await Promise.all(promises).then(results =>
-        posts.concat(...results)
-      )
-      //console.log(allPosts, allPosts.length)
-      const resObject = totalMetrics(allPosts, platform)
-      return resObject
+          // Await all the promises and concatenate the posts arrays
+          const allPosts = await Promise.all(promises).then(results =>
+            posts.concat(...results)
+          )
+          //console.log(allPosts, allPosts.length)
+          const resObject = totalMetrics(allPosts, platform)
+          return resObject
+        }
+      }
+      resObj = {
+        [platform]: {
+          totalLikes,
+          totalShares,
+          totalComments,
+          totalEngagement,
+          totalPostEngagementRate,
+          totalImpressions,
+          totalPosts,
+          totalVideoViews
+        }
+      }
+      return resObj
+    } catch (error) {
+      retries++
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      }
+      return {
+        [platform]: {
+          totalLikes: 0,
+          totalShares: 0,
+          totalComments: 0,
+          totalEngagement: 0,
+          totalPostEngagementRate: 0,
+          totalImpressions: 0,
+          totalPosts: 0,
+          totalVideoViews: 0
+        }
+      }
     }
   }
-  resObj = {
-    [platform]: {
-      totalLikes,
-      totalShares,
-      totalComments,
-      totalEngagement,
-      totalPostEngagementRate,
-      totalImpressions,
-      totalPosts,
-      totalVideoViews
-    }
-  }
-  return resObj
 }
 
 module.exports = {
