@@ -600,7 +600,8 @@ module.exports = async function (fastify, opts) {
       } catch (error) {
         console.log(error)
         return reply.error({
-          message: 'Failed to fetch bounty distribution details. Please try again.'
+          message:
+            'Failed to fetch bounty distribution details. Please try again.'
         })
       }
     }
