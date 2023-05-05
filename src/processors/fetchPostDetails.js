@@ -23,6 +23,7 @@ module.exports = async function (args, done) {
             key => participant.nft.social[key].socialInsiderId !== undefined
           ),
           postDetailsPromises = socialKeys.map(async key => {
+            await new Promise(resolve => setTimeout(resolve, 300))
             return getPostDetails(
               participant.nft.social[key].socialInsiderId,
               getAccountType(key),
