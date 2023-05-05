@@ -8,13 +8,18 @@ const jsonObject = {
 
 // Function to call social insider api
 const apiCall = async obj => {
-  const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
-    }
-  })
-  return result
+  try {
+    const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.SOCIAL_INSIDER_AUTH_TOKEN}`
+      }
+    })
+    return result
+  } catch (error) {
+    console.error('API call failed with error: ', error.message)
+    throw error
+  }
 }
 
 // Function to return account type
@@ -39,20 +44,36 @@ const getAccountType = socialPlatform => {
   return socialAccountMap[socialPlatform].type
 }
 
+// Constants for retry
+const MAX_RETRIES = 5
+const RETRY_DELAY = 1000
+
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
-  let method = 'socialinsider_api.add_profile',
-    params = {
-      profile_url: `${socialProfile[socialPlatform]}`,
-      profile_type: getAccountType(socialPlatform),
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let method = 'socialinsider_api.add_profile',
+        params = {
+          profile_url: `${socialProfile[socialPlatform]}`,
+          profile_type: getAccountType(socialPlatform),
+          projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      return result.data
+    } catch (error) {
+      console.error('Adding profile failed with error: ', error.message)
+      retries++
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      }
     }
-
-  jsonObject.method = method
-  jsonObject.params = params
-
-  const result = await apiCall(jsonObject)
-  return result.data
+  }
+  throw new Error('Failed to add profile after max retries.')
 }
 
 // Custom error messages
@@ -80,52 +101,80 @@ const stripTrailingSlash = str => {
 
 // Get social insider profile details
 const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
-  let currentTimestamp = Date.now(),
-    oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
-    oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
-    date = {
-      start: oneMonthAgoTimestamp,
-      end: currentTimestamp,
-      timezone: 'UTC'
-    },
-    method = 'socialinsider_api.get_profile_data',
-    params = {
-      id: socialInsiderId,
-      profile_type: profile_type,
-      date: date
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let currentTimestamp = Date.now(),
+        oneMonthInMilliseconds = 30 * 24 * 60 * 60 * 1000,
+        oneMonthAgoTimestamp = currentTimestamp - oneMonthInMilliseconds,
+        date = {
+          start: oneMonthAgoTimestamp,
+          end: currentTimestamp,
+          timezone: 'UTC'
+        },
+        method = 'socialinsider_api.get_profile_data',
+        params = {
+          id: socialInsiderId,
+          profile_type: profile_type,
+          date: date
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      let highestFollowersCount = 0
+      if (
+        result.data.error == null &&
+        Object.keys(result.data.resp).length !== 0
+      ) {
+        let profileData = result.data.resp[socialInsiderId]
+        highestFollowersCount = Math.max(
+          ...Object.values(profileData).map(d => d.followers || 0)
+        )
+      }
+      let resObj = {
+        [platform]: highestFollowersCount
+      }
+      return resObj
+    } catch (error) {
+      console.error('Error in fetching profile details:', error.message)
+      retries++
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      }
     }
-
-  jsonObject.method = method
-  jsonObject.params = params
-
-  const result = await apiCall(jsonObject)
-  let highestFollowersCount = 0
-  if (result.data.error == null && Object.keys(result.data.resp).length !== 0) {
-    let profileData = result.data.resp[socialInsiderId]
-    highestFollowersCount = Math.max(
-      ...Object.values(profileData).map(d => d.followers || 0)
-    )
   }
-  let resObj = {
-    [platform]: highestFollowersCount
-  }
-  return resObj
+  throw new Error('Failed to fetch profile details after max retries.')
 }
 
 // Remove profile from social insider
 const removeProfile = async (socialInsiderId, socialPlatform) => {
-  let method = 'socialinsider_api.delete_profile',
-    params = {
-      id: socialInsiderId,
-      profile_type: getAccountType(socialPlatform),
-      projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+  let retries = 0
+  while (retries < MAX_RETRIES) {
+    try {
+      let method = 'socialinsider_api.delete_profile',
+        params = {
+          id: socialInsiderId,
+          profile_type: getAccountType(socialPlatform),
+          projectname: process.env.SOCIAL_INSIDER_PROJECT_NAME
+        }
+
+      jsonObject.method = method
+      jsonObject.params = params
+
+      const result = await apiCall(jsonObject)
+      return result.data
+    } catch (error) {
+      console.error('Error in removing profile details:', error.message)
+      retries++
+      console.log(retries)
+      if (retries < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+      }
     }
-
-  jsonObject.method = method
-  jsonObject.params = params
-
-  const result = await apiCall(jsonObject)
-  return result.data
+  }
+  throw new Error('Failed to remove profile details after max retries.')
 }
 
 // Function to return error when a profile not exists in SI
