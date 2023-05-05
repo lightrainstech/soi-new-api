@@ -68,7 +68,6 @@ const addProfile = async (socialProfile, socialPlatform) => {
     } catch (error) {
       console.error('Adding profile failed with error: ', error.message)
       retries++
-      console.log(retries)
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
