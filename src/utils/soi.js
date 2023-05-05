@@ -326,8 +326,7 @@ const getPostDetails = async (
             return apiCall(jsonObject)
               .then(res => res.data.resp.posts)
               .catch(err => {
-                console.log(err)
-                console.error(`Error retrieving posts: ${err}`)
+                console.error(`Error retrieving posts: ${err.message}`)
                 resObj = {
                   [platform]: {
                     totalLikes,
