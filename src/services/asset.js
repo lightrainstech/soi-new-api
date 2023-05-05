@@ -224,13 +224,13 @@ module.exports = async function (fastify, opts) {
         }
 
         // Check profile exists in db or not
-        // const isSocialProfileExists =
-        //   await userTokenModel.checkSocialAccountExists(socialProfile)
-        // if (isSocialProfileExists) {
-        //   return reply.code(400).error({
-        //     message: `${type} profile already exists.`
-        //   })
-        // }
+        const isSocialProfileExists =
+          await userTokenModel.checkSocialAccountExists(socialProfile)
+        if (isSocialProfileExists) {
+          return reply.code(400).error({
+            message: `${type} profile already exists.`
+          })
+        }
 
         // Add profile to social insider
         const resData = {},
@@ -384,7 +384,6 @@ module.exports = async function (fastify, opts) {
         const userTokenModel = new UserToken(),
           { userId } = request.user,
           nfts = await userTokenModel.listTokens(userId)
-
         if (!nfts.length) {
           reply.code(404).error({
             message: 'Assets not found.'
@@ -414,6 +413,7 @@ module.exports = async function (fastify, opts) {
               key => nft.social[key].socialInsiderId !== undefined
             ),
             profileDetailsPromises = socialKeys.map(async key => {
+              await new Promise(resolve => setTimeout(resolve, 300))
               return getProfileDetails(
                 nft.social[key].socialInsiderId,
                 getAccountType(key),

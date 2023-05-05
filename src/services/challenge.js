@@ -65,7 +65,7 @@ module.exports = async function (fastify, opts) {
         const challengeIdentifier = `SOI-Challenge-${challengeHashTag}`
         const result = await createCampaign(challengeIdentifier, queryString)
 
-        if (result.resp !== 'Success') {
+        if (result?.resp !== 'Success') {
           return reply.code(400).error({
             message:
               'Failed to create campaign inside socialInsider.Please try again.',

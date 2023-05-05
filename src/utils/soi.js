@@ -154,7 +154,7 @@ const removeProfile = async (socialInsiderId, socialPlatform) => {
   let retries = 0
   while (retries < MAX_RETRIES) {
     try {
-      let method = 'socialinsider_api.delete_profil',
+      let method = 'socialinsider_api.delete_profile',
         params = {
           id: socialInsiderId,
           profile_type: getAccountType(socialPlatform),
@@ -326,8 +326,7 @@ const getPostDetails = async (
             return apiCall(jsonObject)
               .then(res => res.data.resp.posts)
               .catch(err => {
-                console.log(err)
-                console.error(`Error retrieving posts: ${err}`)
+                console.error(`Error retrieving posts: ${err.message}`)
                 resObj = {
                   [platform]: {
                     totalLikes,
