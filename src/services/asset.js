@@ -422,6 +422,7 @@ module.exports = async function (fastify, opts) {
               key => nft.social[key].socialInsiderId !== undefined
             ),
             profileDetailsPromises = socialKeys.map(async key => {
+              await new Promise(resolve => setTimeout(resolve, 300))
               return getProfileDetails(
                 nft.social[key].socialInsiderId,
                 getAccountType(key),
