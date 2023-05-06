@@ -168,7 +168,6 @@ const removeProfile = async (socialInsiderId, socialPlatform) => {
     } catch (error) {
       console.error('Error in removing profile details:', error.message)
       retries++
-      console.log(retries)
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
