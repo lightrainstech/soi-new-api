@@ -123,19 +123,19 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
       jsonObject.params = params
 
       const result = await apiCall(jsonObject)
-      let highestFollowersCount = 0
+
+      let profileData, highestFollowersCount
       if (
-        result.data.error == null &&
-        Object.keys(result.data.resp).length !== 0
+        result?.data?.error == null &&
+        Object.keys(result?.data?.resp).length
       ) {
-        let profileData = result.data.resp[socialInsiderId]
+        profileData = result.data.resp[socialInsiderId]
         highestFollowersCount = Math.max(
           ...Object.values(profileData).map(d => d.followers || 0)
         )
       }
-      let resObj = {
-        [platform]: highestFollowersCount
-      }
+      let resObj = { [platform]: highestFollowersCount ?? 0 }
+
       return resObj
     } catch (error) {
       console.error('Error in fetching profile details:', error.message)
