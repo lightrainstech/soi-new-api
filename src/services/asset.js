@@ -243,6 +243,8 @@ module.exports = async function (fastify, opts) {
         const resData = {},
           result = await addProfile(socialProfile, type)
 
+          console.log('Response after adding profile - ', resData)
+
         if (result.error) {
           let err = await errorMessage(type)
           reply.code(400).error({
@@ -255,12 +257,13 @@ module.exports = async function (fastify, opts) {
         resData.name = result?.resp?.name
 
         // Get followers count
-        const profileData = await getProfileDetails(
-          resData.id,
-          getAccountType(type),
-          type
-        )
-        resData.followers = profileData ? profileData[type]: 0
+        // const profileData = await getProfileDetails(
+        //   resData.id,
+        //   getAccountType(type),
+        //   type
+        // )
+        //resData.followers = profileData ? profileData[type]: 0
+        resData.followers = 0
 
         // Add social account of a user to db
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(
