@@ -260,7 +260,7 @@ module.exports = async function (fastify, opts) {
           getAccountType(type),
           type
         )
-        resData.followers = profileData[type]
+        resData.followers = profileData ? profileData[type]: 0
 
         // Add social account of a user to db
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(

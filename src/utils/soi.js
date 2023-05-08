@@ -129,11 +129,14 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
         result?.data?.error == null &&
         Object.keys(result?.data?.resp).length
       ) {
-        profileData = result.data.resp[socialInsiderId]
+        profileData = result?.data?.resp[socialInsiderId]
         highestFollowersCount = Math.max(
-          ...Object.values(profileData).map(d => d.followers || 0)
+          ...Object.values(profileData).map(d => d?.followers || 0)
         )
         let resObj = { [platform]: highestFollowersCount ?? 0 }
+        return resObj
+      }else {
+        let resObj = { [platform]:  0 }
         return resObj
       }
     } catch (error) {
