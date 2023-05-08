@@ -133,10 +133,9 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
         highestFollowersCount = Math.max(
           ...Object.values(profileData).map(d => d.followers || 0)
         )
+        let resObj = { [platform]: highestFollowersCount ?? 0 }
+        return resObj
       }
-      let resObj = { [platform]: highestFollowersCount ?? 0 }
-
-      return resObj
     } catch (error) {
       console.error('Error in fetching profile details:', error.message)
       retries++

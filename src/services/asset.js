@@ -417,48 +417,48 @@ module.exports = async function (fastify, opts) {
         }
 
         let resArray = []
-        const updatePromises = nfts.map(async nft => {
-          const socialKeys = Object.keys(nft.social).filter(
-              key => nft.social[key].socialInsiderId !== undefined
-            ),
-            profileDetailsPromises = socialKeys.map(async key => {
-              await new Promise(resolve => setTimeout(resolve, 300))
-              return getProfileDetails(
-                nft.social[key].socialInsiderId,
-                getAccountType(key),
-                key
-              )
-            })
-          const profileDetails = await Promise.allSettled(
-            profileDetailsPromises
+        const updateFollowers = async (nft, key) => {
+          const socialInsiderId = nft.social[key].socialInsiderId
+          if (!socialInsiderId) return 0
+
+          await new Promise(resolve => setTimeout(resolve, 300))
+          const accountType = getAccountType(key)
+          const profileDetails = await getProfileDetails(
+            socialInsiderId,
+            accountType,
+            key
           )
-          if (profileDetails) {
-            // Update followers count in db
-            const updateFollowerPromises = socialKeys.map(async key => {
-              let followerData = profileDetails.find(obj => obj[key]),
-                value = followerData ? followerData[key] : 0,
-                k = `social.${key}.followers`
-              const update = await userTokenModel.updateFollowers(
-                nft.nftId,
-                k,
-                value
-              )
-              if (update) {
-                const foundObject = resArray.find(obj => key in obj)
-                if (foundObject) {
-                  const index = resArray.indexOf(foundObject)
-                  resArray[index] = Object.assign({}, foundObject, {
-                    [key]: foundObject[key] + update.social[key].followers
-                  })
-                } else {
-                  resArray.push({ [key]: update.social[key].followers })
-                }
-              }
-              return update
-            })
-            await Promise.allSettled(updateFollowerPromises)
+          const followersCount = profileDetails?.[key]?.followers ?? 0
+          const update = await userTokenModel.updateFollowers(
+            nft.nftId,
+            `social.${key}.followers`,
+            followersCount
+          )
+          if (!update) return 0
+
+          const foundObject = resArray.find(obj => key in obj)
+          if (foundObject) {
+            const index = resArray.indexOf(foundObject)
+            resArray[index] = {
+              ...foundObject,
+              [key]: foundObject[key] + update.social[key].followers
+            }
+          } else {
+            resArray.push({ [key]: update.social[key].followers })
           }
+
+          return update.social[key].followers
+        }
+
+        const updatePromises = nfts.map(nft => {
+          const socialKeys = Object.keys(nft.social).filter(
+            key => nft.social[key].socialInsiderId !== undefined
+          )
+          return Promise.allSettled(
+            socialKeys.map(key => updateFollowers(nft, key))
+          )
         })
+
         await Promise.allSettled(updatePromises)
 
         //Cache response in redis
