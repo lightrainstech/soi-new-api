@@ -388,10 +388,10 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { userId } = request.user
       try {
-        const userTokenModel = new UserToken(),
-          { userId } = request.user,
-          nfts = await userTokenModel.listTokens(userId)
+        const userTokenModel = new UserToken()
+        const nfts = await userTokenModel.listTokens(userId)
 
         if (!nfts.length) {
           reply.code(404).error({
@@ -415,48 +415,6 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-
-        // let resArray = []
-        // const updatePromises = nfts.map(async nft => {
-        //   const socialKeys = Object.keys(nft.social).filter(
-        //       key => nft.social[key].socialInsiderId !== undefined
-        //     ),
-        //     profileDetailsPromises = socialKeys.map(async key => {
-        //       await new Promise(resolve => setTimeout(resolve, 300))
-        //       return getProfileDetails(
-        //         nft.social[key].socialInsiderId,
-        //         getAccountType(key),
-        //         key
-        //       )
-        //     })
-        //   const profileDetails = await Promise.all(profileDetailsPromises)
-        //   if (profileDetails) {
-        //     // Update followers count in db
-        //     const updateFollowerPromises = socialKeys.map(async key => {
-        //       let followerData = profileDetails.find(obj => obj[key]),
-        //         value = followerData ? followerData[key] : 0,
-        //         k = `social.${key}.followers`
-        //       const update = await userTokenModel.updateFollowers(
-        //         nft.nftId,
-        //         k,
-        //         value
-        //       )
-        //       if (update) {
-        //         const foundObject = resArray.find(obj => key in obj)
-        //         if (foundObject) {
-        //           const index = resArray.indexOf(foundObject)
-        //           resArray[index] = Object.assign({}, foundObject, {
-        //             [key]: foundObject[key] + update.social[key].followers
-        //           })
-        //         } else {
-        //           resArray.push({ [key]: update.social[key].followers })
-        //         }
-        //       }
-        //     })
-        //     await Promise.all(updateFollowerPromises)
-        //   }
-        // })
-        // await Promise.all(updatePromises)
 
         let resArray = []
         const updatePromises = nfts.map(async nft => {
