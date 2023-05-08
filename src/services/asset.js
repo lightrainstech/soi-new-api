@@ -429,7 +429,9 @@ module.exports = async function (fastify, opts) {
                 key
               )
             })
-          const profileDetails = await Promise.all(profileDetailsPromises)
+          const profileDetails = await Promise.allSettled(
+            profileDetailsPromises
+          )
           if (profileDetails) {
             // Update followers count in db
             const updateFollowerPromises = socialKeys.map(async key => {
@@ -457,7 +459,7 @@ module.exports = async function (fastify, opts) {
             await Promise.allSettled(updateFollowerPromises)
           }
         })
-        await Promise.all(updatePromises)
+        await Promise.allSettled(updatePromises)
 
         //Cache response in redis
         await fastify.redis.set(
