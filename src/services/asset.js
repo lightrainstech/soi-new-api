@@ -240,10 +240,8 @@ module.exports = async function (fastify, opts) {
         }
 
         // Add profile to social insider
-        const resData = {},
-          result = await addProfile(socialProfile, type)
-
-          console.log('Response after adding profile - ', resData)
+        const resData = {}
+        const result = await addProfile(socialProfile, type)
 
         if (result.error) {
           let err = await errorMessage(type)
@@ -253,17 +251,20 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
+        console.log('Response after adding profile - ', result)
+
         resData.id = result?.resp?.id
         resData.name = result?.resp?.name
 
-        // Get followers count
-        // const profileData = await getProfileDetails(
-        //   resData.id,
-        //   getAccountType(type),
-        //   type
-        // )
-        //resData.followers = profileData ? profileData[type]: 0
-        resData.followers = 0
+        //Get followers count
+        const profileData = await getProfileDetails(
+          resData.id,
+          getAccountType(type),
+          type
+        )
+
+        console.log('profileData', profileData)
+        resData.followers = profileData ? profileData[type]: 0
 
         // Add social account of a user to db
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(
@@ -271,6 +272,9 @@ module.exports = async function (fastify, opts) {
           socialProfile,
           resData
         )
+
+        console.log('db result', addSocialAccounts)
+
         if (!addSocialAccounts) {
           reply.code(400).error({
             message: `Failed to add ${type} profile.`
@@ -431,12 +435,14 @@ module.exports = async function (fastify, opts) {
             accountType,
             key
           )
+          console.log('profileDetails from details api', profileDetails)
           const followersCount = profileDetails?.[key]?.followers ?? 0
           const update = await userTokenModel.updateFollowers(
             nft.nftId,
             `social.${key}.followers`,
             followersCount
           )
+          console.log('DB result', update)
           if (!update) return 0
 
           const foundObject = resArray.find(obj => key in obj)
@@ -457,6 +463,7 @@ module.exports = async function (fastify, opts) {
           const socialKeys = Object.keys(nft?.social).filter(
             key => nft?.social[key]?.socialInsiderId !== undefined
           )
+          console.log('socialKeys', socialKeys)
           return Promise.allSettled(
             socialKeys.map(key => updateFollowers(nft, key))
           )
