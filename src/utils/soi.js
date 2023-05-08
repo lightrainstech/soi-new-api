@@ -121,26 +121,31 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
 
       jsonObject.method = method
       jsonObject.params = params
-
+      console.log('Before SI api call', jsonObject)
       const result = await apiCall(jsonObject)
-
-      let profileData, highestFollowersCount
+      console.log('After SI call')
+      let profileData = {},
+        highestFollowersCount = 0
       if (
         result?.data?.error == null &&
         Object.keys(result?.data?.resp).length
       ) {
+        console.log('Inside if condition')
         profileData = result?.data?.resp[socialInsiderId]
+        console.log(profileData)
         highestFollowersCount = Math.max(
           ...Object.values(profileData).map(d => d?.followers || 0)
         )
+        console.log('highestFollowersCount', highestFollowersCount)
         let resObj = { [platform]: highestFollowersCount ?? 0 }
+        console.log('resObj', resObj)
         return resObj
-      }else {
-        let resObj = { [platform]:  0 }
+      } else {
+        let resObj = { [platform]: 0 }
         return resObj
       }
     } catch (error) {
-      console.error('Error in fetching profile details:', error.message)
+      console.error('Error in fetching profile details:', error)
       retries++
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))

@@ -407,21 +407,21 @@ module.exports = async function (fastify, opts) {
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
         const cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          reply.success({
-            isCache: true,
-            profileDetails: JSON.parse(cachedData),
-            connectedProfiles
-          })
-          return reply
-        }
+        // if (cachedData) {
+        //   reply.success({
+        //     isCache: true,
+        //     profileDetails: JSON.parse(cachedData),
+        //     connectedProfiles
+        //   })
+        //   return reply
+        // }
 
         let resArray = []
         const updateFollowers = async (nft, key) => {
-          const socialInsiderId = nft.social[key].socialInsiderId
+          const socialInsiderId = nft?.social[key]?.socialInsiderId
           if (!socialInsiderId) return 0
 
-          await new Promise(resolve => setTimeout(resolve, 300))
+          await new Promise(resolve => setTimeout(resolve, 500))
           const accountType = getAccountType(key)
           const profileDetails = await getProfileDetails(
             socialInsiderId,
@@ -441,18 +441,18 @@ module.exports = async function (fastify, opts) {
             const index = resArray.indexOf(foundObject)
             resArray[index] = {
               ...foundObject,
-              [key]: foundObject[key] + update.social[key].followers
+              [key]: foundObject[key] + update?.social[key]?.followers
             }
           } else {
-            resArray.push({ [key]: update.social[key].followers })
+            resArray.push({ [key]: update?.social[key]?.followers })
           }
 
-          return update.social[key].followers
+          return update?.social[key]?.followers
         }
 
         const updatePromises = nfts.map(nft => {
-          const socialKeys = Object.keys(nft.social).filter(
-            key => nft.social[key].socialInsiderId !== undefined
+          const socialKeys = Object.keys(nft?.social).filter(
+            key => nft?.social[key]?.socialInsiderId !== undefined
           )
           return Promise.allSettled(
             socialKeys.map(key => updateFollowers(nft, key))
