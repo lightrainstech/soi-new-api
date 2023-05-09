@@ -101,6 +101,14 @@ const stripTrailingSlash = str => {
 
 // Get social insider profile details
 const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
+  let resObj = {}
+
+  if (!socialInsiderId || !profile_type || !platform) {
+    console.log('Invalid or missing parameters exiting.')
+    resObj = { [platform]: 0 }
+    return resObj
+  }
+
   let retries = 0
   while (retries < MAX_RETRIES) {
     try {
@@ -137,7 +145,6 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
         result?.data?.error == null &&
         Object.keys(result?.data?.resp).length
       ) {
-
         console.log('Inside if condition')
 
         profileData = result?.data?.resp[socialInsiderId]
@@ -150,13 +157,13 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
 
         console.log('highestFollowersCount', highestFollowersCount)
 
-        let resObj = { [platform]: highestFollowersCount ?? 0 }
+        resObj = { [platform]: highestFollowersCount ?? 0 }
 
         console.log('resObj', resObj)
 
         return resObj
       } else {
-        let resObj = { [platform]: 0 }
+        resObj = { [platform]: 0 }
         return resObj
       }
     } catch (error) {

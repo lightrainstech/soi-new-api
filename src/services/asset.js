@@ -243,6 +243,8 @@ module.exports = async function (fastify, opts) {
         const resData = {}
         const result = await addProfile(socialProfile, type)
 
+        console.log('Response after adding profile - ', result)
+
         if (result.error) {
           let err = await errorMessage(type)
           reply.code(400).error({
@@ -250,8 +252,6 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-
-        console.log('Response after adding profile - ', result)
 
         resData.id = result?.resp?.id
         resData.name = result?.resp?.name
@@ -395,7 +395,8 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
-      const { userId } = request.user
+      //const { userId } = request.user
+      const userId = '63f7141539b0d149214c6d90'
       try {
         const userTokenModel = new UserToken()
         const nfts = await userTokenModel.listTokens(userId)
