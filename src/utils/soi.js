@@ -50,6 +50,10 @@ const RETRY_DELAY = 1000
 
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
+  if(!socialProfile || !socialPlatform) {
+    console.log('Invalid or missing parameters exiting.')
+    return 0
+  }
   let retries = 0
   while (retries < MAX_RETRIES) {
     try {
@@ -63,8 +67,18 @@ const addProfile = async (socialProfile, socialPlatform) => {
       jsonObject.method = method
       jsonObject.params = params
 
+      console.log('Before add profile call', jsonObject)
+
       const result = await apiCall(jsonObject)
-      return result.data
+      
+      console.log('After add profile call', result?.data)
+
+      if(result && result?.data) {
+        return result?.data
+      }else {
+        return 0
+      }
+
     } catch (error) {
       console.error('Adding profile failed with error: ', error.message)
       retries++
@@ -134,17 +148,23 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
 
       const result = await apiCall(jsonObject)
 
-      console.log('API call result object', result?.data?.resp)
+      console.log('API call result object', result?.data)
+
+      // if result is error
+      if (result?.data?.error) {
+        console.log(
+          `Error in fetching profile details: ${result?.data?.error?.message}`
+        )
+        resObj = { [platform]: 0 }
+        return resObj
+      }
 
       console.log('After SI call')
 
       let profileData = {},
         highestFollowersCount = 0
 
-      if (
-        result?.data?.error == null &&
-        Object.keys(result?.data?.resp).length
-      ) {
+      if (result?.data?.resp && Object.keys(result?.data?.resp).length > 0) {
         console.log('Inside if condition')
 
         profileData = result?.data?.resp[socialInsiderId]
