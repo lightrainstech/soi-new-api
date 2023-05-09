@@ -285,7 +285,6 @@ module.exports = async function (fastify, opts) {
           socialProfile,
           resData
         )
-        console.log('db result', addSocialAccounts)
         if (!addSocialAccounts) {
           return reply.code(400).error({
             message: `Failed to add ${type} profile.`
