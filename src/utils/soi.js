@@ -1,7 +1,7 @@
 const axios = require('axios')
 
 // Common social insider api object
-const jsonObject = {
+let jsonObject = {
   jsonrpc: '2.0',
   id: 0
 }
@@ -9,6 +9,7 @@ const jsonObject = {
 // Function to call social insider api
 const apiCall = async obj => {
   try {
+    console.log('Inside apiCall', obj)
     const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +51,7 @@ const RETRY_DELAY = 1000
 
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
-  if(!socialProfile || !socialPlatform) {
+  if (!socialProfile || !socialPlatform) {
     console.log('Invalid or missing parameters exiting.')
     return 0
   }
@@ -67,18 +68,15 @@ const addProfile = async (socialProfile, socialPlatform) => {
       jsonObject.method = method
       jsonObject.params = params
 
-      console.log('Before add profile call', jsonObject)
-
       const result = await apiCall(jsonObject)
-      
-      console.log('After add profile call', result?.data)
 
-      if(result && result?.data) {
+      console.log('After add profile call', result?.data || 'no api response')
+
+      if (result && result?.data) {
         return result?.data
-      }else {
+      } else {
         return 0
       }
-
     } catch (error) {
       console.error('Adding profile failed with error: ', error.message)
       retries++
