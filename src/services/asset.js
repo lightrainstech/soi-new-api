@@ -395,8 +395,8 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
-      //const { userId } = request.user
-      const userId = '63f7141539b0d149214c6d90'
+      const { userId } = request.user
+      //const userId = '63f7141539b0d149214c6d90'
       try {
         const userTokenModel = new UserToken()
         const nfts = await userTokenModel.listTokens(userId)
