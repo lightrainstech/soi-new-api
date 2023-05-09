@@ -280,6 +280,8 @@ module.exports = async function (fastify, opts) {
 
       // Add social account of a user to db
       try {
+        console.log('addSocialAccounts', resData)
+        console.log('socialProfile', socialProfile)
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(
           nftId,
           socialProfile,
@@ -438,11 +440,16 @@ module.exports = async function (fastify, opts) {
 
           await new Promise(resolve => setTimeout(resolve, 500))
           const accountType = getAccountType(key)
+          console.log('socialInsiderId', socialInsiderId)
+          console.log('accountType', accountType)
+          console.log('key', key)
           const profileDetails = await getProfileDetails(
             socialInsiderId,
             accountType,
             key
           )
+
+          console.log('profileDetails', profileDetails)
           const followersCount = profileDetails?.[key]?.followers ?? 0
           const update = await userTokenModel.updateFollowers(
             nft.nftId,
