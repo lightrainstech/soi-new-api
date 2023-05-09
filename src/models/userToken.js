@@ -135,6 +135,12 @@ UserTokenSchema.methods = {
       key4 = `social.${firstKey}.followers`
       val4 = resData.followers
     }
+    console.log('db fields', {
+      [key1]: val1,
+      [key2]: val2,
+      [key3]: val3,
+      [key4]: val4
+    })
     const result = UserToken.findOneAndUpdate(
       { nftId: nftId },
       { [key1]: val1, [key2]: val2, [key3]: val3, [key4]: val4 },
@@ -142,6 +148,7 @@ UserTokenSchema.methods = {
         new: true
       }
     )
+    console.log('db call', result)
     return result
   },
   checkSocialAccountExists: async function (socialAccounts) {

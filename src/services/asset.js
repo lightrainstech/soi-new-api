@@ -261,7 +261,7 @@ module.exports = async function (fastify, opts) {
         })
       }
 
-      //Get followers count
+      // Get followers count
       try {
         const profileData = await getProfileDetails(
           resData?.id,
