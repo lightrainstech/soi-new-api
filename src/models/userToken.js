@@ -148,7 +148,6 @@ UserTokenSchema.methods = {
         new: true
       }
     )
-    console.log('db call', result)
     return result
   },
   checkSocialAccountExists: async function (socialAccounts) {
