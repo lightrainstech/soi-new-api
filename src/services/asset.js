@@ -451,7 +451,7 @@ module.exports = async function (fastify, opts) {
           )
 
           console.log('profileDetails', profileDetails)
-          const followersCount = profileDetails?.[key]?.followers ?? 0
+          const followersCount = profileDetails?.[key]
           const update = await userTokenModel.updateFollowers(
             nft.nftId,
             `social.${key}.followers`,
