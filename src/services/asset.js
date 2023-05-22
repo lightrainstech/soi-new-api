@@ -206,78 +206,98 @@ module.exports = async function (fastify, opts) {
       const { socialProfile, type } = request.body
       const { userId } = request.user
       const { nftId } = request.params
+
+      const userTokenModel = new UserToken()
+
+      // Check NFT exists or not
+      const nft = await userTokenModel.getUserTokenById(nftId, userId)
+      if (!nft) {
+        reply.code(404).error({
+          message: 'Asset not found.'
+        })
+        return reply
+      }
+
+      // Remove redis cache
+      const key = `FOLLOWERC:${userId}`,
+        cachedData = await fastify.redis.get(key)
+      if (cachedData) {
+        await fastify.redis.del(key)
+      }
+
+      // Check profile exists in db or not
+      const isSocialProfileExists =
+        await userTokenModel.checkSocialAccountExists(socialProfile)
+      if (isSocialProfileExists) {
+        reply.code(400).error({
+          message: `${type} profile already exists.`
+        })
+        return reply
+      }
+
+      // Add profile to social insider
+      const resData = {}
       try {
-        const userTokenModel = new UserToken()
-        // Check NFT exists or not
-        const nft = await userTokenModel.getUserTokenById(nftId, userId)
-        if (!nft) {
-          return reply.code(404).error({
-            message: 'Asset not found.'
-          })
-        }
-
-        // Remove redis cache
-        const key = `FOLLOWERC:${userId}`,
-          cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          await fastify.redis.del(key)
-        }
-
-        // Check profile exists in db or not
-        const isSocialProfileExists =
-          await userTokenModel.checkSocialAccountExists(socialProfile)
-        if (isSocialProfileExists) {
-          return reply.code(400).error({
-            message: `${type} profile already exists.`
-          })
-        }
-
-        // Add profile to social insider
-        const resData = {},
-          result = await addProfile(socialProfile, type)
-
-        if (result.error) {
+        const result = await addProfile(socialProfile, type)
+        console.log('Response after adding profile - ', result)
+        if (result && result?.error) {
           let err = await errorMessage(type)
           return reply.code(400).error({
             message: err ? err : result.error.message
           })
         }
+        resData.id = result?.resp?.id
+        resData.name = result?.resp?.name
+      } catch (error) {
+        console.error('Error while adding profile:', error.message)
+        return reply.code(500).error({
+          message: `Failed to add ${type} profile`,
+          error: error.message
+        })
+      }
 
-        resData.id = result.resp.id
-        resData.name = result.resp.name
-
-        // Get followers count
+      // Get followers count
+      try {
         const profileData = await getProfileDetails(
-          resData.id,
+          resData?.id,
           getAccountType(type),
           type
         )
-        resData.followers = profileData[type]
+        console.log('profileData', profileData)
+        resData.followers = profileData ? profileData[type] : 0
+      } catch (error) {
+        console.error('Error while getting followers count:', error.message)
+        return reply.code(500).error({
+          message: 'Failed to get followers count',
+          error: error.message
+        })
+      }
 
-        // Add social account of a user to db
+      // Add social account of a user to db
+      try {
+        console.log('addSocialAccounts', resData)
+        console.log('socialProfile', socialProfile)
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(
           nftId,
           socialProfile,
           resData
         )
+        console.log('DB call', addSocialAccounts)
         if (!addSocialAccounts) {
           return reply.code(400).error({
             message: `Failed to add ${type} profile.`
           })
         } else {
-          if (!addSocialAccounts.isActive) {
-            await userTokenModel.markAsActive(nftId, userId)
-          }
           return reply.success({
             message: `${type} profile added successfully.`,
             nft: addSocialAccounts
           })
         }
-      } catch (err) {
-        console.log(err)
-        return reply.error({
+      } catch (error) {
+        console.error('Error while adding social account to db:', error.message)
+        return reply.code(500).error({
           message: `Failed to add ${type} profile.`,
-          error: err.message
+          error: error.message
         })
       }
     }
