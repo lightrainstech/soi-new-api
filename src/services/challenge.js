@@ -91,7 +91,8 @@ module.exports = async function (fastify, opts) {
           bountyOffered,
           challengeHashTag,
           locations,
-          challengeIdentifier
+          challengeIdentifier,
+          status: 'created'
         })
         const savedChallenge = await newChallengeData.save()
         // Schedule a job
