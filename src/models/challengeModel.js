@@ -200,6 +200,20 @@ ChallengeSchema.methods = {
         new: true
       }
     )
+  },
+  updateChallengeAddress: async function (challengeId, challengeAddress) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findByIdAndUpdate(
+      challengeId,
+      {
+        $set: {
+          challengeAddress: challengeAddress
+        }
+      },
+      {
+        new: true
+      }
+    )
   }
 }
 
