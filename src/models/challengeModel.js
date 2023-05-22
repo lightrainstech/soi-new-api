@@ -185,6 +185,21 @@ ChallengeSchema.methods = {
       totalChallengesByBrand: result[0].totalChallengesByBrand,
       totalInfluencerParticipation: result[0].totalInfluencerParticipation
     }
+  },
+  updateFundStatus: async function (challengeId, bountyOffered) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findByIdAndUpdate(
+      challengeId,
+      {
+        $set: {
+          bountyOffered: bountyOffered,
+          isFunded: true
+        }
+      },
+      {
+        new: true
+      }
+    )
   }
 }
 
