@@ -642,9 +642,9 @@ module.exports = async function (fastify, opts) {
           challenge: fundStatus
         })
       } catch (error) {
-        console.log(`Failed to fund status. Pleas try again - ${error.message}`)
+        console.log(`Failed to fund status. Please try again - ${error.message}`)
         return reply.error({
-          message: 'Failed to fund status. Pleas try again.'
+          message: 'Failed to fund status. Please try again.'
         })
       }
     }
