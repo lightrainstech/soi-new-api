@@ -301,7 +301,7 @@ ChallengeParticipationSchema.methods = {
     key12,
     value12,
     key13,
-    value13,
+    value13
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
@@ -517,6 +517,8 @@ ChallengeParticipationSchema.methods = {
         $group: {
           _id: '$_id',
           user: { $first: '$user._id' },
+          name: { $first: '$user.name' },
+          wallet: { $first: '$user.wallet' },
           bountyReceived: { $first: '$bountyReceived' },
           postMetrics: { $first: '$social' }
         }
@@ -529,8 +531,10 @@ ChallengeParticipationSchema.methods = {
             $push: {
               _id: '$_id',
               userId: '$user',
+              name: '$name',
+              wallet: '$wallet',
               userTotal: '$bountyReceived',
-              postMetrics: "$postMetrics"
+              postMetrics: '$postMetrics'
             }
           }
         }

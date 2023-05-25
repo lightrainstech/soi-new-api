@@ -156,6 +156,9 @@ const distributeBounty = async (
         totalCommission += introducingAgencyCommission
         resArray.push({
           userTotalBounty: participant.userTotal,
+          postMetrics: participant.postMetrics,
+          name: participant.name,
+          wallet: participant.wallet,
           Agency: {
             Name: agency.agency.name,
             Wallet: agency.agency.wallet,
@@ -178,6 +181,9 @@ const distributeBounty = async (
         totalCommission += agencyCommission
         resArray.push({
           userTotalBounty: participant.userTotal,
+          postMetrics: participant.postMetrics,
+          name: participant.name,
+          wallet: participant.wallet,
           Agency: {
             Name: agency.agency.name,
             Wallet: agency.agency.wallet,
