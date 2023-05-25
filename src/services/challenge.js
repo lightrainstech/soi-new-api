@@ -14,6 +14,7 @@ const {
   distributeBounty
 } = require('../utils/bountyCalculator')
 const UserToken = require('../models/userToken')
+const { createChallenge } = require('../utils/challengeContract')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -24,8 +25,8 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { userId, role } = request.user
       try {
-        const { userId, role } = request.user
         const {
           title,
           description,
@@ -73,6 +74,13 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Create challenge in contract
+        const endDateInSeconds = new Date(endDate).getTime() / 1000
+        const challengeAddress = await createChallenge(
+          endDateInSeconds,
+          bountyOffered
+        )
+
         // Create new challenge
         const newChallengeData = new Challenge({
           user: userId,
@@ -92,12 +100,15 @@ module.exports = async function (fastify, opts) {
           challengeHashTag,
           locations,
           challengeIdentifier,
-          status: 'created'
+          status: 'created',
+          challengeAddress: challengeAddress
         })
         const savedChallenge = await newChallengeData.save()
+        
         // Schedule a job
         const delayDate = new Date(startDate).getTime() - Date.now()
         const delayDate2 = new Date(endDate).getTime() - Date.now()
+
         // Create a repeating job
         await fastify.bull.fetchPostDetails.add(
           {
@@ -140,9 +151,11 @@ module.exports = async function (fastify, opts) {
           challenge: savedChallenge
         })
       } catch (error) {
-        console.log(error)
+        console.log(
+          `Failed to create challenge. Please try again. ${error.message}`
+        )
         return reply.code(500).send({
-          message: `Failed to create challenge. Please try again. ${error.message}`
+          message: `Failed to create challenge. Please try again`
         })
       }
     }
@@ -642,7 +655,9 @@ module.exports = async function (fastify, opts) {
           challenge: fundStatus
         })
       } catch (error) {
-        console.log(`Failed to fund status. Please try again - ${error.message}`)
+        console.log(
+          `Failed to fund status. Please try again - ${error.message}`
+        )
         return reply.error({
           message: 'Failed to fund status. Please try again.'
         })
