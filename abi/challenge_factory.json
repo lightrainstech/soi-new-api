@@ -1,5 +1,18 @@
 [
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_address",
+        "type": "address"
+      }
+    ],
+    "name": "CreateChallenge",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
