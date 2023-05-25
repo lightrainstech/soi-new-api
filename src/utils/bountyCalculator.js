@@ -159,6 +159,7 @@ const distributeBounty = async (
           postMetrics: participant.postMetrics,
           name: participant.name,
           wallet: participant.wallet,
+          initialBounty: participant.initialBounty,
           Agency: {
             Name: agency.agency.name,
             Wallet: agency.agency.wallet,
@@ -184,6 +185,7 @@ const distributeBounty = async (
           postMetrics: participant.postMetrics,
           name: participant.name,
           wallet: participant.wallet,
+          initialBounty: participant.initialBounty,
           Agency: {
             Name: agency.agency.name,
             Wallet: agency.agency.wallet,

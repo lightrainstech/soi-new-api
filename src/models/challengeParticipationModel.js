@@ -514,13 +514,53 @@ ChallengeParticipationSchema.methods = {
         }
       },
       {
+        $addFields: {
+          initialBounty: {
+            $add: [
+              { $ifNull: ['$social.facebook.totalPostsPrice', 0] },
+              { $ifNull: ['$social.facebook.totalSharesPrice', 0] },
+              { $ifNull: ['$social.facebook.totalLikesPrice', 0] },
+              { $ifNull: ['$social.facebook.totalViewsPrice', 0] },
+              { $ifNull: ['$social.facebook.totalCommentsPrice', 0] },
+
+              { $ifNull: ['$social.instagram.totalPostsPrice', 0] },
+              { $ifNull: ['$social.instagram.totalSharesPrice', 0] },
+              { $ifNull: ['$social.instagram.totalLikesPrice', 0] },
+              { $ifNull: ['$social.instagram.totalViewsPrice', 0] },
+              { $ifNull: ['$social.instagram.totalCommentsPrice', 0] },
+
+              { $ifNull: ['$social.twitter.totalPostsPrice', 0] },
+              { $ifNull: ['$social.twitter.totalSharesPrice', 0] },
+              { $ifNull: ['$social.twitter.totalLikesPrice', 0] },
+              { $ifNull: ['$social.twitter.totalViewsPrice', 0] },
+              { $ifNull: ['$social.twitter.totalCommentsPrice', 0] },
+
+              { $ifNull: ['$social.youtube.totalPostsPrice', 0] },
+              { $ifNull: ['$social.youtube.totalSharesPrice', 0] },
+              { $ifNull: ['$social.youtube.totalLikesPrice', 0] },
+              { $ifNull: ['$social.youtube.totalViewsPrice', 0] },
+              { $ifNull: ['$social.youtube.totalCommentsPrice', 0] },
+
+              { $ifNull: ['$social.tiktok.totalPostsPrice', 0] },
+              { $ifNull: ['$social.tiktok.totalSharesPrice', 0] },
+              { $ifNull: ['$social.tiktok.totalLikesPrice', 0] },
+              { $ifNull: ['$social.tiktok.totalViewsPrice', 0] },
+              { $ifNull: ['$social.tiktok.totalCommentsPrice', 0] }
+            ]
+          }
+        }
+      },
+      {
         $group: {
           _id: '$_id',
           user: { $first: '$user._id' },
           name: { $first: '$user.name' },
           wallet: { $first: '$user.wallet' },
           bountyReceived: { $first: '$bountyReceived' },
-          postMetrics: { $first: '$social' }
+          postMetrics: { $first: '$social' },
+          initialBounty: {
+            $sum: '$initialBounty'
+          }
         }
       },
       {
@@ -534,7 +574,8 @@ ChallengeParticipationSchema.methods = {
               name: '$name',
               wallet: '$wallet',
               userTotal: '$bountyReceived',
-              postMetrics: '$postMetrics'
+              postMetrics: '$postMetrics',
+              initialBounty: '$initialBounty'
             }
           }
         }
