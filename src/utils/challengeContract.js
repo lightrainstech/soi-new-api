@@ -12,7 +12,7 @@ web3.eth.accounts.wallet.add(account)
 web3.eth.defaultAccount = account.address
 
 // Challenge factory Contract
-const challengeFactoryAbiJson = fs.readFileSync('abi/challenge_factory')
+const challengeFactoryAbiJson = fs.readFileSync('abi/challenge_factory.json')
 const challengeFactoryAbi = JSON.parse(challengeFactoryAbiJson)
 const CHALLENGE_FACTORY_ADDRESS = process.env.CHALLENGE_FACTORY_ADDRESS
 const challengeFactoryContract = new Contract(
@@ -21,23 +21,29 @@ const challengeFactoryContract = new Contract(
 )
 
 // Create challenge in contract
-const createChallenge = async () => {
+const createChallenge = async (endDate, amount) => {
   try {
-    const callMethod = await challengeFactoryContract.methods.createChallenge()
+    // Contract method
+    const callMethod = await challengeFactoryContract.methods.createChallenge(
+      endDate,
+      Web3.utils.toWei(amount.toString(), 'ether'),
+      process.env.BUSD_ADDRESS
+    )
 
+    // Estimate gas
     const gas = await callMethod.estimateGas({
       from: web3.eth.defaultAccount
     })
 
+    // Contract interaction and return result
     const tx = await callMethod.send({
       from: web3.eth.defaultAccount,
       gas: gas
     })
-
-    return tx
+    return tx.events?.CreateChallenge?.returnValues?._address
   } catch (error) {
     console.log(`Failed to create challenge in contract - ${error.message}.`)
-    throw error
+    throw new Error('Failed to create challenge in contract.')
   }
 }
 
