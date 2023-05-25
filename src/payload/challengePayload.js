@@ -75,3 +75,13 @@ exports.getBountyDetails = {
     S.string().pattern('^[a-fA-F0-9]{24}$').required()
   )
 }
+
+exports.updateFundStatusSchema = {
+  tags: ['Challenge'],
+  summary: 'Update challenge fund status.',
+  params: S.object().prop(
+    'challengeId',
+    S.string().pattern('^[a-fA-F0-9]{24}$').required()
+  ),
+  body: S.object().prop('bountyOffered', S.number().minimum(0).required())
+}

@@ -206,78 +206,98 @@ module.exports = async function (fastify, opts) {
       const { socialProfile, type } = request.body
       const { userId } = request.user
       const { nftId } = request.params
+
+      const userTokenModel = new UserToken()
+
+      // Check NFT exists or not
+      const nft = await userTokenModel.getUserTokenById(nftId, userId)
+      if (!nft) {
+        reply.code(404).error({
+          message: 'Asset not found.'
+        })
+        return reply
+      }
+
+      // Remove redis cache
+      const key = `FOLLOWERC:${userId}`,
+        cachedData = await fastify.redis.get(key)
+      if (cachedData) {
+        await fastify.redis.del(key)
+      }
+
+      // Check profile exists in db or not
+      const isSocialProfileExists =
+        await userTokenModel.checkSocialAccountExists(socialProfile)
+      if (isSocialProfileExists) {
+        reply.code(400).error({
+          message: `${type} profile already exists.`
+        })
+        return reply
+      }
+
+      // Add profile to social insider
+      const resData = {}
       try {
-        const userTokenModel = new UserToken()
-        // Check NFT exists or not
-        const nft = await userTokenModel.getUserTokenById(nftId, userId)
-        if (!nft) {
-          return reply.code(404).error({
-            message: 'Asset not found.'
-          })
-        }
-
-        // Remove redis cache
-        const key = `FOLLOWERC:${userId}`,
-          cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          await fastify.redis.del(key)
-        }
-
-        // Check profile exists in db or not
-        const isSocialProfileExists =
-          await userTokenModel.checkSocialAccountExists(socialProfile)
-        if (isSocialProfileExists) {
-          return reply.code(400).error({
-            message: `${type} profile already exists.`
-          })
-        }
-
-        // Add profile to social insider
-        const resData = {},
-          result = await addProfile(socialProfile, type)
-
-        if (result.error) {
+        const result = await addProfile(socialProfile, type)
+        console.log('Response after adding profile - ', result)
+        if (result && result?.error) {
           let err = await errorMessage(type)
           return reply.code(400).error({
             message: err ? err : result.error.message
           })
         }
+        resData.id = result?.resp?.id
+        resData.name = result?.resp?.name
+      } catch (error) {
+        console.error('Error while adding profile:', error.message)
+        return reply.code(500).error({
+          message: `Failed to add ${type} profile`,
+          error: error.message
+        })
+      }
 
-        resData.id = result.resp.id
-        resData.name = result.resp.name
-
-        // Get followers count
+      // Get followers count
+      try {
         const profileData = await getProfileDetails(
-          resData.id,
+          resData?.id,
           getAccountType(type),
           type
         )
-        resData.followers = profileData[type]
+        console.log('profileData', profileData)
+        resData.followers = profileData ? profileData[type] : 0
+      } catch (error) {
+        console.error('Error while getting followers count:', error.message)
+        return reply.code(500).error({
+          message: 'Failed to get followers count',
+          error: error.message
+        })
+      }
 
-        // Add social account of a user to db
+      // Add social account of a user to db
+      try {
+        console.log('addSocialAccounts', resData)
+        console.log('socialProfile', socialProfile)
         const addSocialAccounts = await userTokenModel.updateSocialAccounts(
           nftId,
           socialProfile,
           resData
         )
+        console.log('DB call', addSocialAccounts)
         if (!addSocialAccounts) {
           return reply.code(400).error({
             message: `Failed to add ${type} profile.`
           })
         } else {
-          if (!addSocialAccounts.isActive) {
-            await userTokenModel.markAsActive(nftId, userId)
-          }
           return reply.success({
             message: `${type} profile added successfully.`,
             nft: addSocialAccounts
           })
         }
-      } catch (err) {
-        console.log(err)
-        return reply.error({
+      } catch (error) {
+        console.error('Error while adding social account to db:', error.message)
+        return reply.code(500).error({
           message: `Failed to add ${type} profile.`,
-          error: err.message
+          error: error.message
         })
       }
     }
@@ -380,10 +400,11 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { userId } = request.user
       try {
-        const userTokenModel = new UserToken(),
-          { userId } = request.user,
-          nfts = await userTokenModel.listTokens(userId)
+        const userTokenModel = new UserToken()
+        const nfts = await userTokenModel.listTokens(userId)
+
         if (!nfts.length) {
           reply.code(404).error({
             message: 'Assets not found.'
@@ -398,56 +419,65 @@ module.exports = async function (fastify, opts) {
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
         const cachedData = await fastify.redis.get(key)
-        if (cachedData) {
-          reply.success({
-            isCache: true,
-            profileDetails: JSON.parse(cachedData),
-            connectedProfiles
-          })
-          return reply
-        }
+        // if (cachedData) {
+        //   reply.success({
+        //     isCache: true,
+        //     profileDetails: JSON.parse(cachedData),
+        //     connectedProfiles
+        //   })
+        //   return reply
+        // }
 
         let resArray = []
-        const updatePromises = nfts.map(async nft => {
-          const socialKeys = Object.keys(nft.social).filter(
-              key => nft.social[key].socialInsiderId !== undefined
-            ),
-            profileDetailsPromises = socialKeys.map(async key => {
-              await new Promise(resolve => setTimeout(resolve, 300))
-              return getProfileDetails(
-                nft.social[key].socialInsiderId,
-                getAccountType(key),
-                key
-              )
-            })
-          const profileDetails = await Promise.all(profileDetailsPromises)
-          if (profileDetails) {
-            // Update followers count in db
-            const updateFollowerPromises = socialKeys.map(async key => {
-              let followerData = profileDetails.find(obj => obj[key]),
-                value = followerData ? followerData[key] : 0,
-                k = `social.${key}.followers`
-              const update = await userTokenModel.updateFollowers(
-                nft.nftId,
-                k,
-                value
-              )
-              if (update) {
-                const foundObject = resArray.find(obj => key in obj)
-                if (foundObject) {
-                  const index = resArray.indexOf(foundObject)
-                  resArray[index] = Object.assign({}, foundObject, {
-                    [key]: foundObject[key] + update.social[key].followers
-                  })
-                } else {
-                  resArray.push({ [key]: update.social[key].followers })
-                }
-              }
-            })
-            await Promise.all(updateFollowerPromises)
+        const updateFollowers = async (nft, key) => {
+          const socialInsiderId = nft?.social[key]?.socialInsiderId
+          if (!socialInsiderId) return 0
+
+          await new Promise(resolve => setTimeout(resolve, 500))
+          const accountType = getAccountType(key)
+          console.log('socialInsiderId', socialInsiderId)
+          console.log('accountType', accountType)
+          console.log('key', key)
+          const profileDetails = await getProfileDetails(
+            socialInsiderId,
+            accountType,
+            key
+          )
+
+          console.log('profileDetails', profileDetails)
+          const followersCount = profileDetails?.[key] || 0
+          const update = await userTokenModel.updateFollowers(
+            nft.nftId,
+            `social.${key}.followers`,
+            followersCount
+          )
+          if (!update) return 0
+
+          const foundObject = resArray.find(obj => key in obj)
+          if (foundObject) {
+            const index = resArray.indexOf(foundObject)
+            resArray[index] = {
+              ...foundObject,
+              [key]: foundObject[key] + update?.social[key]?.followers
+            }
+          } else {
+            resArray.push({ [key]: update?.social[key]?.followers })
           }
+
+          return update?.social[key]?.followers
+        }
+
+        const updatePromises = nfts.map(nft => {
+          const socialKeys = Object.keys(nft?.social).filter(
+            key => nft?.social[key]?.socialInsiderId !== undefined
+          )
+          return Promise.allSettled(
+            socialKeys.map(key => updateFollowers(nft, key))
+          )
         })
-        await Promise.all(updatePromises)
+
+        await Promise.allSettled(updatePromises)
+
         //Cache response in redis
         await fastify.redis.set(
           key,

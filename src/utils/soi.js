@@ -9,6 +9,7 @@ const jsonObject = {
 // Function to call social insider api
 const apiCall = async obj => {
   try {
+    console.log('Inside apiCall', obj)
     const result = await axios.post(process.env.SOCIAL_INSIDER_API_URL, obj, {
       headers: {
         'Content-Type': 'application/json',
@@ -50,6 +51,10 @@ const RETRY_DELAY = 1000
 
 // Add profile to social insider
 const addProfile = async (socialProfile, socialPlatform) => {
+  if (!socialProfile || !socialPlatform) {
+    console.log('Invalid or missing parameters exiting.')
+    return 0
+  }
   let retries = 0
   while (retries < MAX_RETRIES) {
     try {
@@ -64,11 +69,17 @@ const addProfile = async (socialProfile, socialPlatform) => {
       jsonObject.params = params
 
       const result = await apiCall(jsonObject)
-      return result.data
+
+      console.log('After add profile call', result?.data || 'no api response')
+
+      if (result && result?.data) {
+        return result?.data
+      } else {
+        return 0
+      }
     } catch (error) {
       console.error('Adding profile failed with error: ', error.message)
       retries++
-      console.log(retries)
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }
@@ -102,6 +113,14 @@ const stripTrailingSlash = str => {
 
 // Get social insider profile details
 const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
+  let resObj = {}
+
+  if (!socialInsiderId || !profile_type || !platform) {
+    console.log('Invalid or missing parameters exiting.')
+    resObj = { [platform]: 0 }
+    return resObj
+  }
+
   let retries = 0
   while (retries < MAX_RETRIES) {
     try {
@@ -123,21 +142,48 @@ const getProfileDetails = async (socialInsiderId, profile_type, platform) => {
       jsonObject.method = method
       jsonObject.params = params
 
+      console.log('Before SI api call', jsonObject)
+
       const result = await apiCall(jsonObject)
-      let highestFollowersCount = 0
-      if (
-        result.data.error == null &&
-        Object.keys(result.data.resp).length !== 0
-      ) {
-        let profileData = result.data.resp[socialInsiderId]
-        highestFollowersCount = Math.max(
-          ...Object.values(profileData).map(d => d.followers || 0)
+
+      console.log('API call result object', result?.data)
+
+      // if result is error
+      if (result?.data?.error) {
+        console.log(
+          `Error in fetching profile details: ${result?.data?.error?.message}`
         )
+        resObj = { [platform]: 0 }
+        return resObj
       }
-      let resObj = {
-        [platform]: highestFollowersCount
+
+      console.log('After SI call')
+
+      let profileData = {},
+        highestFollowersCount = 0
+
+      if (result?.data?.resp && Object.keys(result?.data?.resp).length > 0) {
+        console.log('Inside if condition')
+
+        profileData = result?.data?.resp[socialInsiderId]
+
+        console.log('profileData', profileData)
+
+        highestFollowersCount = Math.max(
+          ...Object.values(profileData).map(d => d?.followers || 0)
+        )
+
+        console.log('highestFollowersCount', highestFollowersCount)
+
+        resObj = { [platform]: highestFollowersCount ?? 0 }
+
+        console.log('resObj', resObj)
+
+        return resObj
+      } else {
+        resObj = { [platform]: 0 }
+        return resObj
       }
-      return resObj
     } catch (error) {
       console.error('Error in fetching profile details:', error.message)
       retries++
@@ -169,7 +215,6 @@ const removeProfile = async (socialInsiderId, socialPlatform) => {
     } catch (error) {
       console.error('Error in removing profile details:', error.message)
       retries++
-      console.log(retries)
       if (retries < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
       }

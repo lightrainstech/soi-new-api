@@ -91,7 +91,8 @@ module.exports = async function (fastify, opts) {
           bountyOffered,
           challengeHashTag,
           locations,
-          challengeIdentifier
+          challengeIdentifier,
+          status: 'created'
         })
         const savedChallenge = await newChallengeData.save()
         // Schedule a job
@@ -602,6 +603,48 @@ module.exports = async function (fastify, opts) {
         return reply.error({
           message:
             'Failed to fetch bounty distribution details. Please try again.'
+        })
+      }
+    }
+  )
+  // Update challenge funded status
+  fastify.put(
+    '/:challengeId/funds/status',
+    {
+      schema: challengePayload.updateFundStatusSchema,
+      onRequest: [fastify.authenticate]
+    },
+    async function (request, reply) {
+      const { challengeId } = request.params
+      const { bountyOffered } = request.body
+      try {
+        const challengeModel = new Challenge()
+        const challenge = await challengeModel.getChallengeDetails(challengeId)
+        if (!challenge) {
+          return reply.code(404).error({
+            message: 'Challenge not found.'
+          })
+        }
+
+        const fundStatus = await challengeModel.updateFundStatus(
+          challengeId,
+          bountyOffered
+        )
+
+        if (!fundStatus) {
+          return reply.error({
+            message: 'Failed to update fund status. Pleas try again.'
+          })
+        }
+
+        return reply.success({
+          message: 'Fund status updated successfully.',
+          challenge: fundStatus
+        })
+      } catch (error) {
+        console.log(`Failed to fund status. Pleas try again - ${error.message}`)
+        return reply.error({
+          message: 'Failed to fund status. Pleas try again.'
         })
       }
     }
