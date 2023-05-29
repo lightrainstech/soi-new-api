@@ -109,7 +109,7 @@ module.exports = async function (args, done) {
 
             let totalImpressionsPrice = 0
             let key15
-            if (key !== 'instagram') {
+            if (key === 'instagram') {
               totalImpressionsPrice = pricePerPostMetrics(
                 key,
                 'impression',
