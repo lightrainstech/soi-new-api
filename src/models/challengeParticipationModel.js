@@ -55,45 +55,58 @@ const socialStatusSchema = {
   totalViewsPrice: {
     type: Number,
     default: 0
-  }
-}
-
-const ChallengeParticipationSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
   },
-  challenge: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Challenge',
-    required: true
+  totalEngagementsPrice: {
+    type: Number,
+    default: 0
   },
-  hashTag: {
-    type: String
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  nftId: {
-    type: String
-  },
-  team: {
-    type: String
-  },
-  social: {
-    facebook: socialStatusSchema,
-    instagram: socialStatusSchema,
-    youtube: socialStatusSchema,
-    tiktok: socialStatusSchema,
-    twitter: socialStatusSchema
-  },
-  bountyReceived: {
+  totalImpressionsPrice: {
     type: Number,
     default: 0
   }
-})
+}
+
+const ChallengeParticipationSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    challenge: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Challenge',
+      required: true
+    },
+    hashTag: {
+      type: String
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    nftId: {
+      type: String
+    },
+    team: {
+      type: String
+    },
+    social: {
+      facebook: socialStatusSchema,
+      instagram: socialStatusSchema,
+      youtube: socialStatusSchema,
+      tiktok: socialStatusSchema,
+      twitter: socialStatusSchema
+    },
+    bountyReceived: {
+      type: Number,
+      default: 0
+    }
+  },
+  {
+    timestamps: true
+  }
+)
 
 ChallengeParticipationSchema.methods = {
   getParticipationDetails: async function (userId, nftId) {
@@ -301,7 +314,11 @@ ChallengeParticipationSchema.methods = {
     key12,
     value12,
     key13,
-    value13
+    value13,
+    key14,
+    value14,
+    key15,
+    value15
   ) {
     const ChallengeParticipation = mongoose.model('ChallengeParticipation')
     return ChallengeParticipation.findOneAndUpdate(
@@ -322,6 +339,8 @@ ChallengeParticipationSchema.methods = {
             [key11]: value11,
             [key12]: value12,
             [key13]: value13,
+            [key14]: value14,
+            [key15]: value15,
             isActive: false
           }
         },
@@ -334,30 +353,32 @@ ChallengeParticipationSchema.methods = {
                 '$social.facebook.totalLikesPrice',
                 '$social.facebook.totalViewsPrice',
                 '$social.facebook.totalCommentsPrice',
+                '$social.facebook.totalEngagementsPrice',
 
                 '$social.instagram.totalPostsPrice',
-                '$social.instagram.totalSharesPrice',
                 '$social.instagram.totalLikesPrice',
                 '$social.instagram.totalCommentsPrice',
-                '$social.instagram.totalViewsPrice',
+                '$social.instagram.totalEngagementsPrice',
+                '$social.instagram.totalImpressionsPrice',
 
                 '$social.youtube.totalPostsPrice',
-                '$social.youtube.totalSharesPrice',
                 '$social.youtube.totalLikesPrice',
                 '$social.youtube.totalCommentsPrice',
                 '$social.youtube.totalViewsPrice',
+                '$social.youtube.totalEngagementsPrice',
 
                 '$social.tiktok.totalPostsPrice',
                 '$social.tiktok.totalSharesPrice',
                 '$social.tiktok.totalLikesPrice',
                 '$social.tiktok.totalCommentsPrice',
                 '$social.tiktok.totalViewsPrice',
+                '$social.tiktok.totalEngagementsPrice',
 
                 '$social.twitter.totalPostsPrice',
                 '$social.twitter.totalSharesPrice',
                 '$social.twitter.totalLikesPrice',
-                '$social.twitter.totalCommentsPrice',
-                '$social.twitter.totalViewsPrice'
+                '$social.twitter.totalViewsPrice',
+                '$social.twitter.totalEngagementsPrice'
               ]
             }
           }
@@ -522,30 +543,32 @@ ChallengeParticipationSchema.methods = {
               { $ifNull: ['$social.facebook.totalLikesPrice', 0] },
               { $ifNull: ['$social.facebook.totalViewsPrice', 0] },
               { $ifNull: ['$social.facebook.totalCommentsPrice', 0] },
+              { $ifNull: ['$social.facebook.totalEngagementsPrice', 0] },
 
               { $ifNull: ['$social.instagram.totalPostsPrice', 0] },
-              { $ifNull: ['$social.instagram.totalSharesPrice', 0] },
               { $ifNull: ['$social.instagram.totalLikesPrice', 0] },
-              { $ifNull: ['$social.instagram.totalViewsPrice', 0] },
               { $ifNull: ['$social.instagram.totalCommentsPrice', 0] },
+              { $ifNull: ['$social.instagram.totalImpressionsPrice', 0] },
+              { $ifNull: ['$social.instagram.totalEngagementsPrice', 0] },
 
               { $ifNull: ['$social.twitter.totalPostsPrice', 0] },
               { $ifNull: ['$social.twitter.totalSharesPrice', 0] },
               { $ifNull: ['$social.twitter.totalLikesPrice', 0] },
               { $ifNull: ['$social.twitter.totalViewsPrice', 0] },
-              { $ifNull: ['$social.twitter.totalCommentsPrice', 0] },
+              { $ifNull: ['$social.twitter.totalEngagementsPrice', 0] },
 
               { $ifNull: ['$social.youtube.totalPostsPrice', 0] },
-              { $ifNull: ['$social.youtube.totalSharesPrice', 0] },
               { $ifNull: ['$social.youtube.totalLikesPrice', 0] },
               { $ifNull: ['$social.youtube.totalViewsPrice', 0] },
               { $ifNull: ['$social.youtube.totalCommentsPrice', 0] },
+              { $ifNull: ['$social.youtube.totalEngagementsPrice', 0] },
 
               { $ifNull: ['$social.tiktok.totalPostsPrice', 0] },
               { $ifNull: ['$social.tiktok.totalSharesPrice', 0] },
               { $ifNull: ['$social.tiktok.totalLikesPrice', 0] },
               { $ifNull: ['$social.tiktok.totalViewsPrice', 0] },
-              { $ifNull: ['$social.tiktok.totalCommentsPrice', 0] }
+              { $ifNull: ['$social.tiktok.totalCommentsPrice', 0] },
+              { $ifNull: ['$social.tiktok.totalEngagementsPrice', 0] }
             ]
           }
         }

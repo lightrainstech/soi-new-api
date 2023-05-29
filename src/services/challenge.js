@@ -464,7 +464,7 @@ module.exports = async function (fastify, opts) {
         //           : 0
         //         let key4 = `social.${key}.engagement`
         //         let totalPostEngagementRate = postData
-        //           ? postData[key].totalPostEngagementRate
+        //           ? parseFloat (postData[key].totalPostEngagementRate.toFixed(5))
         //           : 0
         //         let key5 = `social.${key}.post_engagement_rate`
         //         let totalImpressions = postData
@@ -493,37 +493,55 @@ module.exports = async function (fastify, opts) {
         //         let key10 = `social.${key}.totalLikesPrice`
 
         //         let totalSharesPrice = 0
-        //         if (key !== 'youtube') {
+        //         if (key !== 'youtube' && key !== 'instagram') {
         //           totalSharesPrice = pricePerPostMetrics(
         //             key,
         //             'share',
         //             totalShares
         //           )
         //         }
+
         //         let key11 = `social.${key}.totalSharesPrice`
 
-        //         let totalCommentsPrice = pricePerPostMetrics(
-        //           key,
-        //           'comment',
-        //           totalComments
-        //         )
+        //         let totalCommentsPrice = 0
+        //         if(key !== 'twitter') {
+        //           totalCommentsPrice = pricePerPostMetrics(
+        //             key,
+        //             'comment',
+        //             totalComments
+        //           )
+
+        //         }
         //         let key12 = `social.${key}.totalCommentsPrice`
 
-        //         const metricsMap = {
-        //           youtube: 'view',
-        //           tiktok: 'play'
-        //         }
-
         //         let totalViewsPrice = 0
-        //         if (key in metricsMap) {
-        //           const metric = metricsMap[key]
+        //         if (key !== 'instagram') {
         //           totalViewsPrice = pricePerPostMetrics(
         //             key,
-        //             metric,
+        //             'video_view',
         //             totalVideoViews
         //           )
+
         //         }
-        //         let key13 = `social.${key}.totalViewsPrice`
+        //       let key13 = `social.${key}.totalViewsPrice`
+
+        //         let totalEngagementsPrice = pricePerPostMetrics(
+        //           key,
+        //           'engagement',
+        //           totalEngagement
+        //         )
+        //         let key14 = `social.${key}.totalEngagementsPrice`
+
+        //         let totalImpressionsPrice = 0
+        //         if (key === 'instagram') {
+        //           totalImpressionsPrice = pricePerPostMetrics(
+        //             key,
+        //             'impression',
+        //             totalImpressions
+        //           )
+
+        //         }
+        //         let key15 = `social.${key}.totalImpressionsPrice`
 
         //         await challengeParticipationModel.updatePostData(
         //           challengeId,
@@ -554,6 +572,10 @@ module.exports = async function (fastify, opts) {
         //           totalCommentsPrice,
         //           key13,
         //           totalViewsPrice,
+        //           key14,
+        //           totalEngagementsPrice,
+        //           key15,
+        //           totalImpressionsPrice
         //         )
         //       })
         //       await Promise.all(updatePostDataPromises)

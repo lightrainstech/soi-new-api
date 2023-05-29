@@ -327,13 +327,13 @@ const getPostDetails = async (
             totalImpressions += post?.video_views || 0
           } else {
             totalImpressions +=
-              parseInt(post?.impressions_total) ||
               parseInt(post?.impressions) ||
+              parseInt(post?.impressions_total) ||
               0
           }
 
           // Total posts
-          totalPosts = totalPosts + 1
+          totalPosts++
 
           // Total video views
           totalVideoViews += post?.video_views || 0
