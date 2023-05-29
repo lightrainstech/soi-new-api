@@ -5,35 +5,42 @@ const Affiliate = require('../models/affiliateModel')
 // Price for posts per platform
 const pricePerPlatform = {
   facebook: {
-    post: 45,
+    post: 4.0,
     share: 0.4,
     comment: 0.05,
-    like: 0.01
+    like: 0.01,
+    video_view: 0.05,
+    engagement: 0.02
   },
   instagram: {
-    post: 50,
-    share: 0.4,
-    comment: 0.05,
-    like: 0.01
+    post: 50.0,
+    comment: 0.04,
+    like: 0.01,
+    engagement: 0.04,
+    comment: 0.04,
+    impression: 0.01
   },
   twitter: {
-    post: 50,
+    post: 50.0,
     share: 0.4,
-    comment: 0.05,
-    like: 0.01
+    like: 0.01,
+    engagement: 0.05,
+    video_view: 0.4
   },
   youtube: {
-    post: 60,
-    comment: 1,
+    post: 60.0,
+    comment: 0.2,
     like: 0.01,
-    view: 0.5
+    video_view: 0.5,
+    engagement: 0.2
   },
   tiktok: {
-    post: 40,
+    post: 40.0,
     comment: 0.03,
     like: 0.01,
-    play: 0.02,
-    share: 0.3
+    video_view: 0.05,
+    share: 0.1,
+    engagement: 0.05
   }
 }
 
