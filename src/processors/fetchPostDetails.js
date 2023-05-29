@@ -75,52 +75,82 @@ module.exports = async function (args, done) {
             )
             let key12 = `social.${key}.totalCommentsPrice`
 
-            const metricsMap = {
-              youtube: 'view',
-              tiktok: 'play'
-            }
+            // const metricsMap = {
+            //   youtube: 'view',
+            //   tiktok: 'play'
+            // }
 
+            // let totalViewsPrice = 0
+            // if (key in metricsMap) {
+            //   const metric = metricsMap[key]
+            //   totalViewsPrice = pricePerPostMetrics(
+            //     key,
+            //     metric,
+            //     totalVideoViews
+            //   )
+            // }
             let totalViewsPrice = 0
-            if (key in metricsMap) {
-              const metric = metricsMap[key]
+            let key13
+            if(key !== 'instagram') {
               totalViewsPrice = pricePerPostMetrics(
                 key,
-                metric,
-                totalVideoViews
+                'video_view',
+                totalComments
               )
+              key13 = `social.${key}.totalViewsPrice`
             }
-            let key13 = `social.${key}.totalViewsPrice`
 
-            await challengeParticipationModel.updatePostData(
-              challengeId,
-              participant.user,
-              key1,
-              totalLikes,
-              key2,
-              totalShares,
-              key3,
-              totalComments,
-              key4,
-              totalEngagement,
-              key5,
-              totalPostEngagementRate,
-              key6,
-              totalImpressions,
-              key7,
-              totalPosts,
-              key8,
-              totalVideoViews,
-              key9,
-              totalPostsPrice,
-              key10,
-              totalLikesPrice,
-              key11,
-              totalSharesPrice,
-              key12,
-              totalCommentsPrice,
-              key13,
-              totalViewsPrice
+            let totalEngagementsPrice = pricePerPostMetrics(
+              key,
+              'engagement',
+              totalEngagement
             )
+            let key14 = `social.${key}.totalEngagementsPrice`
+
+            let totalImpressionsPrice = 0
+            let key15
+            if (key !== 'instagram') {
+              totalImpressionsPrice = pricePerPostMetrics(
+                key,
+                'impression',
+                totalImpressions
+              )
+              key15 = `social.${key}.totalImpressionsPrice`
+            }
+              await challengeParticipationModel.updatePostData(
+                challengeId,
+                participant.user,
+                key1,
+                totalLikes,
+                key2,
+                totalShares,
+                key3,
+                totalComments,
+                key4,
+                totalEngagement,
+                key5,
+                totalPostEngagementRate,
+                key6,
+                totalImpressions,
+                key7,
+                totalPosts,
+                key8,
+                totalVideoViews,
+                key9,
+                totalPostsPrice,
+                key10,
+                totalLikesPrice,
+                key11,
+                totalSharesPrice,
+                key12,
+                totalCommentsPrice,
+                key13,
+                totalViewsPrice,
+                key14,
+                totalEngagementsPrice,
+                key15,
+                totalImpressionsPrice
+              )
           })
           await Promise.all(updatePostDataPromises)
         }

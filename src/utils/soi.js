@@ -326,10 +326,7 @@ const getPostDetails = async (
           if (platform === 'tiktok' || platform === 'youtube') {
             totalImpressions += post?.video_views || 0
           } else {
-            totalImpressions +=
-              parseInt(post?.impressions_total) ||
-              parseInt(post?.impressions) ||
-              0
+            totalImpressions += parseInt(post?.impressions) || 0
           }
 
           // Total posts
