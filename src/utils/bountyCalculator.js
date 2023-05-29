@@ -59,7 +59,9 @@ const deductCommission = bountyInvested => {
 
 // Calculate total metrics price
 const pricePerPostMetrics = (platform, metric, totalMetric) => {
-  return pricePerPlatform?.[platform]?.[metric] * totalMetric
+  return parseFloat(
+    (pricePerPlatform?.[platform]?.[metric] * totalMetric).toFixed(2)
+  )
 }
 
 const percentageOfTotalBountyEarned = (
@@ -221,9 +223,11 @@ const distributeBounty = async (
     commission: commission,
     soiCommission: companyCommission,
     totalCommission: totalCommission,
-    commissionWalletBalance: commission - totalCommission,
+    commissionWalletBalance: parseFloat(
+      (commission - totalCommission).toFixed(2)
+    ),
     bountyRemaining:
-      bountyAfterCommission - participantDetails.totalBountyAllUsers,
+      parseFloat((bountyAfterCommission - participantDetails.totalBountyAllUsers).toFixed(2)),
     Distribution: resArray
   }
 }
