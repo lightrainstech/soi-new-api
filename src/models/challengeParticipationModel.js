@@ -66,42 +66,47 @@ const socialStatusSchema = {
   }
 }
 
-const ChallengeParticipationSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const ChallengeParticipationSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    challenge: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Challenge',
+      required: true
+    },
+    hashTag: {
+      type: String
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    nftId: {
+      type: String
+    },
+    team: {
+      type: String
+    },
+    social: {
+      facebook: socialStatusSchema,
+      instagram: socialStatusSchema,
+      youtube: socialStatusSchema,
+      tiktok: socialStatusSchema,
+      twitter: socialStatusSchema
+    },
+    bountyReceived: {
+      type: Number,
+      default: 0
+    }
   },
-  challenge: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Challenge',
-    required: true
-  },
-  hashTag: {
-    type: String
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  nftId: {
-    type: String
-  },
-  team: {
-    type: String
-  },
-  social: {
-    facebook: socialStatusSchema,
-    instagram: socialStatusSchema,
-    youtube: socialStatusSchema,
-    tiktok: socialStatusSchema,
-    twitter: socialStatusSchema
-  },
-  bountyReceived: {
-    type: Number,
-    default: 0
+  {
+    timestamps: true
   }
-})
+)
 
 ChallengeParticipationSchema.methods = {
   getParticipationDetails: async function (userId, nftId) {
