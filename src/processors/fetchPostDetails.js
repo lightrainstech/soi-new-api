@@ -46,7 +46,7 @@ module.exports = async function (args, done) {
             let totalEngagement = postData ? postData[key].totalEngagement : 0
             let key4 = `social.${key}.engagement`
             let totalPostEngagementRate = postData
-              ? postData[key].totalPostEngagementRate
+              ? parseFloat(postData[key].totalPostEngagementRate.toFixed(5))
               : 0
             let key5 = `social.${key}.post_engagement_rate`
             let totalImpressions = postData ? postData[key].totalImpressions : 0

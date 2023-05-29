@@ -222,12 +222,15 @@ const distributeBounty = async (
     bountyAfterCommission: bountyAfterCommission,
     commission: commission,
     soiCommission: companyCommission,
-    totalCommission: totalCommission,
+    totalCommission: parseFloat(totalCommission.toFixed(2)),
     commissionWalletBalance: parseFloat(
       (commission - totalCommission).toFixed(2)
     ),
-    bountyRemaining:
-      parseFloat((bountyAfterCommission - participantDetails.totalBountyAllUsers).toFixed(2)),
+    bountyRemaining: parseFloat(
+      (bountyAfterCommission - participantDetails.totalBountyAllUsers).toFixed(
+        2
+      )
+    ),
     Distribution: resArray
   }
 }
