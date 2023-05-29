@@ -333,7 +333,7 @@ const getPostDetails = async (
           }
 
           // Total posts
-          totalPosts = totalPosts + 1
+          totalPosts++
 
           // Total video views
           totalVideoViews += post?.video_views || 0
