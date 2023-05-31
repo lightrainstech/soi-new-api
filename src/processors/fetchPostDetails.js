@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const { getPostDetails, getAccountType } = require('../utils/soi')
 const { pricePerPostMetrics } = require('../utils/bountyCalculator')
+const Challenge = require('../models/challengeModel')
 
 module.exports = async function (args, done) {
   const { challengeId } = args.data
@@ -13,6 +14,17 @@ module.exports = async function (args, done) {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
+
+    // Check challenge and funded status
+    const challengeModel = new Challenge()
+    const challenge = await challengeModel.getChallengeById(challengeId)
+    if (challenge && challenge?.status ==='created' && !challenge?.isFunded) {
+      // Cancel challenge
+      await challengeModel.updateChallengeStatus(challengeId, 'cancelled')
+      console.log('Challenge is not funded yet. Exiting...')
+      return 0
+    }
+
     const challengeParticipationModel = new ChallengeParticipation()
     const participants =
       await challengeParticipationModel.getChallengeParticipants(challengeId)

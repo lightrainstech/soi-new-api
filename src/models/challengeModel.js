@@ -214,6 +214,20 @@ ChallengeSchema.methods = {
         new: true
       }
     )
+  },
+  updateChallengeStatus: async function (challengeId, status) {
+    const Challenge = mongoose.model('Challenge')
+    return Challenge.findByIdAndUpdate(
+      challengeId,
+      {
+        $set: {
+          status: status
+        }
+      },
+      {
+        new: true
+      }
+    )
   }
 }
 
