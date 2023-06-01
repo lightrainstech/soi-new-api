@@ -639,6 +639,7 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Update fund status
         const fundStatus = await challengeModel.updateFundStatus(
           challengeId,
           bountyOffered
@@ -649,6 +650,42 @@ module.exports = async function (fastify, opts) {
             message: 'Failed to update fund status. Pleas try again.'
           })
         }
+
+        // Schedule a job
+        const delayDate = new Date(fundStatus.startDate).getTime() - Date.now()
+        const delayDate2 = new Date(fundStatus.endDate).getTime() - Date.now()
+
+        //Create a repeating job
+        await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnFail: false,
+            delay: delayDate,
+            attempts: 2,
+            backoff: 10000,
+            repeat: {
+              cron: '0 */3 * * *', // Run every 3h
+              startDate: new Date(fundStatus.startDate),
+              endDate: new Date(fundStatus.endDate)
+            },
+            removeOnComplete: true
+          }
+        )
+        // Create job that run when end time is reached
+        await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate2,
+            attempts: 2,
+            backoff: 10000
+          }
+        )
 
         return reply.success({
           message: 'Fund status updated successfully.',
