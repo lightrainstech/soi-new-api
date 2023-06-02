@@ -235,7 +235,116 @@ const distributeBounty = async (
   }
 }
 
+const distributeBountyInJob = async (
+  bountyInvested,
+  participants,
+  totalBounty,
+  challengeId,
+  user
+) => {
+  // Agency commissions
+  const COMPANY_COMMISSION = 5
+
+  let totalCommission = 0
+
+  let distributionDetails = []
+
+  // Deduct commissions
+  const { commission, bountyAfterCommission } = deductCommission(bountyInvested)
+  // Check total bounty is greater than bounty invested
+  if (totalBounty > bountyAfterCommission) {
+    const updateUserBountyReceived = participants.map(participant => {
+      const bountyToBePaid = percentageOfTotalBountyEarned(
+        participant.userTotal,
+        totalBounty,
+        bountyAfterCommission
+      )
+      return updateBountyReceived(participant._id, bountyToBePaid)
+    })
+    await Promise.all(updateUserBountyReceived)
+  }
+  const participantDetails = await getParticipantsDetails(challengeId)
+  const participantAgencyPromises = participantDetails.userTotals.map(
+    async participant => {
+      const { agency, introducingAgency } = await getAgencyDetails(
+        participant.userId
+      )
+      if (agency && introducingAgency) {
+        const agencyCommission = calculateCommissions(
+          'agency',
+          participant.userTotal,
+          bountyAfterCommission,
+          7
+        )
+        totalCommission += agencyCommission
+        const introducingAgencyCommission = calculateCommissions(
+          'introducingAgency',
+          participant.userTotal,
+          bountyAfterCommission,
+          0.5
+        )
+        totalCommission += introducingAgencyCommission
+        distributionDetails.push({
+          [participant.wallet]: participant.userTotal,
+          [agency.agency.wallet]: agencyCommission,
+          [introducingAgency.agency.wallet]: introducingAgencyCommission
+        })
+      }
+      if (agency && !introducingAgency) {
+        const agencyCommission = calculateCommissions(
+          'agency',
+          participant.userTotal,
+          bountyAfterCommission,
+          7.5
+        )
+        totalCommission += agencyCommission
+        distributionDetails.push({
+          [participant.wallet]: participant.userTotal,
+          [agency.agency.wallet]: agencyCommission
+        })
+      }
+    }
+  )
+  await Promise.all(participantAgencyPromises)
+  const companyCommission = calculateCommissions(
+    'company',
+    0,
+    bountyAfterCommission,
+    COMPANY_COMMISSION
+  )
+  totalCommission += companyCommission
+
+  const bountyRemaining = parseFloat(
+    (bountyAfterCommission - participantDetails.totalBountyAllUsers).toFixed(2)
+  )
+  const commissionBalance = parseFloat(
+    (commission - totalCommission).toFixed(2)
+  )
+  distributionDetails.push({
+    [user]: bountyRemaining,
+    'commission balance': commissionBalance,
+    'soi commission': companyCommission
+  })
+
+  const mergedObject = distributionDetails.reduce((result, current) => {
+    for (const key in current) {
+      if (current.hasOwnProperty(key)) {
+        if (result.hasOwnProperty(key)) {
+          result[key] += current[key]
+        } else {
+          result[key] = current[key]
+        }
+      }
+    }
+    return result
+  }, {})
+
+  console.log(mergedObject)
+
+}
+
 module.exports = {
   pricePerPostMetrics,
-  distributeBounty
+  distributeBounty,
+  distributeBountyInJob
 }
