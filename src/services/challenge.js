@@ -104,42 +104,42 @@ module.exports = async function (fastify, opts) {
           challengeAddress: challengeAddress
         })
         const savedChallenge = await newChallengeData.save()
-        
+
         // Schedule a job
-        const delayDate = new Date(startDate).getTime() - Date.now()
-        const delayDate2 = new Date(endDate).getTime() - Date.now()
+        //const delayDate = new Date(startDate).getTime() - Date.now()
+        //const delayDate2 = new Date(endDate).getTime() - Date.now()
 
         // Create a repeating job
-        await fastify.bull.fetchPostDetails.add(
-          {
-            challengeId: savedChallenge._id
-          },
-          {
-            removeOnFail: false,
-            delay: delayDate,
-            attempts: 2,
-            backoff: 10000,
-            repeat: {
-              cron: '0 */3 * * *', // Run every 3h
-              startDate: new Date(startDate),
-              endDate: new Date(endDate)
-            },
-            removeOnComplete: true
-          }
-        )
+        // await fastify.bull.fetchPostDetails.add(
+        //   {
+        //     challengeId: savedChallenge._id
+        //   },
+        //   {
+        //     removeOnFail: false,
+        //     delay: delayDate,
+        //     attempts: 2,
+        //     backoff: 10000,
+        //     repeat: {
+        //       cron: '0 */3 * * *', // Run every 3h
+        //       startDate: new Date(startDate),
+        //       endDate: new Date(endDate)
+        //     },
+        //     removeOnComplete: true
+        //   }
+        // )
         // Create job that run when end time is reached
-        await fastify.bull.fetchPostDetails.add(
-          {
-            challengeId: savedChallenge._id
-          },
-          {
-            removeOnComplete: true,
-            removeOnFail: false,
-            delay: delayDate2,
-            attempts: 2,
-            backoff: 10000
-          }
-        )
+        // await fastify.bull.fetchPostDetails.add(
+        //   {
+        //     challengeId: savedChallenge._id
+        //   },
+        //   {
+        //     removeOnComplete: true,
+        //     removeOnFail: false,
+        //     delay: delayDate2,
+        //     attempts: 2,
+        //     backoff: 10000
+        //   }
+        // )
         if (!savedChallenge) {
           return reply.code(400).error({
             message: 'Failed to create challenge please try again.',
