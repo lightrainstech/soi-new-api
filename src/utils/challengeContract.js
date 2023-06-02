@@ -51,6 +51,33 @@ const createChallenge = async (endDate, amount) => {
 const challengeAbiJson = fs.readFileSync('abi/challenge.json')
 const challengeAbi = JSON.parse(challengeAbiJson)
 
+const distributeBounty = async (challengeAddress, wallets, address) => {
+  const challengeContract = new Contract(challengeAbi, challengeAddress)
+  try {
+    // Contract method
+    const callMethod = await challengeContract.methods.distribute(
+      wallets,
+      address
+    )
+
+    // Estimate gas
+    const gas = await callMethod.estimateGas({
+      from: web3.eth.defaultAccount
+    })
+
+    // Contract interaction and return result
+    const tx = await callMethod.send({
+      from: web3.eth.defaultAccount,
+      gas: gas
+    })
+    return tx
+  } catch (error) {
+    console.log(`Failed to distribute bounty - ${error.message}.`)
+    throw new Error('Failed to distribute bounty.')
+  }
+}
+
 module.exports = {
-  createChallenge
+  createChallenge,
+  distributeBounty
 }
