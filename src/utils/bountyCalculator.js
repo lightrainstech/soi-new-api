@@ -321,9 +321,8 @@ const distributeBountyInJob = async (
     (commission - totalCommission).toFixed(2)
   )
   distributionDetails.push({
-    [user]: bountyRemaining,
-    'commission balance': commissionBalance,
-    'soi commission': companyCommission
+    [user]: bountyRemaining + commissionBalance,
+    [process.env.SOI_ADMIN_WALLET]: companyCommission
   })
 
   const mergedObject = distributionDetails.reduce((result, current) => {
