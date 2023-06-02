@@ -21,6 +21,8 @@ let subscriber = new Redis(REDIS_CONN, connOpts)
 let JOBS = {}
 JOBS.sendNFT = require('./processors/sendNFT.js')
 JOBS.fetchPostDetails = require('./processors/fetchPostDetails.js')
+JOBS.distributeBounty = require('./processors/distributeBounty')
+
 
 let opts = {
   createClient: type => {
@@ -40,7 +42,7 @@ let opts = {
 const JOB_QUEUES = process.env.JOB_QUEUES
   ? process.env.JOB_QUEUES.split(',')
   : []
-  
+
 if (JOB_QUEUES.length > 0) {
   JOB_QUEUES.forEach(type => {
     let jType = new Bull(type, opts)
