@@ -47,6 +47,10 @@ const createChallenge = async (endDate, amount) => {
   }
 }
 
+// Challenge Contract
+const challengeAbiJson = fs.readFileSync('abi/challenge.json')
+const challengeAbi = JSON.parse(challengeAbiJson)
+
 module.exports = {
   createChallenge
 }
