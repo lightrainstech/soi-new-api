@@ -14,6 +14,7 @@ const {
   distributeBounty
 } = require('../utils/bountyCalculator')
 const UserToken = require('../models/userToken')
+const { createChallenge } = require('../utils/challengeContract')
 
 module.exports = async function (fastify, opts) {
   // Create challenge
@@ -24,8 +25,8 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
+      const { userId, role } = request.user
       try {
-        const { userId, role } = request.user
         const {
           title,
           description,
@@ -73,6 +74,13 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Create challenge in contract
+        const endDateInSeconds = new Date(endDate).getTime() / 1000
+        const challengeAddress = await createChallenge(
+          endDateInSeconds,
+          bountyOffered
+        )
+
         // Create new challenge
         const newChallengeData = new Challenge({
           user: userId,
@@ -92,43 +100,46 @@ module.exports = async function (fastify, opts) {
           challengeHashTag,
           locations,
           challengeIdentifier,
-          status: 'created'
+          status: 'created',
+          challengeAddress: challengeAddress
         })
         const savedChallenge = await newChallengeData.save()
+
         // Schedule a job
-        const delayDate = new Date(startDate).getTime() - Date.now()
-        const delayDate2 = new Date(endDate).getTime() - Date.now()
+        //const delayDate = new Date(startDate).getTime() - Date.now()
+        //const delayDate2 = new Date(endDate).getTime() - Date.now()
+
         // Create a repeating job
-        await fastify.bull.fetchPostDetails.add(
-          {
-            challengeId: savedChallenge._id
-          },
-          {
-            removeOnFail: false,
-            delay: delayDate,
-            attempts: 2,
-            backoff: 10000,
-            repeat: {
-              cron: '0 */3 * * *', // Run every 3h
-              startDate: new Date(startDate),
-              endDate: new Date(endDate)
-            },
-            removeOnComplete: true
-          }
-        )
+        // await fastify.bull.fetchPostDetails.add(
+        //   {
+        //     challengeId: savedChallenge._id
+        //   },
+        //   {
+        //     removeOnFail: false,
+        //     delay: delayDate,
+        //     attempts: 2,
+        //     backoff: 10000,
+        //     repeat: {
+        //       cron: '0 */3 * * *', // Run every 3h
+        //       startDate: new Date(startDate),
+        //       endDate: new Date(endDate)
+        //     },
+        //     removeOnComplete: true
+        //   }
+        // )
         // Create job that run when end time is reached
-        await fastify.bull.fetchPostDetails.add(
-          {
-            challengeId: savedChallenge._id
-          },
-          {
-            removeOnComplete: true,
-            removeOnFail: false,
-            delay: delayDate2,
-            attempts: 2,
-            backoff: 10000
-          }
-        )
+        // await fastify.bull.fetchPostDetails.add(
+        //   {
+        //     challengeId: savedChallenge._id
+        //   },
+        //   {
+        //     removeOnComplete: true,
+        //     removeOnFail: false,
+        //     delay: delayDate2,
+        //     attempts: 2,
+        //     backoff: 10000
+        //   }
+        // )
         if (!savedChallenge) {
           return reply.code(400).error({
             message: 'Failed to create challenge please try again.',
@@ -140,9 +151,11 @@ module.exports = async function (fastify, opts) {
           challenge: savedChallenge
         })
       } catch (error) {
-        console.log(error)
+        console.log(
+          `Failed to create challenge. Please try again. ${error.message}`
+        )
         return reply.code(500).send({
-          message: `Failed to create challenge. Please try again. ${error.message}`
+          message: `Failed to create challenge. Please try again`
         })
       }
     }
@@ -648,6 +661,7 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Update fund status
         const fundStatus = await challengeModel.updateFundStatus(
           challengeId,
           bountyOffered
@@ -659,14 +673,70 @@ module.exports = async function (fastify, opts) {
           })
         }
 
+        // Schedule a job
+        const delayDate = new Date(fundStatus.startDate).getTime() - Date.now()
+        const delayDate2 = new Date(fundStatus.endDate).getTime() - Date.now()
+
+        const endDate = new Date(fundStatus.endDate)
+        endDate.setHours(endDate.getHours() + 2)
+        const delayDate3 = endDate.getTime() - Date.now()
+
+        // Create a repeating job to fetch post details
+        await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnFail: false,
+            delay: delayDate,
+            attempts: 2,
+            backoff: 10000,
+            repeat: {
+              cron: '0 */3 * * *', // Run every 3h
+              startDate: new Date(fundStatus.startDate),
+              endDate: new Date(fundStatus.endDate)
+            },
+            removeOnComplete: true
+          }
+        )
+        // Create job that update post details when challenge ends
+        await fastify.bull.fetchPostDetails.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate2,
+            attempts: 2,
+            backoff: 10000
+          }
+        )
+
+        // Create job to distribute bounty
+        await fastify.bull.distributeBounty.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate3,
+            attempts: 2,
+            backoff: 10000
+          }
+        )
+
         return reply.success({
           message: 'Fund status updated successfully.',
           challenge: fundStatus
         })
       } catch (error) {
-        console.log(`Failed to fund status. Pleas try again - ${error.message}`)
+        console.log(
+          `Failed to fund status. Please try again - ${error.message}`
+        )
         return reply.error({
-          message: 'Failed to fund status. Pleas try again.'
+          message: 'Failed to fund status. Please try again.'
         })
       }
     }
