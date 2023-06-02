@@ -677,7 +677,11 @@ module.exports = async function (fastify, opts) {
         const delayDate = new Date(fundStatus.startDate).getTime() - Date.now()
         const delayDate2 = new Date(fundStatus.endDate).getTime() - Date.now()
 
-        //Create a repeating job
+        const endDate = new Date(fundStatus.endDate)
+        endDate.setHours(endDate.getHours() + 2)
+        const delayDate3 = endDate.getTime() - Date.now()
+
+        // Create a repeating job to fetch post details
         await fastify.bull.fetchPostDetails.add(
           {
             challengeId: savedChallenge._id
@@ -695,7 +699,7 @@ module.exports = async function (fastify, opts) {
             removeOnComplete: true
           }
         )
-        // Create job that run when end time is reached
+        // Create job that update post details when challenge ends
         await fastify.bull.fetchPostDetails.add(
           {
             challengeId: savedChallenge._id
@@ -704,6 +708,20 @@ module.exports = async function (fastify, opts) {
             removeOnComplete: true,
             removeOnFail: false,
             delay: delayDate2,
+            attempts: 2,
+            backoff: 10000
+          }
+        )
+
+        // Create job to distribute bounty
+        await fastify.bull.distributeBounty.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false,
+            delay: delayDate3,
             attempts: 2,
             backoff: 10000
           }
