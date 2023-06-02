@@ -24,7 +24,7 @@ module.exports = async function (args, done) {
       await challengeParticipationModel.getUserBountyReceived(challengeId)
 
     if (challenge && participants) {
-      const { wallets, amounts } = await distributeBounty(
+      const { wallets, amounts } = await distributeBountyInJob(
         challenge.bountyOffered,
         participants.userTotals,
         participants.totalBountyAllUsers,
