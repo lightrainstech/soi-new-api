@@ -3,86 +3,91 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
-const ChallengeSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
+const ChallengeSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    facebookText: {
+      type: String
+    },
+    instagramText: {
+      type: String
+    },
+    twitterText: {
+      type: String
+    },
+    youtubeText: {
+      type: String
+    },
+    tiktokText: {
+      type: String
+    },
+    hashtags: {
+      type: [String]
+    },
+    mentions: {
+      type: [String]
+    },
+    startDate: {
+      type: Date
+    },
+    endDate: {
+      type: Date
+    },
+    externalLink: {
+      type: String
+    },
+    bountyOffered: {
+      type: Number
+    },
+    challengeHashTag: {
+      type: String,
+      unique: true
+    },
+    participants: {
+      type: Array,
+      default: []
+    },
+    challengeIdentifier: {
+      type: String
+    },
+    locations: {
+      type: Array,
+      default: []
+    },
+    participantsHashTags: {
+      type: Array,
+      default: []
+    },
+    challengeAddress: {
+      type: String,
+      default: null
+    },
+    isFunded: {
+      type: Boolean,
+      default: false
+    },
+    status: {
+      type: String,
+      enum: ['created', 'started', 'cancelled', 'completed'],
+      default: 'created'
+    }
   },
-  title: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  facebookText: {
-    type: String
-  },
-  instagramText: {
-    type: String
-  },
-  twitterText: {
-    type: String
-  },
-  youtubeText: {
-    type: String
-  },
-  tiktokText: {
-    type: String
-  },
-  hashtags: {
-    type: [String]
-  },
-  mentions: {
-    type: [String]
-  },
-  startDate: {
-    type: Date
-  },
-  endDate: {
-    type: Date
-  },
-  externalLink: {
-    type: String
-  },
-  bountyOffered: {
-    type: Number
-  },
-  challengeHashTag: {
-    type: String,
-    unique: true
-  },
-  participants: {
-    type: Array,
-    default: []
-  },
-  challengeIdentifier: {
-    type: String
-  },
-  locations: {
-    type: Array,
-    default: []
-  },
-  participantsHashTags: {
-    type: Array,
-    default: []
-  },
-  challengeAddress: {
-    type: String,
-    default: null
-  },
-  isFunded: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    enum: ['created', 'started', 'cancelled', 'completed'],
-    default: 'created'
+  {
+    timestamps: true
   }
-})
+)
 
 ChallengeSchema.methods = {
   getChallengeById: async function (challengeId) {
