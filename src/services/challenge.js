@@ -106,40 +106,21 @@ module.exports = async function (fastify, opts) {
         const savedChallenge = await newChallengeData.save()
 
         // Schedule a job
-        //const delayDate = new Date(startDate).getTime() - Date.now()
-        //const delayDate2 = new Date(endDate).getTime() - Date.now()
-
-        // Create a repeating job
-        // await fastify.bull.fetchPostDetails.add(
-        //   {
-        //     challengeId: savedChallenge._id
-        //   },
-        //   {
-        //     removeOnFail: false,
-        //     delay: delayDate,
-        //     attempts: 2,
-        //     backoff: 10000,
-        //     repeat: {
-        //       cron: '0 */3 * * *', // Run every 3h
-        //       startDate: new Date(startDate),
-        //       endDate: new Date(endDate)
-        //     },
-        //     removeOnComplete: true
-        //   }
-        // )
-        // Create job that run when end time is reached
-        // await fastify.bull.fetchPostDetails.add(
-        //   {
-        //     challengeId: savedChallenge._id
-        //   },
-        //   {
-        //     removeOnComplete: true,
-        //     removeOnFail: false,
-        //     delay: delayDate2,
-        //     attempts: 2,
-        //     backoff: 10000
-        //   }
-        // )
+        const delayDate = new Date(startDate).getTime() - Date.now()
+        
+        // Create job to cancel challenge
+        await fastify.bull.cancelChallenge.add(
+          {
+            challengeId: savedChallenge._id
+          },
+          {
+            removeOnFail: false,
+            delay: delayDate,
+            attempts: 2,
+            backoff: 10000,
+            removeOnComplete: true
+          }
+        )
         if (!savedChallenge) {
           return reply.code(400).error({
             message: 'Failed to create challenge please try again.',
@@ -679,7 +660,7 @@ module.exports = async function (fastify, opts) {
         const delayDate2 = new Date(fundStatus.endDate).getTime() - Date.now()
 
         const endDate = new Date(fundStatus.endDate)
-        endDate.setHours(endDate.getHours() + 2)
+        endDate.setMinutes(endDate.getMinutes() + 30)
         const delayDate3 = endDate.getTime() - Date.now()
 
         // Create a repeating job to fetch post details

@@ -323,12 +323,20 @@ const distributeBountyInJob = async (
   const amounts = Object.values(mergedObject).map(value =>
     Web3.utils.toWei(value.toString(), 'ether')
   )
-  
+
+  return { wallets, amounts }
+}
+
+const returnBounty = (wallet, bounty) => {
+  let wallets = [], amounts = []
+  wallets.push(Web3.utils.toChecksumAddress(wallet))
+  amounts.push(Web3.utils.toWei(bounty.toString(), 'ether'))
   return { wallets, amounts }
 }
 
 module.exports = {
   pricePerPostMetrics,
   distributeBounty,
-  distributeBountyInJob
+  distributeBountyInJob,
+  returnBounty
 }

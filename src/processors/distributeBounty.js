@@ -3,7 +3,7 @@
 const mongoose = require('mongoose')
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const Challenge = require('../models/challengeModel')
-const { distributeBountyInJob } = require('../utils/bountyCalculator')
+const { distributeBountyInJob, returnBounty } = require('../utils/bountyCalculator')
 const { distributeBounty } = require('../utils/challengeContract')
 
 module.exports = async function (args, done) {
@@ -23,7 +23,7 @@ module.exports = async function (args, done) {
     const participants =
       await challengeParticipationModel.getUserBountyReceived(challengeId)
 
-    if (challenge && participants.length > 0) {
+    if (challenge && participants) {
       const { wallets, amounts } = await distributeBountyInJob(
         challenge.bountyOffered,
         participants.userTotals,
@@ -42,6 +42,15 @@ module.exports = async function (args, done) {
         done()
       }
     } else {
+      const { wallets, amounts } = await returnBounty(
+        wallet,
+        challenge.bountyOffered
+      )
+      const tx = await distributeBounty(
+        challenge.challengeAddress,
+        wallets,
+        amounts
+      )
       await challengeModel.updateChallengeStatus(challengeId, 'cancelled')
       console.log('Exiting. No participants.')
       done()
