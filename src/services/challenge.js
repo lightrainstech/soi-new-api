@@ -684,7 +684,7 @@ module.exports = async function (fastify, opts) {
         // Create a repeating job to fetch post details
         await fastify.bull.fetchPostDetails.add(
           {
-            challengeId: savedChallenge._id
+            challengeId: fundStatus._id
           },
           {
             removeOnFail: false,
@@ -692,7 +692,8 @@ module.exports = async function (fastify, opts) {
             attempts: 2,
             backoff: 10000,
             repeat: {
-              cron: '0 */3 * * *', // Run every 3h
+              //cron: '0 */3 * * *', // Run every 3h
+              cron: '*/3 * * * *',
               startDate: new Date(fundStatus.startDate),
               endDate: new Date(fundStatus.endDate)
             },
@@ -702,7 +703,7 @@ module.exports = async function (fastify, opts) {
         // Create job that update post details when challenge ends
         await fastify.bull.fetchPostDetails.add(
           {
-            challengeId: savedChallenge._id
+            challengeId: fundStatus._id
           },
           {
             removeOnComplete: true,
@@ -716,7 +717,7 @@ module.exports = async function (fastify, opts) {
         // Create job to distribute bounty
         await fastify.bull.distributeBounty.add(
           {
-            challengeId: savedChallenge._id
+            challengeId: fundStatus._id
           },
           {
             removeOnComplete: true,
