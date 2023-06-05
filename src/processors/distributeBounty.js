@@ -42,6 +42,7 @@ module.exports = async function (args, done) {
         done()
       }
     } else {
+      await challengeModel.updateChallengeStatus(challengeId, 'cancelled')
       console.log('Exiting. No participants.')
       done()
     }
