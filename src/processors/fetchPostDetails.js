@@ -32,7 +32,7 @@ module.exports = async function (args, done) {
       const participants =
         await challengeParticipationModel.getChallengeParticipants(challengeId)
 
-      if (participants.length) {
+      if (participants.length > 0) {
         const updatePromises = participants.map(async participant => {
           const socialKeys = Object.keys(participant.nft.social).filter(
               key => participant.nft.social[key].socialInsiderId !== undefined
@@ -168,8 +168,12 @@ module.exports = async function (args, done) {
         console.log('Post details updated')
         console.log('---------done-------')
         done()
+      }else {
+        console.log('Exiting. No participants.')
+        done()
       }
-      console.log('Exiting........')
+    } else {
+      console.log('Exiting. Challenge not started or funded.')
       done()
     }
   } catch (error) {

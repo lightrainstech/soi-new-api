@@ -223,7 +223,7 @@ const distributeBounty = async (
   }
 }
 
-
+// Distribute bounty in job
 const distributeBountyInJob = async (
   bountyInvested,
   participants,
@@ -314,10 +314,16 @@ const distributeBountyInJob = async (
     return result
   }, {})
 
-  const wallets = Object.keys(mergedObject)
+  // Convert wallet to checksum
+  const wallets = Object.keys(mergedObject).map(value =>
+    Web3.utils.toChecksumAddress(value)
+  )
+
+  // Convert amount towei
   const amounts = Object.values(mergedObject).map(value =>
     Web3.utils.toWei(value.toString(), 'ether')
   )
+  
   return { wallets, amounts }
 }
 

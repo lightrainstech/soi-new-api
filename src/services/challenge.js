@@ -652,6 +652,7 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       const { challengeId } = request.params
       const { bountyOffered } = request.body
+      const { wallet } = request.user
       try {
         const challengeModel = new Challenge()
         const challenge = await challengeModel.getChallengeDetails(challengeId)
@@ -692,8 +693,7 @@ module.exports = async function (fastify, opts) {
             attempts: 2,
             backoff: 10000,
             repeat: {
-              //cron: '0 */3 * * *', // Run every 3h
-              cron: '*/3 * * * *',
+              cron: '0 */3 * * *', // Run every 3h
               startDate: new Date(fundStatus.startDate),
               endDate: new Date(fundStatus.endDate)
             },
@@ -717,7 +717,8 @@ module.exports = async function (fastify, opts) {
         // Create job to distribute bounty
         await fastify.bull.distributeBounty.add(
           {
-            challengeId: fundStatus._id
+            challengeId: fundStatus._id,
+            wallet: wallet
           },
           {
             removeOnComplete: true,
