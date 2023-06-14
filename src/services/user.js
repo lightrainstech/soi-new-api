@@ -22,6 +22,10 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkUsernameSchema },
     async function (request, reply) {
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           { userName } = request.query,
           user = await userModel.getUserByUsername(userName)
@@ -50,6 +54,10 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           { email } = request.params,
           user = await userModel.getUserByEmail(email.toString().toLowerCase())
@@ -80,7 +88,7 @@ module.exports = async function (fastify, opts) {
       const { phone, country, name, affCode, wallet, userName } = request.body,
         email = request.body.email.toString().toLowerCase()
       try {
-        return reply.code(503).send({
+        return reply.error({
           message:
             'Sorry for the inconvenience caused. We are undergoing maintenance.'
         })
@@ -197,7 +205,7 @@ module.exports = async function (fastify, opts) {
       '/walletConnect',
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
-        return reply.code(503).send({
+        return reply.error({
           message:
             'Sorry for the inconvenience caused. We are undergoing maintenance.'
         })
