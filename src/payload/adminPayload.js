@@ -4,6 +4,6 @@ exports.nftAlloctionSchema = {
   tags: ['Admin'],
   summary: 'Allocate number of NFTs for affliatecode',
   body: S.object()
-    .prop('affCode', S.string().maxLength(8))
+    .prop('agencyCode', S.string().maxLength(8))
     .prop('nftAllocation', S.number().minimum(0).default(0))
 }

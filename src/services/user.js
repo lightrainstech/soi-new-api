@@ -6,10 +6,9 @@ const User = require('../models/userModel.js')
 const UserToken = require('../models/userToken')
 const userPayload = require('../payload/userPayload.js')
 const Affiliate = require('../models/affiliateModel.js')
-const Agency = require('../models/agencyModel')
 
 const { checkSumAddress } = require('../utils/contract')
-const S3 = require('../utils/S3Config')
+const { S3, uploadToS3 } = require('../utils/S3Config')
 
 const EXPIRESIN = process.env.JWT_TOKEN_EXPIRY || '3d'
 
@@ -85,7 +84,8 @@ module.exports = async function (fastify, opts) {
     '/signup',
     { schema: userPayload.signUpSchema },
     async function (request, reply) {
-      const { phone, country, name, affCode, wallet, userName } = request.body,
+      const { phone, country, name, agencyCode, wallet, userName } =
+          request.body,
         email = request.body.email.toString().toLowerCase()
       try {
         return reply.error({
@@ -104,15 +104,16 @@ module.exports = async function (fastify, opts) {
           userModel.country = country
           userModel.wallet = checkSumWallet
 
-          if (affCode) {
+          if (agencyCode) {
             userModel.role = 'influencer'
           }
           const newUsr = await userModel.save()
 
-          if (affCode) {
+          if (agencyCode) {
             Affiliate.create({
               user: newUsr._id,
-              affiliateCode: affCode
+              agencyCode: agencyCode,
+              role: 'influencer'
             })
           }
           const jwt = fastify.jwt.sign(
@@ -120,15 +121,17 @@ module.exports = async function (fastify, opts) {
               userId: newUsr._id,
               name: newUsr.name,
               wallet: newUsr.wallet,
-              affCode: affCode ? affCode : ''
+              agencyCode: agencyCode ? agencyCode : '',
+              role: newUsr.role
             },
             { expiresIn: EXPIRESIN }
           )
           let respUser = {
             userId: newUsr._id,
             name: newUsr.name,
-            userName: newUsr.userName,
-            affCode: affCode ? affCode : '',
+            userName: newUsr.userName ? newUsr.userName : null,
+            agencyCode: agencyCode ? agencyCode : '',
+            role: newUsr.role,
             accessToken: jwt
           }
           reply.success({ message: 'Sign up successful', respUser })
@@ -171,17 +174,17 @@ module.exports = async function (fastify, opts) {
     '/availableNft',
     { schema: userPayload.nftAvailableSchema },
     async function (request, reply) {
-      const { affCode } = request.query
+      const { agencyCode } = request.query
       try {
-        const agencyModel = new Agency(),
-          isExists = await agencyModel.checkAffiliateCode(affCode)
+        const userModel = new User(),
+          isExists = await userModel.checkAffiliateCode(agencyCode)
         if (!isExists) {
           reply.code(400).error({
             message: 'Invalid agency code.'
           })
           return reply
         }
-        let count = (await redis.get(`NFTC:${affCode}`)) || 0
+        let count = (await redis.get(`NFTC:${agencyCode}`)) || 0
         if (Number(count) === 0) {
           return reply.error({
             message: 'Invalid agency code.'
@@ -233,7 +236,7 @@ module.exports = async function (fastify, opts) {
             if (!affiliateData) {
               return reply.code(400).error({
                 message:
-                  'You must need an influencer account. Contact admin for more information.'
+                  'You must need an influencer or brand account. Contact admin for more information.'
               })
             }
             const jwt = fastify.jwt.sign(
@@ -241,7 +244,8 @@ module.exports = async function (fastify, opts) {
                 userId: userData._id,
                 name: userData.name,
                 wallet: userData.wallet,
-                affCode: affiliateData?.affiliateCode
+                agencyCode: affiliateData?.agencyCode,
+                role: userData.role
               },
               { expiresIn: EXPIRESIN }
             )
@@ -249,6 +253,7 @@ module.exports = async function (fastify, opts) {
               userId: userData._id,
               name: userData.name,
               wallet: userData.wallet,
+              role: userData.role,
               accessToken: jwt
             }
 
@@ -327,7 +332,7 @@ module.exports = async function (fastify, opts) {
       onRequest: [fastify.authenticate]
     },
     async function (request, reply) {
-      const { userId, affCode } = request.user
+      const { userId, agencyCode } = request.user
       try {
         const userTokenModel = new UserToken(),
           userModel = new User(),
@@ -338,7 +343,7 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        let count = (await redis.get(`NFTC:${affCode}`)) || 0,
+        let count = (await redis.get(`NFTC:${agencyCode}`)) || 0,
           isMinted = await userTokenModel.getUserTokenByUserId(userId)
         if (!isMinted && Number(count) > 0) {
           reply.success({
@@ -450,25 +455,12 @@ module.exports = async function (fastify, opts) {
           }).promise()
         }
 
-        const fileName = file[0].filename.replace(/[^a-zA-Z0-9.]/g, '')
-        const uniqFileName = `${Date.now()}-${fileName}`,
-          fileDirPath = `${userId}/${uniqFileName}`
-
-        // Set up S3 parameters for upload
-        const params = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: fileDirPath,
-          Body: file[0].data,
-          ContentType: file[0].mimetype,
-          ACL: 'public-read'
-        }
-        // Upload thumbnail to S3
-        const upload = await S3.upload(params).promise()
+        const { link } = await uploadToS3(file, userId)
         let updateObj = {}
         if (isBanner) {
-          updateObj['bannerImage'] = upload.Location
+          updateObj['bannerImage'] = link
         } else {
-          updateObj['avatar'] = upload.Location
+          updateObj['avatar'] = link
         }
 
         const update = await userModel.updateBannerOrAvatar(userId, updateObj)
@@ -494,6 +486,35 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+
+  // Check wallet exists or not
+  fastify.get(
+    '/wallet/check',
+    { schema: userPayload.checkWalletSchema },
+    async function (request, reply) {
+      try {
+        const userModel = new User()
+        const { wallet } = request.query
+        const checkSumWallet = await checkSumAddress(wallet)
+        const user = await userModel.getUserBywallet(checkSumWallet)
+        if (user) {
+          reply.code(400).error({
+            message: 'Wallet already exists.'
+          })
+          return reply
+        } else {
+          reply.success({
+            message: 'Wallet is available.'
+          })
+          return reply
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({ message: `Something went wrong: ${error}` })
+        return reply
+      }
+    }
+  )
 }
 
-module.exports.autoPrefix = '/user'
+module.exports.autoPrefix = '/users'

@@ -1,6 +1,5 @@
 const pinataSDK = require('@pinata/sdk')
 const fs = require('fs')
-const { pipeline, Duplex } = require('stream')
 
 const UserToken = require('../models/userToken')
 const assetPayload = require('../payload/assetPayload')
@@ -35,7 +34,6 @@ module.exports = async function (fastify, opts) {
     },
     async function (request, reply) {
       try {
-        let pinataStatus = await pinata.testAuthentication()
         const { file } = request.body
         if (!Array.isArray(file) || !file[0].filename) {
           reply.error({
@@ -45,40 +43,37 @@ module.exports = async function (fastify, opts) {
           return reply
         }
 
+        // Write file to disk
         const filePath = `${process.cwd()}/public/assets/${Date.now()}${
           file[0].filename
         }`
-        const readStream = Duplex()
-        readStream.push(file[0].data)
-        readStream.push(null)
-        pipeline(readStream, fs.createWriteStream(filePath), async err => {
-          if (err) {
-            console.log(err)
-            reply.error({ message: 'Upload failed', error: err.message })
+        fs.promises.writeFile(filePath, file[0].data)
+
+        // Add file to IPFS
+        const { IpfsHash } = await pinata.pinFileToIPFS(
+          fs.createReadStream(filePath),
+          {
+            pinataMetadata: {
+              name: file[0].filename
+            }
           }
-          const readableStreamForFile = fs.createReadStream(filePath),
-            { IpfsHash } = await pinata.pinFileToIPFS(readableStreamForFile, {
-              pinataMetadata: {
-                name: file[0].filename
-              }
-            })
+        )
+        const assetUrl = 'https://ipfs.io/ipfs/' + IpfsHash
 
-          // Create thumbnail and get S3 link
-          const { link } = await createThumbnailAndPushToS3(filePath, file)
+        // Create thumbnail
+        const { link } = await createThumbnailAndPushToS3(filePath, file)
 
-          // Remove file from disk storage
-          fs.unlinkSync(filePath)
+        // Remove file from disk
+        fs.promises.unlink(filePath)
 
-          let assetUrl = 'https://ipfs.io/ipfs/' + IpfsHash
-          reply.success({
-            path: assetUrl,
-            mimeType: file[0].mimetype,
-            thumbnail: link
-          })
+        return reply.success({
+          path: assetUrl,
+          mimeType: file[0].mimetype,
+          thumbnail: link
         })
       } catch (err) {
         console.log(err)
-        reply.error({ message: 'Upload Failed', error: err.message })
+        reply.error({ message: 'Upload Failed', error: err.message || err })
       }
       return reply
     }
@@ -90,7 +85,7 @@ module.exports = async function (fastify, opts) {
     { schema: assetPayload.mintNftSchema, onRequest: [fastify.authenticate] },
     async function (request, reply) {
       const { assetUrl, thumbnail, name } = request.body,
-        { wallet, affCode, userId } = request.user
+        { wallet, agencyCode, userId } = request.user
       try {
         // Static title and description for assets
         const title = name ? name : 'SOI',
@@ -113,7 +108,7 @@ module.exports = async function (fastify, opts) {
         const job = await fastify.bull.sendNFT.add(
           {
             userId: userId,
-            affCode: affCode,
+            agencyCode: agencyCode,
             wallet: wallet,
             metaDataUrl: metaDataUrl,
             assetUrl: assetUrl,
@@ -122,9 +117,9 @@ module.exports = async function (fastify, opts) {
           },
           { removeOnComplete: true, removeOnFail: false, backoff: 10000 }
         )
-        let count = await redis.get(`NFTC:${affCode}`)
+        let count = await redis.get(`NFTC:${agencyCode}`)
         count = Number(count) - 1
-        await redis.set(`NFTC:${affCode}`, Number(count))
+        await redis.set(`NFTC:${agencyCode}`, Number(count))
         return reply.success({
           message: 'NFT minting initiated.',
           jobId: job.id

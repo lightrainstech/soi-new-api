@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 const { stripTrailingSlash } = require('../utils/soi')
+const { randomHashTag } = require('../utils/hashtag')
 
 const UserTokenSchema = new mongoose.Schema(
   {
@@ -65,13 +66,16 @@ const UserTokenSchema = new mongoose.Schema(
       }
     },
     isActive: {
-      true: Boolean,
+      type: Boolean,
       default: false
     },
-    owner: {
+    owner:{
       type: String
     },
     creator: {
+      type: String
+    },
+    tokenHashTag: {
       type: String
     }
   },
@@ -356,7 +360,7 @@ UserTokenSchema.statics = {
   load: function (options, cb) {
     options.select =
       options.select ||
-      'user avatar name thumbnail nftId social isActive createdAt owner creator'
+      'user avatar name thumbnail nftId social isActive createdAt owner creator tokenHashTag'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   },
 
@@ -366,7 +370,7 @@ UserTokenSchema.statics = {
     const limit = parseInt(options.limit) || 12
     const select =
       options.select ||
-      'user avatar name thumbnail nftId social isActive createdAt owner creator'
+      'user avatar name thumbnail nftId social isActive createdAt owner creator tokenHashTag'
     return this.find(criteria)
       .select(select)
       .sort({ createdAt: -1 })

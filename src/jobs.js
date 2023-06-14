@@ -20,6 +20,10 @@ let subscriber = new Redis(REDIS_CONN, connOpts)
 
 let JOBS = {}
 JOBS.sendNFT = require('./processors/sendNFT.js')
+JOBS.fetchPostDetails = require('./processors/fetchPostDetails.js')
+JOBS.distributeBounty = require('./processors/distributeBounty')
+JOBS.cancelChallenge = require('./processors/cancelChallenge')
+
 
 let opts = {
   createClient: type => {

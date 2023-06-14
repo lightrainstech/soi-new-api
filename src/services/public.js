@@ -36,4 +36,33 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+
+  // Get brands avatar list
+  fastify.get(
+    '/brands/avatar',
+    { schema: publicPayload.avatarsListSchema },
+    async function (request, reply) {
+      try {
+        const userModel = new User()
+        const avatarLists = await userModel.getAvatars('brand')
+        if (avatarLists) {
+          return reply.success({
+            message: 'Avatar listed successfully.',
+            avatarLists
+          })
+        } else {
+          return reply.error({
+            message: 'Failed tto fetch avatars.',
+            avatarLists
+          })
+        }
+      } catch (error) {
+        console.log(error)
+        reply.error({
+          message: `Failed to fetch avatars. Please try again: ${error.message}`
+        })
+        return reply
+      }
+    }
+  )
 }

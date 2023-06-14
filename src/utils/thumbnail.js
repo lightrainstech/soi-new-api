@@ -1,5 +1,5 @@
 const sharp = require('sharp')
-const S3 = require('./S3Config')
+const { S3 } = require('./S3Config')
 
 exports.createThumbnailAndPushToS3 = async (filePath, file) => {
   // Resize image to thumbnail size

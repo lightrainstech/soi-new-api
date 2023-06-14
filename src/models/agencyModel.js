@@ -7,6 +7,7 @@ const nanoidLong = customAlphabet(
   '5eDVbMmnXU9GRaF3H4Cl2vwSzYsqfrLdyOIKWZ78hkJPgTN6xEjcQtABpu',
   8
 )
+const ObjectId = mongoose.Types.ObjectId
 
 const agencySchema = new mongoose.Schema({
   name: {
@@ -18,7 +19,7 @@ const agencySchema = new mongoose.Schema({
     unique: true,
     required: true
   },
-  parentAgencyId: {
+  parent: {
     type: Schema.ObjectId
   },
   wallet: {
@@ -28,10 +29,13 @@ const agencySchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['agency', 'sub-agency'],
+    enum: ['agency', 'sub-agency', 'brand'],
     default: 'agency'
   },
-  agencyCode: { type: String, default: null }
+  agencyCode: { type: String, default: null },
+  logo: {
+    type: String,
+  }
 })
 
 agencySchema.pre('save', async function (next) {
@@ -48,9 +52,33 @@ agencySchema.methods = {
     }
     return Agency.load(options)
   },
-  checkAffiliateCode: async function (affCode) {
+  getAgencyById: async function (id) {
     const Agency = mongoose.model('Agency')
-    let query = { agencyCode: affCode }
+    let query = { _id: ObjectId(id) }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
+  },
+  checkAffiliateCode: async function (agencyCode) {
+    const Agency = mongoose.model('Agency')
+    let query = { agencyCode: agencyCode, role: 'agency' }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
+  },
+  getBrandByEmailOrWallet: async function (email, wallet) {
+    const Agency = mongoose.model('Agency')
+    let query = { $or: [{ email: email }, { wallet: wallet }], role: 'brand' }
+    const options = {
+      criteria: query
+    }
+    return Agency.load(options)
+  },
+  getBrandByWallet: async function (wallet) {
+    const Agency = mongoose.model('Agency')
+    let query = {  wallet: wallet , role: 'brand' }
     const options = {
       criteria: query
     }
@@ -60,7 +88,7 @@ agencySchema.methods = {
 
 agencySchema.statics = {
   load: function (options, cb) {
-    options.select = options.select || 'email name wallet role agencyCode'
+    options.select = options.select || 'email name wallet role parent agencyCode logo'
     return this.findOne(options.criteria).select(options.select).exec(cb)
   }
 }

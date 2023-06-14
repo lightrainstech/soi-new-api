@@ -18,75 +18,54 @@ const UserSchema = new mongoose.Schema(
     },
     userName: {
       type: String,
+      index: {
+        unique: true,
+        partialFilterExpression: {
+          $or: [
+            { userName: { $type: 'string' } },
+            { userName: { $exists: false } }
+          ]
+        }
+      },
+      default: null
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      default: '--'
+    },
+    country: {
+      type: String,
+      default: '--'
+    },
+    wallet: {
+      type: String,
       required: true,
       unique: true
     },
-    name: { type: String, required: true },
-    phone: { type: String, default: '--' },
-    country: { type: String, default: '--' },
-    wallet: { type: String, required: true, unique: true },
-    affiliateCode: { type: String, default: null },
+    agencyCode: {
+      type: String,
+      default: null
+    },
     isRestricted: {
       type: Boolean,
       default: false
     },
     role: {
       type: String,
-      enum: ['user', 'influencer', 'agency'],
+      enum: ['user', 'influencer', 'agency', 'sub-agency', 'brand'],
       default: 'user'
     },
     avatar: {
-      type: String
+      type: String,
+      default: null
     },
     bannerImage: {
-      type: String
-    },
-    social: {
-      facebook: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      twitter: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      youtube: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      instagram: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      },
-      tiktok: {
-        name: String,
-        handle: String,
-        socialInsiderId: String,
-        followers: {
-          type: Number,
-          default: 0
-        }
-      }
+      type: String,
+      default: null
     }
   },
   {
@@ -95,17 +74,16 @@ const UserSchema = new mongoose.Schema(
 )
 
 UserSchema.pre('save', async function (next) {
-  this.affiliateCode = nanoidLong()
+  this.agencyCode = nanoidLong()
   next()
 })
-;;(UserSchema.methods = {
+UserSchema.methods = {
   getUserById: async function (id) {
     const User = mongoose.model('User')
     let query = { _id: id }
     const options = {
       criteria: query,
-      select:
-        'email userName wallet role avatar bannerImage social name country phone'
+      select: 'email userName wallet role avatar bannerImage name country phone'
     }
     return User.load(options)
   },
@@ -114,8 +92,7 @@ UserSchema.pre('save', async function (next) {
     let query = { email }
     const options = {
       criteria: query,
-      select:
-        'email userName wallet role avatar bannerImage social name country phone'
+      select: 'email userName wallet role avatar bannerImage name country phone'
     }
     return User.load(options)
   },
@@ -124,7 +101,7 @@ UserSchema.pre('save', async function (next) {
     let query = { email, isRestricted: false }
     const options = {
       criteria: query,
-      select: 'email hashed_password name'
+      select: 'email  name'
     }
     return User.load(options)
   },
@@ -133,8 +110,7 @@ UserSchema.pre('save', async function (next) {
     let query = { wallet }
     const options = {
       criteria: query,
-      select:
-        'email userName wallet role avatar bannerImage social name country phone'
+      select: 'email userName wallet role avatar bannerImage country phone'
     }
     return await User.load(options)
   },
@@ -146,9 +122,9 @@ UserSchema.pre('save', async function (next) {
     }
     return User.load(options)
   },
-  checkAffiliateCode: async function (affCode) {
+  checkAffiliateCode: async function (agencyCode) {
     const User = mongoose.model('User')
-    return await User.findOne({ affiliateCode: affCode })
+    return await User.findOne({ agencyCode: agencyCode, role: 'agency' })
   },
   updateProfile: async function (userId, updateObj) {
     const User = mongoose.model('User')
@@ -201,31 +177,50 @@ UserSchema.pre('save', async function (next) {
       { new: true }
     )
     return data
-  }
-}),
-  (UserSchema.statics = {
-    load: function (options, cb) {
-      options.select = options.select || 'email name'
-      return this.findOne(options.criteria).select(options.select).exec(cb)
-    },
-
-    list: function (options) {
-      const criteria = options.criteria || {}
-      const page = options.page - 1
-      const limit = parseInt(options.limit) || 12
-      const select =
-        options.select || 'email name isVerified wallet createdAt -__v'
-      return this.find(criteria)
-        .select(select)
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(limit * page)
-        .lean()
-        .exec()
+  },
+  getUserByEmailOrWallet: async function (email, wallet, role) {
+    const User = mongoose.model('User')
+    let query = { $or: [{ email: email }, { wallet: wallet }], role: role }
+    const options = {
+      criteria: query
     }
-  })
+    return User.load(options)
+  },
+  getAvatars: async function (role) {
+    const User = mongoose.model('User')
+    let query = { role: role, avatar: { $exists: true, $ne: null } }
+    const options = {
+      criteria: query,
+      select: 'name avatar'
+    }
+    return User.find(options.criteria)
+      .select(options.select)
+      .sort({ createdAt: -1 })
+  }
+}
+UserSchema.statics = {
+  load: function (options, cb) {
+    options.select = options.select || 'email name'
+    return this.findOne(options.criteria).select(options.select).exec(cb)
+  },
 
-UserSchema.index({ email: 1 }, { unique: true }, { affiliateCode : 1})
+  list: function (options) {
+    const criteria = options.criteria || {}
+    const page = options.page - 1
+    const limit = parseInt(options.limit) || 12
+    const select =
+      options.select || 'email name isVerified wallet createdAt -__v'
+    return this.find(criteria)
+      .select(select)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page)
+      .lean()
+      .exec()
+  }
+}
+
+UserSchema.index({ email: 1 }, { unique: true }, { agencyCode: 1 })
 
 UserSchema.plugin(uniqueValidator)
 
