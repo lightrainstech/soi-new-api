@@ -80,6 +80,10 @@ module.exports = async function (fastify, opts) {
       const { phone, country, name, affCode, wallet, userName } = request.body,
         email = request.body.email.toString().toLowerCase()
       try {
+        return reply.code(503).send({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           checkSumWallet = await checkSumAddress(wallet)
         // Check user exists or not
@@ -193,6 +197,10 @@ module.exports = async function (fastify, opts) {
       '/walletConnect',
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
+        return reply.code(503).send({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const { wallet, signature, message } = request.body,
           userModel = new User(),
           msgBuffer = Buffer.from(message),
