@@ -21,6 +21,10 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkUsernameSchema },
     async function (request, reply) {
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           { userName } = request.query,
           user = await userModel.getUserByUsername(userName)
@@ -49,6 +53,10 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkEmailSchema },
     async function (request, reply) {
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           { email } = request.params,
           user = await userModel.getUserByEmail(email.toString().toLowerCase())
@@ -80,6 +88,10 @@ module.exports = async function (fastify, opts) {
           request.body,
         email = request.body.email.toString().toLowerCase()
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User(),
           checkSumWallet = await checkSumAddress(wallet)
         // Check user exists or not
@@ -196,6 +208,10 @@ module.exports = async function (fastify, opts) {
       '/walletConnect',
       { schema: userPayload.walletConnectSchema },
       async function (request, reply) {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const { wallet, signature, message } = request.body,
           userModel = new User(),
           msgBuffer = Buffer.from(message),
@@ -477,6 +493,10 @@ module.exports = async function (fastify, opts) {
     { schema: userPayload.checkWalletSchema },
     async function (request, reply) {
       try {
+        return reply.error({
+          message:
+            'Sorry for the inconvenience caused. We are undergoing maintenance.'
+        })
         const userModel = new User()
         const { wallet } = request.query
         const checkSumWallet = await checkSumAddress(wallet)
