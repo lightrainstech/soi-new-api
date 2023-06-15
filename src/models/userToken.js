@@ -3,7 +3,6 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 const { stripTrailingSlash } = require('../utils/soi')
-const { randomHashTag } = require('../utils/hashtag')
 
 const UserTokenSchema = new mongoose.Schema(
   {
