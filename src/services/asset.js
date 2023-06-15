@@ -519,16 +519,16 @@ module.exports = async function (fastify, opts) {
           })
           return reply
         }
-        const socialKeys = Object.keys(nft.social).filter(
-          key => nft.social[key].socialInsiderId !== undefined
-        )
+        // const socialKeys = Object.keys(nft.social).filter(
+        //   key => nft.social[key].socialInsiderId !== undefined
+        // )
 
-        if (Object.keys(socialKeys).length < 2) {
-          reply.error({
-            message: 'Please connect at least two social media profile.'
-          })
-          return reply
-        }
+        // if (Object.keys(socialKeys).length < 2) {
+        //   reply.error({
+        //     message: 'Please connect at least two social media profile.'
+        //   })
+        //   return reply
+        // }
         const markAsActive = await userTokenModel.markAsActive(nftId, userId)
         if (markAsActive) {
           return reply.success({
