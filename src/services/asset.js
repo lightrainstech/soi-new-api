@@ -420,14 +420,14 @@ module.exports = async function (fastify, opts) {
         // Check for cached value
         const key = `FOLLOWERC:${userId}`
         const cachedData = await fastify.redis.get(key)
-        // if (cachedData) {
-        //   reply.success({
-        //     isCache: true,
-        //     profileDetails: JSON.parse(cachedData),
-        //     connectedProfiles
-        //   })
-        //   return reply
-        // }
+        if (cachedData) {
+          reply.success({
+            isCache: true,
+            profileDetails: JSON.parse(cachedData),
+            connectedProfiles
+          })
+          return reply
+        }
 
         let resArray = []
         const updateFollowers = async (nft, key) => {
