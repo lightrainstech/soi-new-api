@@ -107,6 +107,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  // API to get brand details
   fastify.get(
     '/',
     {

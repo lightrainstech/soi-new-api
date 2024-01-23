@@ -122,7 +122,7 @@ module.exports = async function (fastify, opts) {
         await redis.set(`NFTC:${agencyCode}`, Number(count))
         return reply.success({
           message: 'NFT minting initiated.',
-          jobId: job.id
+          jobId: job.id // Return job id to check minting status
         })
       } catch (err) {
         console.log(err)

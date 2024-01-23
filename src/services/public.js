@@ -5,6 +5,7 @@ const UserToken = require('../models/userToken')
 const publicPayload = require('../payload/publicPayload')
 
 module.exports = async function (fastify, opts) {
+  // API to get influencer status
   fastify.get(
     '/influencer/status',
     { schema: publicPayload.influencerStatusSchema },

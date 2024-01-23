@@ -15,6 +15,8 @@ module.exports = async function (fastify, opts) {
   //     reply.error(err)
   //   }
   // }),
+
+  // [Admin API] - API to allocate token
   fastify.post(
     '/allocate-token',
     { schema: adminPayload.nftAlloctionSchema },
@@ -28,6 +30,8 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+
+  // [Admin API] - API add new agency
   fastify.post(
     '/agency',
     { schema: agencyPayload.addNewAgency },
