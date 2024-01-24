@@ -1,3 +1,4 @@
+// Bounty Calculator based on the excel shared
 'use strict'
 const ChallengeParticipation = require('../models/challengeParticipationModel')
 const Affiliate = require('../models/affiliateModel')
