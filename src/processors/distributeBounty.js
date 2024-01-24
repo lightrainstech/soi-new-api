@@ -1,3 +1,4 @@
+// Job to distribute bounty
 'use strict'
 
 const mongoose = require('mongoose')

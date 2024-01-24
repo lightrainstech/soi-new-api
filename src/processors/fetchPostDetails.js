@@ -1,3 +1,4 @@
+// Job to get post details from social insider
 'use strict'
 
 const mongoose = require('mongoose')
@@ -33,11 +34,13 @@ module.exports = async function (args, done) {
         await challengeParticipationModel.getChallengeParticipants(challengeId)
 
       if (participants.length > 0) {
+        // Get post details of social profiles connected to an NFT
         const updatePromises = participants.map(async participant => {
           const socialKeys = Object.keys(participant.nft.social).filter(
               key => participant.nft.social[key].socialInsiderId !== undefined
             ),
             postDetailsPromises = socialKeys.map(async key => {
+              // Add delay of 300ms between each request to handle rate limit
               await new Promise(resolve => setTimeout(resolve, 300))
               return getPostDetails(
                 participant.nft.social[key].socialInsiderId,

@@ -117,6 +117,7 @@ const getParticipantsDetails = async challengeId => {
   return await challengeParticipationModel.getUserBountyReceived(challengeId)
 }
 
+// Sample function for testing
 const distributeBounty = async (
   bountyInvested,
   participants,
